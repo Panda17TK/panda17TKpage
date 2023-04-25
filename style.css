@@ -15,8 +15,15 @@ body {
 header {
     position: absolute;
     right: 10%;
-    padding: 40px;
+    padding: 2%;
 }
+
+header ul li a:hover {
+    text-decoration:underline;
+    color: white;
+    font-size: 500;
+}
+
 
 header ul li {
     list-style: none;
