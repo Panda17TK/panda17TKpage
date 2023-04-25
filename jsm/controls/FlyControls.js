@@ -2,7 +2,7 @@ import {
 	EventDispatcher,
 	Quaternion,
 	Vector3
-} from '/main/build/three.module.js';
+} from './../../build/three.module.js';
 const _changeEvent = { type: 'change' };
 
 class FlyControls extends EventDispatcher {

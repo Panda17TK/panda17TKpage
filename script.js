@@ -1,6 +1,6 @@
 import * as THREE from "./build/three.module.js";
-import { FlyControls } from "/main/jsm/controls/FlyControls.js";
-import {Lensflare, LensflareElement} from "/main/jsm/objects/Lensflare.js";
+import { FlyControls } from "./jsm/controls/FlyControls.js";
+import {Lensflare, LensflareElement} from "./jsm/objects/Lensflare.js";
 
 let camera, scene, renderer;
 let controls;
