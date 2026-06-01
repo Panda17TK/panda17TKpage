@@ -47,12 +47,12 @@ NH.PARAMS = [
     { key: "poleHeight",    def: 10.0,  uniform: "u_poleHeight",    type: "float", ui: { min: 2, max: 20, step: 0.5 } },
     { key: "lampCount",     def: 16,    uniform: "u_lampCount",     type: "int",   ui: { min: 1, max: 32, step: 1 } },
     { key: "lampFade",      def: 0.80,  uniform: "u_lampFade",      type: "float", ui: { min: 0, max: 1, step: 0.01 } }, // 最遠の灯をフェードし始める割合
-    { key: "lampCore",      def: 2.0,   uniform: "u_lampCore",      type: "float", ui: { min: 0, max: 4, step: 0.1 } },  // ランプ頭部の白熱コア（明かり）
+    { key: "lampCore",      def: 2.4,   uniform: "u_lampCore",      type: "float", ui: { min: 0, max: 4, step: 0.1 } },  // ランプ頭部の白熱コア（明かり）
     { key: "glowSize",      def: 0.012, uniform: "u_glowSize",      type: "float", ui: { min: 0.002, max: 0.05, step: 0.001 } },
     { key: "tail",          def: 0.22,  uniform: "u_tail",          type: "float", ui: { min: 0.0, max: 0.6, step: 0.01 } },
-    { key: "glowBright",    def: 2.6,   uniform: "u_glowBright",    type: "float", ui: { min: 0.2, max: 5, step: 0.1 } },
+    { key: "glowBright",    def: 3.0,   uniform: "u_glowBright",    type: "float", ui: { min: 0.2, max: 6, step: 0.1 } },
     { key: "poleWidth",     def: 0.0030, uniform: "u_poleWidth",    type: "float", ui: { min: 0.001, max: 0.02, step: 0.0005 } },
-    { key: "poolIntensity", def: 0.02,  uniform: "u_poolIntensity", type: "float", ui: { min: 0, max: 1, step: 0.01 } },
+    { key: "poolIntensity", def: 0.08,  uniform: "u_poolIntensity", type: "float", ui: { min: 0, max: 1, step: 0.01 } },  // 路面の反射光
 
     // --- 大気 / 見た目（旧ハードコード値を config 化）---
     { key: "fogDensity",    def: 0.012, uniform: "u_fogDensity",    type: "float", ui: { min: 0, max: 0.05, step: 0.001 } },
@@ -73,6 +73,9 @@ NH.PARAMS = [
     { key: "cityCols",      def: 26.0,  uniform: "u_cityCols",      type: "float", ui: { min: 6, max: 80, step: 1 } },
     { key: "windowBright",  def: 0.55,  uniform: "u_windowBright",  type: "float", ui: { min: 0, max: 2, step: 0.05 } },
     { key: "windowDensity", def: 0.35,  uniform: "u_windowDensity", type: "float", ui: { min: 0, max: 1, step: 0.02 } },
+    { key: "beaconMinH",    def: 0.70,  uniform: "u_beaconMinH",    type: "float", ui: { min: 0.3, max: 1.0, step: 0.02 } }, // 航空障害灯がつく高さの閾値
+    { key: "beaconSize",    def: 0.006, uniform: "u_beaconSize",    type: "float", ui: { min: 0.002, max: 0.02, step: 0.001 } },
+    { key: "beaconBright",  def: 1.7,   uniform: "u_beaconBright",  type: "float", ui: { min: 0, max: 4, step: 0.1 } },
 
     // --- 色 ---
     { key: "skyTop",     def: [0.005, 0.005, 0.03], uniform: "u_skyTop",     type: "color", ui: { color: true } },
@@ -85,7 +88,8 @@ NH.PARAMS = [
     { key: "moonCol",    def: [0.95, 0.95, 0.85],   uniform: "u_moonCol",    type: "color", ui: { color: true } },
     { key: "poleCol",    def: [0.04, 0.04, 0.05],   uniform: "u_poleCol",    type: "color", ui: { color: true } },
     { key: "cityCol",    def: [0.02, 0.025, 0.05],  uniform: "u_cityCol",    type: "color", ui: { color: true } },
-    { key: "windowCol",  def: [1.00, 0.85, 0.50],   uniform: "u_windowCol",  type: "color", ui: { color: true } }
+    { key: "windowCol",  def: [1.00, 0.85, 0.50],   uniform: "u_windowCol",  type: "color", ui: { color: true } },
+    { key: "beaconCol",  def: [1.00, 0.06, 0.03],   uniform: "u_beaconCol",  type: "color", ui: { color: true } }
 ];
 
 // 調整済みの値を残すならここに（"Copy config JSON" の出力を貼る）
