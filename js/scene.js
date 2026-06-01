@@ -62,7 +62,7 @@ NH.createScene = function (canvas, config) {
         gl.enableVertexAttribArray(0);
         gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
-        var names = ["u_res", "u_scroll", "u_sway", "u_camHeight", "u_pitch", "u_fovTan",
+        var names = ["u_res", "u_scroll", "u_sway", "u_camHeight", "u_pitch", "u_fovTan", "u_camX",
             "u_roadHalfWidth", "u_dashLength", "u_laneEdge", "u_swayAmount", "u_lampSpacing",
             "u_lampSide", "u_poleHeight", "u_glowSize", "u_tail", "u_glowBright", "u_poleWidth",
             "u_poolIntensity", "u_lampCount", "u_paletteSteps", "u_hazeIntensity", "u_moon",
@@ -81,6 +81,7 @@ NH.createScene = function (canvas, config) {
         gl.uniform1f(U.u_camHeight, config.camHeight);
         gl.uniform1f(U.u_pitch, config.pitchDeg * Math.PI / 180);
         gl.uniform1f(U.u_fovTan, Math.tan(config.fovDeg * Math.PI / 360));
+        gl.uniform1f(U.u_camX, config.laneOffset);
         gl.uniform1f(U.u_roadHalfWidth, config.roadHalfWidth);
         gl.uniform1f(U.u_dashLength, config.dashLength);
         gl.uniform1f(U.u_laneEdge, config.laneEdge);

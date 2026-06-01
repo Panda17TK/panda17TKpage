@@ -11,7 +11,7 @@ NH.FRAG_BODY = `
 uniform vec2  u_res;
 uniform float u_scroll;     // 進行距離（JS側でラップ済みの有界値）
 uniform float u_sway;       // 道路の揺れ（有界 sin）
-uniform float u_camHeight, u_pitch, u_fovTan;
+uniform float u_camHeight, u_pitch, u_fovTan, u_camX;
 uniform float u_roadHalfWidth, u_dashLength, u_laneEdge, u_swayAmount;
 uniform float u_lampSpacing, u_lampSide, u_poleHeight;
 uniform float u_glowSize, u_tail, u_glowBright, u_poleWidth, u_poolIntensity;
@@ -52,7 +52,7 @@ void main(){
     if (dir.y < -0.0008) {
         // ===== 地面（地平面 y = -camHeight との交点）=====
         float t = -u_camHeight / dir.y;
-        float X = dir.x * t;
+        float X = u_camX + dir.x * t;      // 横位置オフセット（左車線など）
         float Z = dir.z * t;
         float lane = (X - curveAt(Z)) / u_roadHalfWidth;
         float laneAbs = abs(lane);
@@ -93,11 +93,11 @@ void main(){
         float curv = curveAt(Zrel);
         for (int s = 0; s < 2; s++) {
             float sd = (s == 0) ? -1.0 : 1.0;
-            float Xl = sd * (u_roadHalfWidth + u_lampSide) + curv;
+            float Xl = sd * (u_roadHalfWidth + u_lampSide) + curv - u_camX;
             vec3 hp = project(vec3(Xl, u_poleHeight - u_camHeight, Zrel), cp, sp, tanX, tanY);
             if (hp.z <= 0.05) continue;
             vec3 bp = project(vec3(Xl, -u_camHeight, Zrel), cp, sp, tanX, tanY);
-            vec3 ahp = project(vec3(sd * (u_roadHalfWidth + u_lampSide) + curveAt(Zrel * 1.4),
+            vec3 ahp = project(vec3(sd * (u_roadHalfWidth + u_lampSide) + curveAt(Zrel * 1.4) - u_camX,
                                     u_poleHeight - u_camHeight, Zrel * 1.4), cp, sp, tanX, tanY);
             float pscale = clamp(1.0 / hp.z, 0.02, 2.5);   // 近いほど大きい
 
