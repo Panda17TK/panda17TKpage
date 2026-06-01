@@ -1,22 +1,23 @@
 /* =============================================================
    WebGL レンダラ / シーン制御
-   - config を uniform に反映
+   - NH.PARAMS から uniform を自動設定（単一ソース）
    - 可視時のみ描画 / reduced-motion は静止
    - スクロール量は JS で計算しラップ（精度安定）
-   - コンテキストロスト復帰対応
+   - コンテキストロスト復帰・dispose 対応
    ============================================================= */
 window.NH = window.NH || {};
 
 NH.createScene = function (canvas, config) {
-    var gl = canvas.getContext("webgl", {
-        alpha: false, antialias: false, depth: false, stencil: false, powerPreference: "high-performance"
-    }) || canvas.getContext("experimental-webgl");
+    var ctxAttrs = { alpha: false, antialias: false, depth: false, stencil: false, powerPreference: "high-performance" };
+    var gl = canvas.getContext("webgl", ctxAttrs) || canvas.getContext("experimental-webgl", ctxAttrs);
     if (!gl) return null;
 
+    var params = NH.PARAMS;
     var derivExt = gl.getExtension("OES_standard_derivatives");
-    var prog, buf, U = {}, locReady = false;
-    var raf = 0, running = false, lost = false;
+    var prog = null, buf = null, U = {}, locReady = false;
+    var raf = 0, running = false, lost = false, disposed = false;
     var lastT = 0, scrollDist = 0, animTime = 0, wrapMeters = 1.0;
+    var ro = null;
     var reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
 
     function gcd(a, b) { while (b > 1e-6) { var t = a % b; a = b; b = t; } return a; }
@@ -40,9 +41,14 @@ NH.createScene = function (canvas, config) {
     }
 
     function buildProgram() {
+        if (prog) { gl.deleteProgram(prog); prog = null; }
+        if (buf) { gl.deleteBuffer(buf); buf = null; }
+        locReady = false;
+
         var vs = compile(gl.VERTEX_SHADER, NH.VERT);
-        var fs = compile(gl.FRAGMENT_SHADER, NH.buildFragment({ derivatives: !!derivExt }));
-        if (!vs || !fs) return false;
+        var fs = compile(gl.FRAGMENT_SHADER, NH.buildFragment({ derivatives: !!derivExt, params: params }));
+        if (!vs || !fs) { if (vs) gl.deleteShader(vs); if (fs) gl.deleteShader(fs); return false; }
+
         prog = gl.createProgram();
         gl.attachShader(prog, vs);
         gl.attachShader(prog, fs);
@@ -62,50 +68,37 @@ NH.createScene = function (canvas, config) {
         gl.enableVertexAttribArray(0);
         gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
-        var names = ["u_res", "u_scroll", "u_sway", "u_camHeight", "u_pitch", "u_fovTan", "u_camX",
-            "u_roadHalfWidth", "u_dashLength", "u_laneEdge", "u_swayAmount", "u_lampSpacing",
-            "u_lampSide", "u_poleHeight", "u_glowSize", "u_tail", "u_glowBright", "u_poleWidth",
-            "u_poolIntensity", "u_lampCount", "u_paletteSteps", "u_hazeIntensity", "u_moon",
-            "u_skyTop", "u_skyHorizon", "u_ground", "u_asphalt", "u_laneCol", "u_lampCol",
-            "u_hazeCol", "u_moonCol"];
-        U = {};
-        for (var i = 0; i < names.length; i++) U[names[i]] = gl.getUniformLocation(prog, names[i]);
+        // uniform ロケーション（エンジン + PARAMS）
+        U = {
+            u_res: gl.getUniformLocation(prog, "u_res"),
+            u_scroll: gl.getUniformLocation(prog, "u_scroll"),
+            u_sway: gl.getUniformLocation(prog, "u_sway")
+        };
+        for (var i = 0; i < params.length; i++) {
+            if (params[i].uniform) U[params[i].uniform] = gl.getUniformLocation(prog, params[i].uniform);
+        }
         locReady = true;
         return true;
+    }
+
+    function setUniform(p) {
+        var loc = U[p.uniform];
+        if (loc == null) return;
+        var v = config[p.key];
+        if (p.map) v = p.map(v);
+        if (p.type === "color") gl.uniform3fv(loc, v);
+        else if (p.type === "int") gl.uniform1i(loc, v | 0);
+        else if (p.type === "bool") gl.uniform1f(loc, v ? 1.0 : 0.0);
+        else gl.uniform1f(loc, v);
     }
 
     function applyConfig() {
         if (!locReady) return;
         gl.useProgram(prog);
         computeWrap();
-        gl.uniform1f(U.u_camHeight, config.camHeight);
-        gl.uniform1f(U.u_pitch, config.pitchDeg * Math.PI / 180);
-        gl.uniform1f(U.u_fovTan, Math.tan(config.fovDeg * Math.PI / 360));
-        gl.uniform1f(U.u_camX, config.laneOffset);
-        gl.uniform1f(U.u_roadHalfWidth, config.roadHalfWidth);
-        gl.uniform1f(U.u_dashLength, config.dashLength);
-        gl.uniform1f(U.u_laneEdge, config.laneEdge);
-        gl.uniform1f(U.u_swayAmount, config.swayAmount);
-        gl.uniform1f(U.u_lampSpacing, config.lampSpacing);
-        gl.uniform1f(U.u_lampSide, config.lampSide);
-        gl.uniform1f(U.u_poleHeight, config.poleHeight);
-        gl.uniform1f(U.u_glowSize, config.glowSize);
-        gl.uniform1f(U.u_tail, config.tail);
-        gl.uniform1f(U.u_glowBright, config.glowBright);
-        gl.uniform1f(U.u_poleWidth, config.poleWidth);
-        gl.uniform1f(U.u_poolIntensity, config.poolIntensity);
-        gl.uniform1i(U.u_lampCount, config.lampCount | 0);
-        gl.uniform1f(U.u_paletteSteps, config.paletteSteps);
-        gl.uniform1f(U.u_hazeIntensity, config.hazeIntensity);
-        gl.uniform1f(U.u_moon, config.moon ? 1.0 : 0.0);
-        gl.uniform3fv(U.u_skyTop, config.skyTop);
-        gl.uniform3fv(U.u_skyHorizon, config.skyHorizon);
-        gl.uniform3fv(U.u_ground, config.ground);
-        gl.uniform3fv(U.u_asphalt, config.asphalt);
-        gl.uniform3fv(U.u_laneCol, config.laneCol);
-        gl.uniform3fv(U.u_lampCol, config.lampCol);
-        gl.uniform3fv(U.u_hazeCol, config.hazeCol);
-        gl.uniform3fv(U.u_moonCol, config.moonCol);
+        for (var i = 0; i < params.length; i++) {
+            if (params[i].uniform) setUniform(params[i]);
+        }
         render();
     }
 
@@ -146,7 +139,7 @@ NH.createScene = function (canvas, config) {
     }
 
     function start() {
-        if (running || lost) return;
+        if (running || lost || disposed) return;
         if (reduceMQ.matches) { render(); return; } // 静止フレームのみ
         running = true;
         lastT = 0;
@@ -154,31 +147,45 @@ NH.createScene = function (canvas, config) {
     }
     function stop() { running = false; if (raf) cancelAnimationFrame(raf); raf = 0; }
 
-    document.addEventListener("visibilitychange", function () {
-        if (document.hidden) stop(); else start();
-    });
-    if (reduceMQ.addEventListener) {
-        reduceMQ.addEventListener("change", function () { stop(); start(); });
-    }
-    if (window.ResizeObserver) {
-        new ResizeObserver(resize).observe(canvas);
-    } else {
-        window.addEventListener("resize", resize);
-    }
-    canvas.addEventListener("webglcontextlost", function (e) {
-        e.preventDefault(); lost = true; stop();
-    }, false);
-    canvas.addEventListener("webglcontextrestored", function () {
-        lost = false; locReady = false;
+    // ---- イベント（buildProgram 成功後にのみ登録）----
+    function onVisibility() { if (document.hidden) stop(); else start(); }
+    function onReduceChange() { stop(); start(); }
+    function onContextLost(e) { e.preventDefault(); lost = true; stop(); }
+    function onContextRestored() {
+        lost = false;
         if (buildProgram()) { applyConfig(); resize(); start(); }
-    }, false);
+    }
 
-    if (!buildProgram()) return null;
+    function attach() {
+        document.addEventListener("visibilitychange", onVisibility);
+        if (reduceMQ.addEventListener) reduceMQ.addEventListener("change", onReduceChange);
+        if (window.ResizeObserver) { ro = new ResizeObserver(resize); ro.observe(canvas); }
+        else window.addEventListener("resize", resize);
+        canvas.addEventListener("webglcontextlost", onContextLost, false);
+        canvas.addEventListener("webglcontextrestored", onContextRestored, false);
+    }
+
+    function dispose() {
+        disposed = true;
+        stop();
+        document.removeEventListener("visibilitychange", onVisibility);
+        if (reduceMQ.removeEventListener) reduceMQ.removeEventListener("change", onReduceChange);
+        if (ro) ro.disconnect(); else window.removeEventListener("resize", resize);
+        canvas.removeEventListener("webglcontextlost", onContextLost, false);
+        canvas.removeEventListener("webglcontextrestored", onContextRestored, false);
+        if (prog) { gl.deleteProgram(prog); prog = null; }
+        if (buf) { gl.deleteBuffer(buf); buf = null; }
+        locReady = false;
+    }
+
+    if (!buildProgram()) return null;   // 失敗時はリスナを登録しない
+    attach();
 
     return {
         applyConfig: applyConfig,
         resize: resize,
         start: start,
-        stop: stop
+        stop: stop,
+        dispose: dispose
     };
 };

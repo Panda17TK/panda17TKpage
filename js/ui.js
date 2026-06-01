@@ -7,14 +7,22 @@ NH.initUI = function () {
     var toggle = document.querySelector(".nav__toggle");
     var links = document.querySelector(".nav__links");
     if (toggle && links) {
+        function close() {
+            links.classList.remove("is-open");
+            toggle.setAttribute("aria-expanded", "false");
+        }
         toggle.addEventListener("click", function () {
             var open = links.classList.toggle("is-open");
             toggle.setAttribute("aria-expanded", String(open));
         });
         links.addEventListener("click", function (e) {
-            if (e.target.tagName === "A") {
-                links.classList.remove("is-open");
-                toggle.setAttribute("aria-expanded", "false");
+            if (e.target.tagName === "A") close();
+        });
+        // Esc で閉じる（アクセシビリティ）
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && links.classList.contains("is-open")) {
+                close();
+                toggle.focus();
             }
         });
     }
