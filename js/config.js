@@ -35,7 +35,9 @@ NH.PARAMS = [
 
     // --- 道路 ---
     { key: "roadHalfWidth", def: 8.0,   uniform: "u_roadHalfWidth", type: "float", ui: { min: 2, max: 20, step: 0.5 } },
-    { key: "dashLength",    def: 6.0,   uniform: "u_dashLength",    type: "float", ui: { min: 1, max: 20, step: 0.5 } },
+    { key: "roadRaise",     def: 0.25,  uniform: "u_roadRaise",     type: "float", ui: { min: 0, max: 2, step: 0.05 } },  // 外の地面より道路を高く
+    { key: "dashLength",    def: 14.0,  uniform: "u_dashLength",    type: "float", ui: { min: 1, max: 30, step: 0.5 } },
+    { key: "dashDuty",      def: 0.32,  uniform: "u_dashDuty",      type: "float", ui: { min: 0.1, max: 0.9, step: 0.02 } }, // 塗り割合（小さいほど隙間が長い）
     { key: "laneEdge",      def: 0.93,  uniform: "u_laneEdge",      type: "float", ui: { min: 0.5, max: 1.0, step: 0.01 } },
     { key: "swayAmount",    def: 0.0,   uniform: "u_swayAmount",    type: "float", ui: { min: 0, max: 0.02, step: 0.001 } },
 
@@ -45,6 +47,7 @@ NH.PARAMS = [
     { key: "poleHeight",    def: 10.0,  uniform: "u_poleHeight",    type: "float", ui: { min: 2, max: 20, step: 0.5 } },
     { key: "lampCount",     def: 16,    uniform: "u_lampCount",     type: "int",   ui: { min: 1, max: 32, step: 1 } },
     { key: "lampFade",      def: 0.80,  uniform: "u_lampFade",      type: "float", ui: { min: 0, max: 1, step: 0.01 } }, // 最遠の灯をフェードし始める割合
+    { key: "lampCore",      def: 1.6,   uniform: "u_lampCore",      type: "float", ui: { min: 0, max: 4, step: 0.1 } },  // ランプ頭部の白熱コア（明かり）
     { key: "glowSize",      def: 0.012, uniform: "u_glowSize",      type: "float", ui: { min: 0.002, max: 0.05, step: 0.001 } },
     { key: "tail",          def: 0.16,  uniform: "u_tail",          type: "float", ui: { min: 0.0, max: 0.6, step: 0.01 } },
     { key: "glowBright",    def: 2.0,   uniform: "u_glowBright",    type: "float", ui: { min: 0.2, max: 5, step: 0.1 } },
