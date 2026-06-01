@@ -107,8 +107,8 @@ void main(){
                     }
                 }
             }
-            // 航空障害灯：一定以上の高さのビル屋上に小さく目立つ赤い点滅灯
-            if (h > u_beaconMinH) {
+            // 航空障害灯：一定以上の高さのビルのうち一部の屋上に小さく目立つ赤い点滅灯
+            if (h > u_beaconMinH && hash(vec2(c, 71.0 + layer * 17.0)) < u_beaconChance) {
                 vec2 bpos = vec2(((c + 0.5) / cols - 0.5) * aspect, top + 0.006);
                 float bd = distance(vec2((uv.x - 0.5) * aspect, uv.y), bpos);
                 float blink = 0.3 + 0.7 * pow(0.5 + 0.5 * sin(u_time * 2.2 + h * 12.0), 2.0);
@@ -167,11 +167,15 @@ void main(){
             float paa = max(AAW(pd), 0.0008);
             col = mix(col, u_poleCol, (1.0 - smoothstep(pw, pw + paa, pd)) * 0.8 * lf);
 
-            // 路面に映る光
+            // 路面の反射：照明灯の真下（車道側）に円状の明かり。路面は基本暗いまま
             if (onRoad) {
-                float poolR = 0.16 * pscale + 0.01;
-                float d = distance(Pa, Ba);
-                col += u_lampCol * exp(-(d * d) / (poolR * poolR)) * u_poolIntensity * clamp(pscale, 0.1, 1.5) * lf;
+                vec3 pc = project(vec3(sd * u_roadHalfWidth * 0.6, 0.0, Zrel), cp, sp, tanX, tanY);
+                if (pc.z > 0.05) {
+                    vec2 Pc = vec2(pc.x * aspect, pc.y);
+                    float poolR = u_poolSize * pscale + 0.006;
+                    float d = distance(Pa, Pc);
+                    col += u_lampCol * exp(-(d * d) / (poolR * poolR)) * u_poolIntensity * clamp(pscale, 0.1, 1.6) * lf;
+                }
             }
         }
     }

@@ -10,7 +10,7 @@
     "serve": "python3 -m http.server 8000"
   },
   "devDependencies": {
-    "eslint": "^8.57.0",
-    "gl": "^8.1.6"
+    "eslint": "8.57.1",
+    "gl": "8.1.6"
   }
 }
