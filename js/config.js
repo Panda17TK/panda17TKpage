@@ -18,6 +18,7 @@ NH.config = {
 
     // --- 道路 ---
     roadHalfWidth: 8.0,   // 路肩までの半幅
+    laneOffset: -4.0,     // カメラの横位置（負=中心線の左側＝左車線を走る）
     dashLength: 6.0,      // 中央破線の周期
     laneEdge: 0.93,       // 両端白線の位置（半幅に対する割合）
 
@@ -33,8 +34,8 @@ NH.config = {
     poolIntensity: 0.02,  // 路面に映る光量
 
     // --- 見た目 ---
-    pixelRows: 240,       // ドット絵バッファの縦解像度（小さいほど粗い）
-    paletteSteps: 16,     // 色の段階数
+    pixelRows: 340,       // ドット絵バッファの縦解像度（小さいほど粗い）
+    paletteSteps: 22,     // 色の段階数
     hazeIntensity: 0.45,  // 地平線の暖色かすみ
     moon: true,
 
@@ -56,6 +57,7 @@ NH.schema = [
     { key: "fovDeg", min: 30, max: 90, step: 1 },
     { key: "camHeight", min: 0.2, max: 10, step: 0.1 },
     { key: "roadHalfWidth", min: 2, max: 20, step: 0.5 },
+    { key: "laneOffset", min: -12, max: 12, step: 0.5 },
     { key: "dashLength", min: 1, max: 20, step: 0.5 },
     { key: "laneEdge", min: 0.5, max: 1.0, step: 0.01 },
     { key: "lampSpacing", min: 5, max: 80, step: 1 },
