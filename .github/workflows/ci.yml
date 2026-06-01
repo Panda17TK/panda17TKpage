@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: ["**"]
+    branches: [main]      # PR では pull_request 側で1回だけ走らせ、二重起動を避ける
   pull_request:
 
 jobs:
@@ -23,13 +23,16 @@ jobs:
             build-essential libgl1-mesa-dev libxi-dev libxext-dev libglu1-mesa-dev xvfb
 
       - name: Install npm deps
-        run: npm install
+        run: npm ci
 
       - name: Syntax check
         run: npm run check
 
       - name: Lint
         run: npm run lint
+
+      - name: Uniform sync check
+        run: npm run test:uniforms
 
       - name: Headless render smoke test
         run: xvfb-run -a -s "-screen 0 1280x1024x24" npm run test:render

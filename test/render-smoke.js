@@ -68,7 +68,8 @@ function compile(type, src) {
         function loc(n) { return gl.getUniformLocation(prog, n); }
         gl.uniform2f(loc("u_res"), W, H);
         gl.uniform1f(loc("u_scroll"), 12.0);
-        gl.uniform1f(loc("u_sway"), 0.0);
+        gl.uniform1f(loc("u_sway"), 0.4);   // 進路の揺れ＝都市の視差/カーブを踏む
+        gl.uniform1f(loc("u_time"), 3.0);   // 窓の瞬き・障害灯点滅の時間依存パスを踏む
         NH.PARAMS.forEach(function (p) {
             if (!p.uniform) return;
             var l = loc(p.uniform);
