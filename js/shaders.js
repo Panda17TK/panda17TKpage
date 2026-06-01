@@ -9,6 +9,8 @@ NH.VERT = "attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }";
 
 // フラグメント本体（uniform 宣言は buildFragment が前置する）
 NH.FRAG_BODY = `
+float hash(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }
+
 float curveAt(float z){ return u_sway * u_swayAmount * z; }
 
 // ワールド相対座標 → 画面 uv（戻り値 .z は視空間Z。>0で前方）
@@ -75,6 +77,36 @@ void main(){
             float md = distance(vec2((uv.x - 0.5) * aspect, uv.y), vec2(u_moonX * aspect, u_moonY));
             col = mix(col, u_moonCol, smoothstep(u_moonSize, 0.0, md));
             col += u_moonCol * smoothstep(u_moonSize * 2.4, u_moonSize, md) * 0.18;
+        }
+
+        // ===== 遠くの都市のシルエット＋瞬く窓明かり（2層で奥行き）=====
+        float horizonY = 0.5 - 0.5 * (sp / cp) / tanY;
+        for (int L = 0; L < 2; L++) {
+            float layer = float(L);
+            float cols = u_cityCols * (1.0 + layer * 0.7);   // 手前ほど大きいビル
+            float maxH = u_cityHeight * (0.55 + layer * 0.75);
+            float baseY = horizonY - layer * 0.004;
+            float gx = uv.x * cols;
+            float c = floor(gx);
+            float h = hash(vec2(c * 1.7, 5.0 + layer * 11.0));
+            float top = baseY + maxH * (0.2 + 0.8 * h);
+            if (uv.y >= baseY && uv.y <= top) {
+                col = mix(col, u_cityCol * (0.7 + 0.5 * layer), 0.9);   // シルエット
+                float wx = fract(gx);
+                if (wx > 0.16 && wx < 0.84) {                          // 建物の縁は窓なし
+                    float winCols = 3.0 + layer * 2.0;
+                    float cellH = 0.010;
+                    float cwx = floor(wx * winCols);
+                    float cwy = floor((uv.y - baseY) / cellH);
+                    float wseed = hash(vec2(c * 13.0 + cwx, cwy * 1.3 + layer * 51.0));
+                    float inx = fract(wx * winCols);
+                    float iny = fract((uv.y - baseY) / cellH);
+                    if (wseed > (1.0 - u_windowDensity) && inx > 0.22 && inx < 0.78 && iny > 0.22 && iny < 0.78) {
+                        float tw = 0.45 + 0.55 * sin(u_time * 1.7 + wseed * 30.0);   // 瞬き
+                        col += u_windowCol * u_windowBright * tw;
+                    }
+                }
+            }
         }
     }
 
@@ -155,7 +187,7 @@ NH.buildFragment = function (opts) {
     head += opts.derivatives ? "#define AAW(x) (fwidth(x))\n" : "#define AAW(x) (0.0)\n";
 
     // エンジン uniform ＋ PARAMS 由来 uniform
-    var decls = "uniform vec2 u_res;\nuniform float u_scroll;\nuniform float u_sway;\n";
+    var decls = "uniform vec2 u_res;\nuniform float u_scroll;\nuniform float u_sway;\nuniform float u_time;\n";
     for (var i = 0; i < params.length; i++) {
         var p = params[i];
         if (p.uniform) decls += "uniform " + glType(p.type) + " " + p.uniform + ";\n";

@@ -47,10 +47,10 @@ NH.PARAMS = [
     { key: "poleHeight",    def: 10.0,  uniform: "u_poleHeight",    type: "float", ui: { min: 2, max: 20, step: 0.5 } },
     { key: "lampCount",     def: 16,    uniform: "u_lampCount",     type: "int",   ui: { min: 1, max: 32, step: 1 } },
     { key: "lampFade",      def: 0.80,  uniform: "u_lampFade",      type: "float", ui: { min: 0, max: 1, step: 0.01 } }, // 最遠の灯をフェードし始める割合
-    { key: "lampCore",      def: 1.6,   uniform: "u_lampCore",      type: "float", ui: { min: 0, max: 4, step: 0.1 } },  // ランプ頭部の白熱コア（明かり）
+    { key: "lampCore",      def: 2.0,   uniform: "u_lampCore",      type: "float", ui: { min: 0, max: 4, step: 0.1 } },  // ランプ頭部の白熱コア（明かり）
     { key: "glowSize",      def: 0.012, uniform: "u_glowSize",      type: "float", ui: { min: 0.002, max: 0.05, step: 0.001 } },
-    { key: "tail",          def: 0.16,  uniform: "u_tail",          type: "float", ui: { min: 0.0, max: 0.6, step: 0.01 } },
-    { key: "glowBright",    def: 2.0,   uniform: "u_glowBright",    type: "float", ui: { min: 0.2, max: 5, step: 0.1 } },
+    { key: "tail",          def: 0.22,  uniform: "u_tail",          type: "float", ui: { min: 0.0, max: 0.6, step: 0.01 } },
+    { key: "glowBright",    def: 2.6,   uniform: "u_glowBright",    type: "float", ui: { min: 0.2, max: 5, step: 0.1 } },
     { key: "poleWidth",     def: 0.0030, uniform: "u_poleWidth",    type: "float", ui: { min: 0.001, max: 0.02, step: 0.0005 } },
     { key: "poolIntensity", def: 0.02,  uniform: "u_poolIntensity", type: "float", ui: { min: 0, max: 1, step: 0.01 } },
 
@@ -68,6 +68,12 @@ NH.PARAMS = [
     { key: "moonY",         def: 0.82,  uniform: "u_moonY",         type: "float", ui: { min: 0.3, max: 1, step: 0.01 } },
     { key: "moonSize",      def: 0.06,  uniform: "u_moonSize",      type: "float", ui: { min: 0.01, max: 0.2, step: 0.005 } },
 
+    // --- 遠くの都市 ---
+    { key: "cityHeight",    def: 0.10,  uniform: "u_cityHeight",    type: "float", ui: { min: 0, max: 0.3, step: 0.005 } },
+    { key: "cityCols",      def: 26.0,  uniform: "u_cityCols",      type: "float", ui: { min: 6, max: 80, step: 1 } },
+    { key: "windowBright",  def: 0.55,  uniform: "u_windowBright",  type: "float", ui: { min: 0, max: 2, step: 0.05 } },
+    { key: "windowDensity", def: 0.35,  uniform: "u_windowDensity", type: "float", ui: { min: 0, max: 1, step: 0.02 } },
+
     // --- 色 ---
     { key: "skyTop",     def: [0.005, 0.005, 0.03], uniform: "u_skyTop",     type: "color", ui: { color: true } },
     { key: "skyHorizon", def: [0.05, 0.06, 0.12],   uniform: "u_skyHorizon", type: "color", ui: { color: true } },
@@ -77,7 +83,9 @@ NH.PARAMS = [
     { key: "lampCol",    def: [1.00, 0.72, 0.36],   uniform: "u_lampCol",    type: "color", ui: { color: true } },
     { key: "hazeCol",    def: [0.22, 0.13, 0.06],   uniform: "u_hazeCol",    type: "color", ui: { color: true } },
     { key: "moonCol",    def: [0.95, 0.95, 0.85],   uniform: "u_moonCol",    type: "color", ui: { color: true } },
-    { key: "poleCol",    def: [0.04, 0.04, 0.05],   uniform: "u_poleCol",    type: "color", ui: { color: true } }
+    { key: "poleCol",    def: [0.04, 0.04, 0.05],   uniform: "u_poleCol",    type: "color", ui: { color: true } },
+    { key: "cityCol",    def: [0.02, 0.025, 0.05],  uniform: "u_cityCol",    type: "color", ui: { color: true } },
+    { key: "windowCol",  def: [1.00, 0.85, 0.50],   uniform: "u_windowCol",  type: "color", ui: { color: true } }
 ];
 
 // 調整済みの値を残すならここに（"Copy config JSON" の出力を貼る）
