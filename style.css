@@ -4,7 +4,7 @@
     --fg: #f3f4f8;
     --muted: rgba(243, 244, 248, 0.6);
     --accent: #7df9ff;
-    --accent-2: #b388ff;
+    --accent-2: #ff5fc8;
     --glass: rgba(255, 255, 255, 0.06);
     --glass-border: rgba(255, 255, 255, 0.14);
     --display: "Bruno Ace", sans-serif;
@@ -24,30 +24,35 @@ html {
 body {
     min-height: 100vh;
     overflow: hidden;
-    background: #05060a;
     color: var(--fg);
     font-family: var(--body);
     -webkit-font-smoothing: antialiased;
+    /* WebGLが使えない環境でも夜のグラデーションが見えるフォールバック */
+    background:
+        linear-gradient(180deg, #0a0420 0%, #2a0a3a 42%, #46123e 50%, #0c0a14 50%, #05060a 100%);
 }
 
-/* The three.js canvas sits behind everything */
-body > canvas {
+/* 背景キャンバス（夜の高速道路シェーダー） */
+#bg {
     position: fixed;
     inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
     z-index: 0;
+    /* ドット絵感を保つため拡大時もにじませない */
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
 }
 
-/* Soft vignette + color wash over the 3D scene for depth */
-body::before {
+/* キャンバスの上に薄いビネットを重ねて文字を読みやすく */
+body::after {
     content: "";
     position: fixed;
     inset: 0;
     z-index: 1;
     pointer-events: none;
-    background:
-        radial-gradient(120% 90% at 80% 10%, rgba(179, 136, 255, 0.18), transparent 60%),
-        radial-gradient(120% 90% at 10% 90%, rgba(125, 249, 255, 0.14), transparent 55%),
-        radial-gradient(140% 120% at 50% 50%, transparent 40%, rgba(5, 6, 10, 0.85) 100%);
+    background: radial-gradient(120% 120% at 50% 35%, transparent 45%, rgba(5, 6, 10, 0.55) 100%);
 }
 
 header,
@@ -81,7 +86,6 @@ header,
     font-family: var(--display);
     font-size: 1.05rem;
     letter-spacing: 0.5px;
-    color: var(--fg);
     text-decoration: none;
     background: linear-gradient(90deg, var(--accent), var(--accent-2));
     -webkit-background-clip: text;
@@ -142,7 +146,6 @@ header,
     height: 2px;
     background: var(--fg);
     border-radius: 2px;
-    transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 /* ---------- Hero ---------- */
@@ -222,7 +225,7 @@ header,
 
 .btn--primary:hover {
     transform: translateY(-3px);
-    box-shadow: 0 16px 40px rgba(179, 136, 255, 0.4);
+    box-shadow: 0 16px 40px rgba(255, 95, 200, 0.4);
 }
 
 .btn--ghost {
@@ -286,16 +289,9 @@ header,
     color: var(--accent);
 }
 
-/* ---------- Reveal animation ---------- */
 @keyframes rise {
-    from {
-        opacity: 0;
-        transform: translateY(24px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ---------- Responsive ---------- */
@@ -313,7 +309,7 @@ header,
         gap: 1.1rem;
         padding: 1.3rem 1.6rem;
         border-radius: 18px;
-        background: rgba(10, 12, 20, 0.9);
+        background: rgba(10, 12, 20, 0.92);
         border: 1px solid var(--glass-border);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
@@ -329,13 +325,8 @@ header,
         pointer-events: auto;
     }
 
-    .footer {
-        justify-content: center;
-    }
-
-    .footer__hint {
-        display: none;
-    }
+    .footer { justify-content: center; }
+    .footer__hint { display: none; }
 }
 
 @media (max-width: 480px) {
@@ -345,45 +336,17 @@ header,
         width: calc(100% - 1.6rem);
     }
 
-    .hero {
-        padding: 0 1.1rem;
-    }
-
-    .hero__eyebrow {
-        letter-spacing: 0.3em;
-        font-size: 0.75rem;
-    }
-
-    .hero__cta {
-        margin-top: 1.8rem;
-    }
-
-    .btn {
-        padding: 0.7rem 1.4rem;
-        font-size: 0.85rem;
-    }
-
-    .hero__social {
-        margin-top: 2rem;
-        gap: 0.8rem;
-    }
-
-    .hero__social a {
-        width: 42px;
-        height: 42px;
-    }
+    .hero { padding: 0 1.1rem; }
+    .hero__eyebrow { letter-spacing: 0.3em; font-size: 0.75rem; }
+    .hero__cta { margin-top: 1.8rem; }
+    .btn { padding: 0.7rem 1.4rem; font-size: 0.85rem; }
+    .hero__social { margin-top: 2rem; gap: 0.8rem; }
+    .hero__social a { width: 42px; height: 42px; }
 }
 
-/* very short / landscape phones: keep the hero from overflowing */
 @media (max-height: 520px) {
-    .hero {
-        justify-content: center;
-        gap: 0.2rem;
-    }
-
-    .hero__social {
-        margin-top: 1.4rem;
-    }
+    .hero { justify-content: center; gap: 0.2rem; }
+    .hero__social { margin-top: 1.4rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
