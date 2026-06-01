@@ -131,7 +131,7 @@
         "                float dy = (uv.y - yk);",
         "                float along = exp(-dy * dy * 150.0 / (perspk + 0.25));",
         "                float lat = smoothstep(1.15, 0.0, laneAbs);",
-        "                col += lampCol * along * lat * 0.4 * bright;",
+        "                col += lampCol * along * lat * 0.12 * bright;",
         "            }",
         "        }",
         "    }",
