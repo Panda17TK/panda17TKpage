@@ -33,7 +33,7 @@
 
         "float hash(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }",
 
-        "const float HORIZON = 0.40;", // 低いカメラ＋やや見上げる目線（水平線は下めに）
+        "const float HORIZON = 0.33;", // 路面すれすれのカメラで見上げる運転目線（水平線は下め）
         "const float SPEED   = 2.5;",  // 走行スピード
         "const float LSP     = 1.4;",  // 照明灯の間隔（ワールド単位）
 
@@ -131,7 +131,7 @@
         "                float dy = (uv.y - yk);",
         "                float along = exp(-dy * dy * 150.0 / (perspk + 0.25));",
         "                float lat = smoothstep(1.15, 0.0, laneAbs);",
-        "                col += lampCol * along * lat * 0.12 * bright;",
+        "                col += lampCol * along * lat * 0.02 * bright;",
         "            }",
         "        }",
         "    }",
