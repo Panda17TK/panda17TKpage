@@ -26,6 +26,7 @@ NH.PARAMS = [
     // --- 動き（JS専用：uniform 無し）---
     { key: "speed",         def: 16.0,  ui: { min: 0, max: 60, step: 0.5 } },
     { key: "swaySpeed",     def: 0.25,  ui: { min: 0, max: 1, step: 0.05 } },
+    { key: "cityFlowRate",  def: 0.3,   ui: { min: 0, max: 1, step: 0.05 } },  // 都市の流れ速度（swaySpeed に対する倍率。JS で u_cityPhase を生成）
 
     // --- カメラ ---
     { key: "camHeight",     def: 1.4,   uniform: "u_camHeight",     type: "float", ui: { min: 0.2, max: 10, step: 0.1 } },
@@ -47,12 +48,12 @@ NH.PARAMS = [
     { key: "poleHeight",    def: 10.0,  uniform: "u_poleHeight",    type: "float", ui: { min: 2, max: 20, step: 0.5 } },
     { key: "lampCount",     def: 16,    uniform: "u_lampCount",     type: "int",   ui: { min: 1, max: 32, step: 1 } },
     { key: "lampFade",      def: 0.80,  uniform: "u_lampFade",      type: "float", ui: { min: 0, max: 1, step: 0.01 } }, // 最遠の灯をフェードし始める割合
-    { key: "lampCore",      def: 3.0,   uniform: "u_lampCore",      type: "float", ui: { min: 0, max: 5, step: 0.1 } },  // ランプ頭部の白熱コア（明かり）
+    { key: "lampCore",      def: 4.2,   uniform: "u_lampCore",      type: "float", ui: { min: 0, max: 6, step: 0.1 } },  // ランプ頭部の白熱コア（明かり）
     { key: "glowSize",      def: 0.012, uniform: "u_glowSize",      type: "float", ui: { min: 0.002, max: 0.05, step: 0.001 } },
     { key: "tail",          def: 0.22,  uniform: "u_tail",          type: "float", ui: { min: 0.0, max: 0.6, step: 0.01 } },
-    { key: "glowBright",    def: 3.6,   uniform: "u_glowBright",    type: "float", ui: { min: 0.2, max: 8, step: 0.1 } },
+    { key: "glowBright",    def: 5.2,   uniform: "u_glowBright",    type: "float", ui: { min: 0.2, max: 10, step: 0.1 } },
     { key: "poleWidth",     def: 0.0030, uniform: "u_poleWidth",    type: "float", ui: { min: 0.001, max: 0.02, step: 0.0005 } },
-    { key: "poolIntensity", def: 0.22,  uniform: "u_poolIntensity", type: "float", ui: { min: 0, max: 1, step: 0.01 } },  // 照明灯の真下の円状の明かり
+    { key: "poolIntensity", def: 0.28,  uniform: "u_poolIntensity", type: "float", ui: { min: 0, max: 1, step: 0.01 } },  // 照明灯の真下の円状の明かり
     { key: "poolSize",      def: 0.12,  uniform: "u_poolSize",      type: "float", ui: { min: 0.02, max: 0.4, step: 0.01 } }, // その円の大きさ
 
     // --- 大気 / 見た目（旧ハードコード値を config 化）---
@@ -60,9 +61,10 @@ NH.PARAMS = [
     { key: "hazeSharp",     def: 220.0, uniform: "u_hazeSharp",     type: "float", ui: { min: 20, max: 600, step: 10 } },
     { key: "hazeIntensity", def: 0.45,  uniform: "u_hazeIntensity", type: "float", ui: { min: 0, max: 1.5, step: 0.05 } },
     { key: "skyCurve",      def: 0.60,  uniform: "u_skyCurve",      type: "float", ui: { min: 0.2, max: 1.5, step: 0.05 } },
-    { key: "pixelRows",     def: 340,   ui: { min: 80, max: 600, step: 10 } },     // JS専用（描画解像度）
-    { key: "paletteSteps",  def: 22,    uniform: "u_paletteSteps",  type: "float", ui: { min: 2, max: 64, step: 1 } },
-    { key: "exposure",      def: 1.5,   uniform: "u_exposure",      type: "float", ui: { min: 0.3, max: 3, step: 0.05 } },  // 露出（Reinhardトーンマップ前）
+    { key: "pixelRows",     def: 440,   ui: { min: 80, max: 700, step: 10 } },     // JS専用（描画解像度。大きいほど鮮明）
+    { key: "paletteSteps",  def: 26,    uniform: "u_paletteSteps",  type: "float", ui: { min: 2, max: 64, step: 1 } },
+    { key: "exposure",      def: 1.7,   uniform: "u_exposure",      type: "float", ui: { min: 0.3, max: 3, step: 0.05 } },  // 露出（Reinhardトーンマップ前）
+    { key: "saturation",    def: 1.18,  uniform: "u_saturation",    type: "float", ui: { min: 0, max: 2, step: 0.02 } },  // 彩度（鮮明さ）
 
     // --- 月 ---
     { key: "moon",          def: true,  uniform: "u_moon",          type: "bool",  ui: { bool: true } },
@@ -73,7 +75,7 @@ NH.PARAMS = [
     // --- 遠くの都市 ---
     { key: "cityHeight",    def: 0.10,  uniform: "u_cityHeight",    type: "float", ui: { min: 0, max: 0.3, step: 0.005 } },
     { key: "cityCols",      def: 26.0,  uniform: "u_cityCols",      type: "float", ui: { min: 6, max: 80, step: 1 } },
-    { key: "cityParallax",  def: 0.12,  uniform: "u_cityParallax",  type: "float", ui: { min: 0, max: 0.5, step: 0.01 } }, // 進路の揺れに対する都市の流れ（視差）
+    { key: "cityParallax",  def: 0.12,  uniform: "u_cityParallax",  type: "float", ui: { min: 0, max: 0.5, step: 0.01 } }, // 都市の流れ幅（位相 u_cityPhase に乗る視差）
     { key: "windowBright",  def: 0.55,  uniform: "u_windowBright",  type: "float", ui: { min: 0, max: 2, step: 0.05 } },
     { key: "windowDensity", def: 0.35,  uniform: "u_windowDensity", type: "float", ui: { min: 0, max: 1, step: 0.02 } },
     { key: "beaconMinH",    def: 0.70,  uniform: "u_beaconMinH",    type: "float", ui: { min: 0.3, max: 1.0, step: 0.02 } }, // 航空障害灯がつく高さの閾値
