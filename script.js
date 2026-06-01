@@ -23,66 +23,67 @@
 
     // ---- フラグメントシェーダー：夜の高速道路（擬似3D + ドット絵化）----
     var FRAG = [
-        "precision highp float;",
+        // 一部モバイルGPUは highp 非対応なのでフォールバック
+        "#ifdef GL_FRAGMENT_PRECISION_HIGH",
+        "  precision highp float;",
+        "#else",
+        "  precision mediump float;",
+        "#endif",
         "uniform vec2  u_res;",
         "uniform float u_time;",
 
         "float hash(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }",
 
         "void main(){",
-        // --- ピクセル化：5px四方のブロックに量子化してドット感を出す ---
+        // --- ピクセル化：ドット感を出すためブロックに量子化 ---
         "    float PX = max(floor(u_res.y / 240.0), 3.0);",
         "    vec2 fc = (floor(gl_FragCoord.xy / PX) + 0.5) * PX;",
         "    vec2 uv = fc / u_res;",                       // 0..1, y は上方向
         "    float aspect = u_res.x / u_res.y;",
 
-        "    float horizon = 0.5;",
+        "    float horizon = 0.55;",                       // 地平線の高さ
         "    vec3 col;",
 
         "    if (uv.y > horizon) {",
         // ===== 夜空 =====
         "        float t = (uv.y - horizon) / (1.0 - horizon);",
-        "        col = mix(vec3(0.45, 0.10, 0.38), vec3(0.02, 0.01, 0.10), t);",  // 紫→暗
+        "        col = mix(vec3(0.52, 0.13, 0.44), vec3(0.02, 0.01, 0.10), t);", // 紫→暗
         // 星
         "        float s = hash(floor(fc / PX));",
-        "        if (s > 0.985) { col += vec3(0.9) * (0.5 + 0.5 * sin(u_time * 3.0 + s * 50.0)); }",
-        // 月＋ハロー
+        "        if (s > 0.984) { col += vec3(0.9) * (0.5 + 0.5 * sin(u_time * 3.0 + s * 50.0)); }",
+        // 月＋ハロー（aspect補正で真円に）
         "        vec2 mp = vec2((uv.x - 0.5) * aspect, uv.y);",
-        "        float md = distance(mp, vec2(0.52 * aspect, 0.82));",
-        "        col = mix(col, vec3(1.0, 0.96, 0.80), smoothstep(0.075, 0.0, md));",
-        "        col += vec3(1.0, 0.9, 0.7) * smoothstep(0.16, 0.075, md) * 0.22;",
+        "        float md = distance(mp, vec2(0.30 * aspect, 0.88));",
+        "        col = mix(col, vec3(1.0, 0.96, 0.80), smoothstep(0.06, 0.0, md));",
+        "        col += vec3(1.0, 0.9, 0.7) * smoothstep(0.14, 0.06, md) * 0.25;",
         "    } else {",
-        // ===== 路面（擬似3Dパース）=====
-        "        float road = horizon - uv.y;",            // 0(地平線)..0.5(手前)
-        "        float z = 1.0 / max(road, 0.0001);",       // 奥ほど大きい深度
-        "        float v = z * 1.3 + u_time * 3.0;",        // 手前に流れるスクロール量
+        // ===== 路面（擬似3Dパース・aspect非依存）=====
+        "        float hy = horizon - uv.y;",              // 0(地平線)..horizon(手前)
+        "        float persp = hy / horizon;",             // 0(遠)..1(手前)
+        "        float z = 1.0 / max(hy, 0.0008);",        // テクスチャ用の深度
+        "        float v = z * 0.9 + u_time * 3.0;",        // 手前に流れるスクロール量
 
         // ゆるいカーブ（遠方ほど横にずれる）
-        "        float bend = sin(u_time * 0.25) * 0.35;",
-        "        float center = bend * (z - 2.0) * 0.15;",
-        "        float ax = (uv.x - 0.5) * aspect - center;",
-        "        float adx = abs(ax);",
-        "        float halfW = road * 1.35;",               // 道路の半幅（手前ほど広い）
+        "        float curve = sin(u_time * 0.3) * 0.18 * (1.0 - persp);",
+        "        float cx = (uv.x - 0.5) - curve;",          // 画面中央基準（正規化）
+        "        float halfW = persp * 0.52 + 0.012;",       // 消失点から手前へ広がる三角形
+        "        float adx = abs(cx);",
 
-        // 路肩（草地）
-        "        col = vec3(0.05, 0.09, 0.06);",
+        // 地面（遠くは紫、手前は暗い草地）
+        "        col = mix(vec3(0.12, 0.05, 0.18), vec3(0.04, 0.09, 0.06), persp);",
 
         "        if (adx < halfW) {",
-        // アスファルト
-        "            col = vec3(0.09, 0.09, 0.12);",
-        "            float lane = ax / halfW;",              // -1..1
+        // アスファルト（夜でも道路と分かる明るさ＋わずかな紫）
+        "            col = mix(vec3(0.18, 0.11, 0.22), vec3(0.14, 0.14, 0.17), persp);",
+        "            float lane = cx / halfW;",              // 道路内 -1..1
         // 中央の黄色破線
-        "            if (abs(lane) < 0.08 && fract(v) < 0.5) { col = vec3(1.0, 0.82, 0.15); }",
+        "            if (abs(lane) < 0.06 && fract(v) < 0.5) { col = vec3(1.0, 0.85, 0.2); }",
         // 両端の白線（実線）
-        "            if (abs(abs(lane) - 0.9) < 0.06) { col = vec3(0.85, 0.9, 0.95); }",
-        "        } else if (adx < halfW + road * 0.16) {",
+        "            if (abs(abs(lane) - 0.92) < 0.06) { col = vec3(0.9, 0.93, 0.98); }",
+        "        } else if (adx < halfW + 0.03 + persp * 0.05) {",
         // 路肩の街灯（オレンジに点々と）
-        "            if (fract(v * 0.5) < 0.12) { col = vec3(1.0, 0.6, 0.2); }",
+        "            if (fract(v * 0.5) < 0.14) { col = vec3(1.0, 0.62, 0.2); }",
         "        }",
-
-        // 遠方を紫フォグでなじませる
-        "        float fog = smoothstep(0.0, 0.42, road);",
-        "        col = mix(vec3(0.28, 0.06, 0.24), col, fog);",
         "    }",
 
         // ドット絵風にパレットを段階化
