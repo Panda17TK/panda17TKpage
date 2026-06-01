@@ -86,13 +86,13 @@ void main(){
 
         // ===== 遠くの都市のシルエット＋瞬く窓明かり（2層で奥行き）=====
         // 横位置はアスペクト補正済みの sx を使う（縦長/横長で伸縮しない）。
-        // u_sway（道路の進路の揺れ）に連動してゆっくり流れる＝視差。連続関数なので継ぎ目で飛ばない。
+        // u_cityPhase（都市専用のゆっくりした位相）で流れる＝視差。連続関数なので継ぎ目で飛ばない。
         float sx = (uv.x - 0.5) * aspect;
         float horizonY = 0.5 - 0.5 * (sp / cp) / tanY;
         for (int L = 0; L < 2; L++) {
             float layer = float(L);
-            float scale = u_cityCols * (1.0 + layer * 0.7);              // 手前ほど大きいビル
-            float drift = u_sway * u_cityParallax * (1.0 + layer * 0.6); // 近層ほど大きく動く
+            float scale = u_cityCols * (1.0 + layer * 0.7);                    // 手前ほど大きいビル
+            float drift = u_cityPhase * u_cityParallax * (1.0 + layer * 0.6);  // 近層ほど大きく動く
             float maxH = u_cityHeight * (0.55 + layer * 0.75);
             float baseY = horizonY - layer * 0.004;
             float gx = (sx + drift) * scale;
@@ -190,6 +190,9 @@ void main(){
         }
     }
 
+    // 彩度を少し上げて全体を鮮明に
+    float lum = dot(col, vec3(0.299, 0.587, 0.114));
+    col = mix(vec3(lum), col, u_saturation);
     // 露出補正＋Reinhard トーンマップ：加算光の白飛びを抑え、ランプの暖色を保つ
     col *= u_exposure;
     col = col / (1.0 + col);
@@ -211,7 +214,7 @@ NH.buildFragment = function (opts) {
     head += opts.derivatives ? "#define AAW(x) (fwidth(x))\n" : "#define AAW(x) (0.0)\n";
 
     // エンジン uniform ＋ PARAMS 由来 uniform
-    var decls = "uniform vec2 u_res;\nuniform float u_scroll;\nuniform float u_sway;\nuniform float u_time;\n";
+    var decls = "uniform vec2 u_res;\nuniform float u_scroll;\nuniform float u_sway;\nuniform float u_time;\nuniform float u_cityPhase;\n";
     for (var i = 0; i < params.length; i++) {
         var p = params[i];
         if (p.uniform) decls += "uniform " + glType(p.type) + " " + p.uniform + ";\n";
