@@ -33,7 +33,7 @@
 
         "float hash(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }",
 
-        "const float HORIZON = 0.33;", // 路面すれすれのカメラで見上げる運転目線（水平線は下め）
+        "const float HORIZON = 0.48;", // 人がまっすぐ前を見て走っているような目線（地平線は中央付近）
         "const float SPEED   = 2.5;",  // 走行スピード
         "const float LSP     = 1.4;",  // 照明灯の間隔（ワールド単位）
 
@@ -78,9 +78,9 @@
         "        }",
         "    }",
 
-        // 道路の水平線をうっすら（淡い光のライン）
-        "    float hb = exp(-(uv.y - HORIZON) * (uv.y - HORIZON) * 2400.0);",
-        "    col += vec3(0.12, 0.15, 0.22) * hb * 0.22;",
+        // 地平線付近の暖色のかすみ（街明かりのモヤ／写真の雰囲気）
+        "    float hb = exp(-(uv.y - HORIZON) * (uv.y - HORIZON) * 1600.0);",
+        "    col += vec3(0.22, 0.13, 0.06) * hb * 0.45;",
 
         // ===== 道路照明灯（両脇・一定間隔）+ 道路の縁に平行な残光 =====
         "    vec3 lampCol = vec3(1.0, 0.72, 0.36);",
