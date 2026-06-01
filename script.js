@@ -59,7 +59,10 @@ function init() {
     const textureLoader = new THREE.TextureLoader();
     const textureFlare = textureLoader.load("textures/lensflare/lensflare0.png");
 
-    addLight(0.08, 0.3, 0.9, 0, 0, -1000);
+    // 複数のカラー光源で奥行きと彩りを出す (cyan / purple / warm)
+    addLight(0.52, 0.9, 0.7, 0, 0, -1000);   // cyan
+    addLight(0.74, 0.8, 0.7, -2500, 1500, -2500); // purple
+    addLight(0.95, 0.7, 0.6, 2500, -1200, -1800); // magenta/warm
 
     // ポイント光源を追加
     function addLight(h, s, l, x, y, z) {
@@ -91,13 +94,22 @@ function init() {
     controls = new FlyControls(camera, renderer.domElement);
 
     // 前後ろの速度
-    controls.movementSpeed = 2500;
+    controls.movementSpeed = 1500;
     // 横の速度
-    controls.rollSpeed = Math.PI / 40;
+    controls.rollSpeed = Math.PI / 60;
 
+    // リサイズ対応
+    window.addEventListener("resize", onWindowResize);
 
     animate();
 
+}
+
+// 画面リサイズに合わせてカメラとレンダラーを更新
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
 // マウス操作と連動するためのアニメーション
@@ -105,8 +117,33 @@ function animate() {
     requestAnimationFrame(animate);
     // フレーム毎の時間を取得
     const delta = clock.getDelta();
+    // 操作していないときもゆっくり漂うようにシーン全体を自動回転
+    // (カメラ操作と競合しないよう、カメラではなくシーンを回す)
+    scene.rotation.y += delta * 0.01;
+    scene.rotation.x += delta * 0.004;
     // マウス操作を更新
     controls.update(delta);
     renderer.render(scene, camera);
+}
+
+// ---------- UI: モバイルナビ & 年表示 ----------
+const toggle = document.querySelector(".nav__toggle");
+const links = document.querySelector(".nav__links");
+if (toggle && links) {
+    toggle.addEventListener("click", () => {
+        const open = links.classList.toggle("is-open");
+        toggle.setAttribute("aria-expanded", String(open));
+    });
+    links.addEventListener("click", (e) => {
+        if (e.target.tagName === "A") {
+            links.classList.remove("is-open");
+            toggle.setAttribute("aria-expanded", "false");
+        }
+    });
+}
+
+const yearEl = document.getElementById("year");
+if (yearEl) {
+    yearEl.textContent = new Date().getFullYear();
 }
 

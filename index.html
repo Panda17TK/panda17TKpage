@@ -1,31 +1,71 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panda17TK website</title>
+    <meta name="description" content="Panda17TK - my storeroom. Creative works, biography and links.">
+    <meta name="theme-color" content="#05060a">
+    <title>Panda17TK</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <header>
-        <nav>
-            <ul>
+        <nav class="nav">
+            <a href="index.html" class="nav__brand">Panda17TK</a>
+
+            <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+
+            <ul class="nav__links">
                 <li><a href="index.html">Home</a></li>
-                <li><a href="https://twitter.com/">Works</a></li>
-                <li><a href="https://twitter.com/">Biography</a></li>
-                <li><a href="https://github.com/Panda17TK">GitHub</a></li>
-                <li><a href="https://twitter.com/">Twitter</a></li>
-                <li><a href="https://www.instagram.com/">Instagram</a></li>
+                <li><a href="https://twitter.com/" target="_blank" rel="noopener">Works</a></li>
+                <li><a href="https://twitter.com/" target="_blank" rel="noopener">Biography</a></li>
+                <li><a href="https://github.com/Panda17TK" target="_blank" rel="noopener">GitHub</a></li>
+                <li><a href="https://twitter.com/" target="_blank" rel="noopener">Twitter</a></li>
+                <li><a href="https://www.instagram.com/" target="_blank" rel="noopener">Instagram</a></li>
             </ul>
         </nav>
     </header>
 
-    <main>
-        <h1>Panda17TK</h1>
-        <h3>my storeroom</h3>
+    <main class="hero">
+        <p class="hero__eyebrow">Welcome to</p>
+        <h1 class="hero__title">Panda17TK</h1>
+        <p class="hero__subtitle">my storeroom</p>
+
+        <div class="hero__cta">
+            <a href="https://github.com/Panda17TK" target="_blank" rel="noopener" class="btn btn--primary">View Works</a>
+            <a href="#" class="btn btn--ghost">Biography</a>
+        </div>
+
+        <ul class="hero__social" aria-label="Social links">
+            <li>
+                <a href="https://github.com/Panda17TK" target="_blank" rel="noopener" aria-label="GitHub">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.73.5.5 5.74.5 12.02c0 5.1 3.29 9.41 7.86 10.94.58.11.79-.25.79-.56 0-.27-.01-1.16-.02-2.1-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.17.08 1.78 1.2 1.78 1.2 1.03 1.78 2.71 1.26 3.37.97.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.18a11 11 0 0 1 2.9-.39c.98 0 1.97.13 2.9.39 2.2-1.49 3.17-1.18 3.17-1.18.63 1.58.23 2.75.11 3.04.74.81 1.19 1.83 1.19 3.09 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.07.78 2.16 0 1.56-.02 2.82-.02 3.2 0 .31.21.68.8.56A11.52 11.52 0 0 0 23.5 12.02C23.5 5.74 18.27.5 12 .5Z"/></svg>
+                </a>
+            </li>
+            <li>
+                <a href="https://twitter.com/" target="_blank" rel="noopener" aria-label="Twitter / X">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817-5.967 6.817H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117l11.966 15.644Z"/></svg>
+                </a>
+            </li>
+            <li>
+                <a href="https://www.instagram.com/" target="_blank" rel="noopener" aria-label="Instagram">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16Zm0 1.62c-3.15 0-3.52.01-4.76.07-.96.04-1.48.2-1.83.34-.46.18-.79.39-1.13.74-.35.34-.56.67-.74 1.13-.14.35-.3.87-.34 1.83-.06 1.24-.07 1.61-.07 4.76s.01 3.52.07 4.76c.04.96.2 1.48.34 1.83.18.46.39.79.74 1.13.34.35.67.56 1.13.74.35.14.87.3 1.83.34 1.24.06 1.61.07 4.76.07s3.52-.01 4.76-.07c.96-.04 1.48-.2 1.83-.34.46-.18.79-.39 1.13-.74.35-.34.56-.67.74-1.13.14-.35.3-.87.34-1.83.06-1.24.07-1.61.07-4.76s-.01-3.52-.07-4.76c-.04-.96-.2-1.48-.34-1.83a3.05 3.05 0 0 0-.74-1.13 3.05 3.05 0 0 0-1.13-.74c-.35-.14-.87-.3-1.83-.34-1.24-.06-1.61-.07-4.76-.07Zm0 2.76a5.46 5.46 0 1 1 0 10.92 5.46 5.46 0 0 1 0-10.92Zm0 1.62a3.84 3.84 0 1 0 0 7.68 3.84 3.84 0 0 0 0-7.68Zm5.65-2.91a1.28 1.28 0 1 1 0 2.55 1.28 1.28 0 0 1 0-2.55Z"/></svg>
+                </a>
+            </li>
+        </ul>
     </main>
+
+    <footer class="footer">
+        <span>&copy; <span id="year"></span> Panda17TK</span>
+        <span class="footer__hint">drag to fly through space</span>
+    </footer>
+
     <script src="script.js" type="module"></script>
 </body>
 </html>
