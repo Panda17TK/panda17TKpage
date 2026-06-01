@@ -338,6 +338,54 @@ header,
     }
 }
 
+@media (max-width: 480px) {
+    .nav {
+        top: 1rem;
+        padding: 0.6rem 1rem;
+        width: calc(100% - 1.6rem);
+    }
+
+    .hero {
+        padding: 0 1.1rem;
+    }
+
+    .hero__eyebrow {
+        letter-spacing: 0.3em;
+        font-size: 0.75rem;
+    }
+
+    .hero__cta {
+        margin-top: 1.8rem;
+    }
+
+    .btn {
+        padding: 0.7rem 1.4rem;
+        font-size: 0.85rem;
+    }
+
+    .hero__social {
+        margin-top: 2rem;
+        gap: 0.8rem;
+    }
+
+    .hero__social a {
+        width: 42px;
+        height: 42px;
+    }
+}
+
+/* very short / landscape phones: keep the hero from overflowing */
+@media (max-height: 520px) {
+    .hero {
+        justify-content: center;
+        gap: 0.2rem;
+    }
+
+    .hero__social {
+        margin-top: 1.4rem;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
