@@ -40,30 +40,33 @@ void main(){
     bool onRoad = false;
 
     if (dir.y < -0.0008) {
-        // ===== 地面（地平面 y = -camHeight との交点）=====
-        float t = -u_camHeight / dir.y;
-        float X = u_camX + dir.x * t;
-        float Z = dir.z * t;
-        float lane = (X - curveAt(Z)) / u_roadHalfWidth;
+        // ===== 道路面（y=0 相対）と、それより低い外の地面 =====
+        float tR = -u_camHeight / dir.y;                  // 道路面との交点
+        float Xr = u_camX + dir.x * tR;
+        float Zr = dir.z * tR;
+        float lane = (Xr - curveAt(Zr)) / u_roadHalfWidth;
         float laneAbs = abs(lane);
-        float fog = exp(-Z * u_fogDensity);
-        col = u_ground;
         float aa = max(AAW(lane), 0.004);
         float roadMask = 1.0 - smoothstep(1.0 - aa, 1.0 + aa, laneAbs);
-        if (roadMask > 0.001) {
-            onRoad = true;
-            vec3 road = u_asphalt;
-            // 中央破線（縦方向も AA）
-            float zc = (Z + u_scroll) / u_dashLength;
-            float dw = max(AAW(zc), 1e-4);
-            float f = fract(zc);
-            float dash = smoothstep(0.0, dw * 1.5, f) * (1.0 - smoothstep(0.5 - dw * 1.5, 0.5, f));
-            float center = (1.0 - smoothstep(0.035, 0.035 + aa, laneAbs)) * dash;
-            float edge = 1.0 - smoothstep(0.025, 0.025 + aa, abs(laneAbs - u_laneEdge));
-            road = mix(road, u_laneCol, clamp(max(center, edge), 0.0, 1.0));
-            col = mix(col, road, roadMask);
-        }
-        col *= fog;
+        onRoad = roadMask > 0.5;
+
+        // 道路の色（破線は縦方向も AA、塗り割合は dashDuty）
+        vec3 road = u_asphalt;
+        float zc = (Zr + u_scroll) / u_dashLength;
+        float dw = max(AAW(zc), 1e-4);
+        float f = fract(zc);
+        float dash = smoothstep(0.0, dw * 1.5, f) * (1.0 - smoothstep(u_dashDuty - dw * 1.5, u_dashDuty, f));
+        float center = (1.0 - smoothstep(0.035, 0.035 + aa, laneAbs)) * dash;
+        float edge = 1.0 - smoothstep(0.025, 0.025 + aa, abs(laneAbs - u_laneEdge));
+        road = mix(road, u_laneCol, clamp(max(center, edge), 0.0, 1.0));
+        road *= exp(-Zr * u_fogDensity);
+
+        // 外の地面：道路より u_roadRaise だけ低い面に交差させる
+        float tG = -(u_camHeight + u_roadRaise) / dir.y;
+        float Zg = dir.z * tG;
+        vec3 grnd = u_ground * exp(-Zg * u_fogDensity);
+
+        col = mix(grnd, road, roadMask);
     } else {
         // ===== 夜空 =====
         float t = clamp(dir.y / u_skyCurve, 0.0, 1.0);
@@ -91,7 +94,7 @@ void main(){
             float Xl = sd * (u_roadHalfWidth + u_lampSide) + curv - u_camX;
             vec3 hp = project(vec3(Xl, u_poleHeight - u_camHeight, Zrel), cp, sp, tanX, tanY);
             if (hp.z <= 0.05) continue;
-            vec3 bp = project(vec3(Xl, -u_camHeight, Zrel), cp, sp, tanX, tanY);
+            vec3 bp = project(vec3(Xl, -(u_camHeight + u_roadRaise), Zrel), cp, sp, tanX, tanY);
             vec3 ahp = project(vec3(sd * (u_roadHalfWidth + u_lampSide) + curveAt(Zrel * 1.4) - u_camX,
                                     u_poleHeight - u_camHeight, Zrel * 1.4), cp, sp, tanX, tanY);
             float pscale = clamp(1.0 / hp.z, 0.02, 2.5);
@@ -113,6 +116,11 @@ void main(){
             float bbT = b / wid;
             float glow = exp(-(aaT * aaT + bbT * bbT));
             col += u_lampCol * glow * clamp(u_glowBright * pscale, 0.08, u_glowBright) * lf;
+
+            // ランプ頭部の白熱コア（明かりをともす）
+            float coreR = u_glowSize * 0.7 * pscale + 0.001;
+            float core = exp(-dot(rel2, rel2) / (coreR * coreR));
+            col += mix(u_lampCol, vec3(1.0), 0.6) * core * u_lampCore * lf;
 
             // 支柱（AA 付き）
             float pw = u_poleWidth * clamp(pscale, 0.3, 1.5);
