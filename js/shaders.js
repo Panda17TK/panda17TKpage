@@ -107,6 +107,13 @@ void main(){
                     }
                 }
             }
+            // 航空障害灯：一定以上の高さのビル屋上に小さく目立つ赤い点滅灯
+            if (h > u_beaconMinH) {
+                vec2 bpos = vec2(((c + 0.5) / cols - 0.5) * aspect, top + 0.006);
+                float bd = distance(vec2((uv.x - 0.5) * aspect, uv.y), bpos);
+                float blink = 0.3 + 0.7 * pow(0.5 + 0.5 * sin(u_time * 2.2 + h * 12.0), 2.0);
+                col += u_beaconCol * exp(-(bd * bd) / (u_beaconSize * u_beaconSize)) * u_beaconBright * blink;
+            }
         }
     }
 
