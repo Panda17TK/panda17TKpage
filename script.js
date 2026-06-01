@@ -1,187 +1,170 @@
-import * as THREE from "./build/three.module.js";
+/* =============================================================
+   夜の高速道路を走るドット絵風背景
+   依存ライブラリなし・生WebGLで全画面フラグメントシェーダーを描画
+   ============================================================= */
+(function () {
+    "use strict";
 
-// ============================================================
-//  夜の高速道路を走るドット絵風シェーダー背景
-//  フルスクリーンの板ポリゴンにフラグメントシェーダーを描画
-// ============================================================
+    var canvas = document.getElementById("bg");
+    if (!canvas) return;
 
-let camera, scene, renderer, material;
-const clock = new THREE.Clock();
-
-init();
-
-function init() {
-    renderer = new THREE.WebGLRenderer({ antialias: false });
-    // ドット感を出したいので解像度はCSSピクセル基準（等倍）に固定
-    renderer.setPixelRatio(1);
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-
-    scene = new THREE.Scene();
-    // 画面いっぱいに板を出すための正射影カメラ
-    camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-
-    material = new THREE.ShaderMaterial({
-        uniforms: {
-            iTime: { value: 0 },
-            iResolution: { value: new THREE.Vector2() },
-        },
-        vertexShader: VERT,
-        fragmentShader: FRAG,
-    });
-
-    scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material));
-
-    onWindowResize();
-    window.addEventListener("resize", onWindowResize);
-
-    animate();
-}
-
-function onWindowResize() {
-    renderer.setPixelRatio(1);
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    material.uniforms.iResolution.value.set(window.innerWidth, window.innerHeight);
-}
-
-function animate() {
-    requestAnimationFrame(animate);
-    material.uniforms.iTime.value = clock.getElapsedTime();
-    renderer.render(scene, camera);
-}
-
-// ---------- シェーダー ----------
-const VERT = /* glsl */ `
-    void main() {
-        gl_Position = vec4(position, 1.0);
-    }
-`;
-
-const FRAG = /* glsl */ `
-    precision highp float;
-
-    uniform float iTime;
-    uniform vec2  iResolution;
-
-    // 乱数（星のきらめき用）
-    float hash(vec2 p) {
-        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+    var gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+    // WebGLが無い環境ではCSSのフォールバック背景に任せる
+    if (!gl) {
+        console.warn("WebGL is not available; using CSS fallback background.");
+        return;
     }
 
-    // 限定パレットに丸めてドット絵風に
-    vec3 quantize(vec3 c, float steps) {
-        return floor(c * steps + 0.5) / steps;
-    }
+    // ---- 頂点シェーダー：画面を覆う巨大三角形 ----
+    var VERT = [
+        "attribute vec2 p;",
+        "void main(){ gl_Position = vec4(p, 0.0, 1.0); }"
+    ].join("\n");
 
-    void main() {
-        // --- ピクセル化：内部解像度を縦220ドット相当に落とす ---
-        float pixels = 220.0;
-        float px = max(iResolution.y / pixels, 1.0);
-        vec2 fragCoord = floor(gl_FragCoord.xy / px) * px;
+    // ---- フラグメントシェーダー：夜の高速道路（擬似3D + ドット絵化）----
+    var FRAG = [
+        "precision highp float;",
+        "uniform vec2  u_res;",
+        "uniform float u_time;",
 
-        vec2 uv = fragCoord / iResolution.xy;     // 0..1
-        float aspect = iResolution.x / iResolution.y;
-        float x = (uv.x - 0.5) * aspect;          // 中央0の横座標
-        float y = uv.y;                           // 下0 上1
+        "float hash(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }",
 
-        float horizon = 0.55;
-        float speed   = iTime * 2.2;              // 走行スピード
-        vec3 col;
+        "void main(){",
+        // --- ピクセル化：5px四方のブロックに量子化してドット感を出す ---
+        "    float PX = max(floor(u_res.y / 240.0), 3.0);",
+        "    vec2 fc = (floor(gl_FragCoord.xy / PX) + 0.5) * PX;",
+        "    vec2 uv = fc / u_res;",                       // 0..1, y は上方向
+        "    float aspect = u_res.x / u_res.y;",
 
-        if (y > horizon) {
-            // ===== 空（シンセウェーブな夜空）=====
-            float t = (y - horizon) / (1.0 - horizon);
-            vec3 skyTop    = vec3(0.03, 0.02, 0.12);
-            vec3 skyBottom = vec3(0.45, 0.10, 0.38);
-            col = mix(skyBottom, skyTop, t);
+        "    float horizon = 0.5;",
+        "    vec3 col;",
 
-            // 星
-            vec2 cell = floor(fragCoord / px);
-            float s = hash(cell);
-            float twinkle = 0.5 + 0.5 * sin(iTime * 3.0 + s * 30.0);
-            if (s > 0.987 && y > horizon + 0.04) {
-                col += vec3(0.9) * twinkle;
-            }
+        "    if (uv.y > horizon) {",
+        // ===== 夜空 =====
+        "        float t = (uv.y - horizon) / (1.0 - horizon);",
+        "        col = mix(vec3(0.45, 0.10, 0.38), vec3(0.02, 0.01, 0.10), t);",  // 紫→暗
+        // 星
+        "        float s = hash(floor(fc / PX));",
+        "        if (s > 0.985) { col += vec3(0.9) * (0.5 + 0.5 * sin(u_time * 3.0 + s * 50.0)); }",
+        // 月＋ハロー
+        "        vec2 mp = vec2((uv.x - 0.5) * aspect, uv.y);",
+        "        float md = distance(mp, vec2(0.52 * aspect, 0.82));",
+        "        col = mix(col, vec3(1.0, 0.96, 0.80), smoothstep(0.075, 0.0, md));",
+        "        col += vec3(1.0, 0.9, 0.7) * smoothstep(0.16, 0.075, md) * 0.22;",
+        "    } else {",
+        // ===== 路面（擬似3Dパース）=====
+        "        float road = horizon - uv.y;",            // 0(地平線)..0.5(手前)
+        "        float z = 1.0 / max(road, 0.0001);",       // 奥ほど大きい深度
+        "        float v = z * 1.3 + u_time * 3.0;",        // 手前に流れるスクロール量
 
-            // 月
-            vec2 moon = vec2(0.55 * aspect, 0.86);
-            float md = distance(vec2(x, y), moon);
-            col = mix(col, vec3(1.0, 0.95, 0.78), smoothstep(0.075, 0.0, md));
-            col += vec3(0.9, 0.85, 0.6) * smoothstep(0.16, 0.075, md) * 0.25; // ハロー
+        // ゆるいカーブ（遠方ほど横にずれる）
+        "        float bend = sin(u_time * 0.25) * 0.35;",
+        "        float center = bend * (z - 2.0) * 0.15;",
+        "        float ax = (uv.x - 0.5) * aspect - center;",
+        "        float adx = abs(ax);",
+        "        float halfW = road * 1.35;",               // 道路の半幅（手前ほど広い）
 
-            // 地平線の街明かり
-            col += vec3(0.55, 0.12, 0.40) * pow(1.0 - t, 5.0);
-        } else {
-            // ===== 地面と道路（擬似3D）=====
-            float z = 1.0 / (horizon - y);        // 遠いほど大きい
-            float scroll = z + speed;             // 手前に流れる
+        // 路肩（草地）
+        "        col = vec3(0.05, 0.09, 0.06);",
 
-            // ゆるいカーブ（遠方ほど横にずれる）
-            float bend = sin(iTime * 0.25);
-            float roadCenter = clamp(bend * 0.18 * (z - 1.8), -1.4, 1.4);
+        "        if (adx < halfW) {",
+        // アスファルト
+        "            col = vec3(0.09, 0.09, 0.12);",
+        "            float lane = ax / halfW;",              // -1..1
+        // 中央の黄色破線
+        "            if (abs(lane) < 0.08 && fract(v) < 0.5) { col = vec3(1.0, 0.82, 0.15); }",
+        // 両端の白線（実線）
+        "            if (abs(abs(lane) - 0.9) < 0.06) { col = vec3(0.85, 0.9, 0.95); }",
+        "        } else if (adx < halfW + road * 0.16) {",
+        // 路肩の街灯（オレンジに点々と）
+        "            if (fract(v * 0.5) < 0.12) { col = vec3(1.0, 0.6, 0.2); }",
+        "        }",
 
-            float roadHalfWorld = 0.95;
-            float halfW = roadHalfWorld / z;       // 遠いほど細い
-            float dx = x - roadCenter;
-
-            // 草地（チェッカーで流れを表現）
-            float chk = mod(floor(scroll * 1.5) + floor((x + 4.0) * 3.0), 2.0);
-            vec3 grass = mix(vec3(0.04, 0.10, 0.07), vec3(0.06, 0.16, 0.10), chk);
-            col = grass;
-
-            if (abs(dx) < halfW) {
-                // アスファルト
-                col = vec3(0.07, 0.07, 0.10);
-                float ln = dx / halfW;            // 道路内 -1..1
-
-                // 中央の黄色破線
-                float dash = step(0.5, fract(scroll * 0.5));
-                if (abs(ln) < 0.07 && dash > 0.5) {
-                    col = vec3(0.98, 0.82, 0.18);
-                }
-                // 両端の白線
-                if (abs(abs(ln) - 0.92) < 0.05) {
-                    col = vec3(0.85, 0.88, 0.95);
-                }
-            } else {
-                // 路肩の街灯（オレンジに点々と光る）
-                float lamp = fract(scroll * 0.5);
-                float edge = halfW + 0.05;
-                if (abs(abs(dx) - edge) < 0.025 && lamp < 0.12) {
-                    col = vec3(1.0, 0.6, 0.2);
-                    col += vec3(1.0, 0.5, 0.15) * 0.5;
-                }
-            }
-
-            // 遠方を紫のフォグでなじませる
-            float fog = clamp(y / horizon, 0.0, 1.0);
-            col = mix(vec3(0.30, 0.06, 0.26), col, fog);
-        }
+        // 遠方を紫フォグでなじませる
+        "        float fog = smoothstep(0.0, 0.42, road);",
+        "        col = mix(vec3(0.28, 0.06, 0.24), col, fog);",
+        "    }",
 
         // ドット絵風にパレットを段階化
-        col = quantize(col, 14.0);
+        "    col = floor(col * 16.0 + 0.5) / 16.0;",
+        "    gl_FragColor = vec4(col, 1.0);",
+        "}"
+    ].join("\n");
 
-        gl_FragColor = vec4(col, 1.0);
-    }
-`;
-
-// ---------- UI: モバイルナビ & 年表示 ----------
-const toggle = document.querySelector(".nav__toggle");
-const links = document.querySelector(".nav__links");
-if (toggle && links) {
-    toggle.addEventListener("click", () => {
-        const open = links.classList.toggle("is-open");
-        toggle.setAttribute("aria-expanded", String(open));
-    });
-    links.addEventListener("click", (e) => {
-        if (e.target.tagName === "A") {
-            links.classList.remove("is-open");
-            toggle.setAttribute("aria-expanded", "false");
+    function compile(type, src) {
+        var sh = gl.createShader(type);
+        gl.shaderSource(sh, src);
+        gl.compileShader(sh);
+        if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+            console.error("Shader compile error:", gl.getShaderInfoLog(sh));
         }
-    });
-}
+        return sh;
+    }
 
-const yearEl = document.getElementById("year");
-if (yearEl) {
-    yearEl.textContent = new Date().getFullYear();
-}
+    var prog = gl.createProgram();
+    gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+    gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+        console.error("Program link error:", gl.getProgramInfoLog(prog));
+        return;
+    }
+    gl.useProgram(prog);
+
+    // 全画面三角形
+    var buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    var loc = gl.getAttribLocation(prog, "p");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+    var uRes = gl.getUniformLocation(prog, "u_res");
+    var uTime = gl.getUniformLocation(prog, "u_time");
+
+    function resize() {
+        // CSSピクセル基準で描画（ドット感を保ちつつ負荷も軽く）
+        var w = canvas.clientWidth || window.innerWidth;
+        var h = canvas.clientHeight || window.innerHeight;
+        if (canvas.width !== w || canvas.height !== h) {
+            canvas.width = w;
+            canvas.height = h;
+        }
+        gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    var start = performance.now();
+    function frame() {
+        resize();
+        gl.uniform2f(uRes, canvas.width, canvas.height);
+        gl.uniform1f(uTime, (performance.now() - start) / 1000);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        requestAnimationFrame(frame);
+    }
+    frame();
+})();
+
+/* ---------- UI: モバイルナビ & 年表示 ---------- */
+(function () {
+    var toggle = document.querySelector(".nav__toggle");
+    var links = document.querySelector(".nav__links");
+    if (toggle && links) {
+        toggle.addEventListener("click", function () {
+            var open = links.classList.toggle("is-open");
+            toggle.setAttribute("aria-expanded", String(open));
+        });
+        links.addEventListener("click", function (e) {
+            if (e.target.tagName === "A") {
+                links.classList.remove("is-open");
+                toggle.setAttribute("aria-expanded", "false");
+            }
+        });
+    }
+
+    var yearEl = document.getElementById("year");
+    if (yearEl) {
+        yearEl.textContent = new Date().getFullYear();
+    }
+})();
