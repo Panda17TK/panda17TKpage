@@ -54,9 +54,6 @@
         // 夜空（ネオンなし・濃紺→ほぼ黒）
         "        float t = (uv.y - HORIZON) / (1.0 - HORIZON);",
         "        col = mix(vec3(0.05, 0.06, 0.12), vec3(0.005, 0.005, 0.03), t);",
-        // 星
-        "        float s = hash(floor(fc / PX));",
-        "        if (s > 0.984) { col += vec3(0.9) * (0.5 + 0.5 * sin(u_time * 3.0 + s * 50.0)); }",
         // 月＋ハロー
         "        float md = distance(P, vec2(0.30 * aspect, 0.86));",
         "        col = mix(col, vec3(0.95, 0.95, 0.85), smoothstep(0.06, 0.0, md));",
