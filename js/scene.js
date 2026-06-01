@@ -72,7 +72,8 @@ NH.createScene = function (canvas, config) {
         U = {
             u_res: gl.getUniformLocation(prog, "u_res"),
             u_scroll: gl.getUniformLocation(prog, "u_scroll"),
-            u_sway: gl.getUniformLocation(prog, "u_sway")
+            u_sway: gl.getUniformLocation(prog, "u_sway"),
+            u_time: gl.getUniformLocation(prog, "u_time")
         };
         for (var i = 0; i < params.length; i++) {
             if (params[i].uniform) U[params[i].uniform] = gl.getUniformLocation(prog, params[i].uniform);
@@ -122,6 +123,7 @@ NH.createScene = function (canvas, config) {
         gl.uniform2f(U.u_res, canvas.width, canvas.height);
         gl.uniform1f(U.u_scroll, scrollDist % wrapMeters);
         gl.uniform1f(U.u_sway, Math.sin(animTime * config.swaySpeed));
+        gl.uniform1f(U.u_time, animTime % 100.0);   // 窓の瞬き用（有界）
         gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
 
