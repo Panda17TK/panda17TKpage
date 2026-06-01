@@ -9,7 +9,12 @@ NH.VERT = "attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }";
 
 // フラグメント本体（uniform 宣言は buildFragment が前置する）
 NH.FRAG_BODY = `
-float hash(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }
+// mediump でも破綻しにくいハッシュ（sin と巨大係数を排除：Dave Hoskins hash21）
+float hash(vec2 p){
+    vec3 q = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973));
+    q += dot(q, q.yzx + 33.33);
+    return fract((q.x + q.y) * q.z);
+}
 
 float curveAt(float z){ return u_sway * u_swayAmount * z; }
 
@@ -80,19 +85,23 @@ void main(){
         }
 
         // ===== 遠くの都市のシルエット＋瞬く窓明かり（2層で奥行き）=====
+        // 横位置はアスペクト補正済みの sx を使う（縦長/横長で伸縮しない）。
+        // u_sway（道路の進路の揺れ）に連動してゆっくり流れる＝視差。連続関数なので継ぎ目で飛ばない。
+        float sx = (uv.x - 0.5) * aspect;
         float horizonY = 0.5 - 0.5 * (sp / cp) / tanY;
         for (int L = 0; L < 2; L++) {
             float layer = float(L);
-            float cols = u_cityCols * (1.0 + layer * 0.7);   // 手前ほど大きいビル
+            float scale = u_cityCols * (1.0 + layer * 0.7);              // 手前ほど大きいビル
+            float drift = u_sway * u_cityParallax * (1.0 + layer * 0.6); // 近層ほど大きく動く
             float maxH = u_cityHeight * (0.55 + layer * 0.75);
             float baseY = horizonY - layer * 0.004;
-            float gx = uv.x * cols;
+            float gx = (sx + drift) * scale;
             float c = floor(gx);
+            float wx = fract(gx);
             float h = hash(vec2(c * 1.7, 5.0 + layer * 11.0));
             float top = baseY + maxH * (0.2 + 0.8 * h);
             if (uv.y >= baseY && uv.y <= top) {
                 col = mix(col, u_cityCol * (0.7 + 0.5 * layer), 0.9);   // シルエット
-                float wx = fract(gx);
                 if (wx > 0.16 && wx < 0.84) {                          // 建物の縁は窓なし
                     float winCols = 3.0 + layer * 2.0;
                     float cellH = 0.010;
@@ -109,8 +118,9 @@ void main(){
             }
             // 航空障害灯：一定以上の高さのビルのうち一部の屋上に小さく目立つ赤い点滅灯
             if (h > u_beaconMinH && hash(vec2(c, 71.0 + layer * 17.0)) < u_beaconChance) {
-                vec2 bpos = vec2(((c + 0.5) / cols - 0.5) * aspect, top + 0.006);
-                float bd = distance(vec2((uv.x - 0.5) * aspect, uv.y), bpos);
+                float sxc = (c + 0.5) / scale - drift;                  // ビル中心の横位置（アスペクト空間）
+                vec2 bpos = vec2(sxc, top + 0.006);
+                float bd = distance(vec2(sx, uv.y), bpos);
                 float blink = 0.3 + 0.7 * pow(0.5 + 0.5 * sin(u_time * 2.2 + h * 12.0), 2.0);
                 col += u_beaconCol * exp(-(bd * bd) / (u_beaconSize * u_beaconSize)) * u_beaconBright * blink;
             }
@@ -180,6 +190,9 @@ void main(){
         }
     }
 
+    // 露出補正＋Reinhard トーンマップ：加算光の白飛びを抑え、ランプの暖色を保つ
+    col *= u_exposure;
+    col = col / (1.0 + col);
     // ドット絵風にパレット段階化
     col = floor(col * u_paletteSteps + 0.5) / u_paletteSteps;
     gl_FragColor = vec4(col, 1.0);

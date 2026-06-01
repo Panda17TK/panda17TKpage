@@ -39,7 +39,7 @@ NH.PARAMS = [
     { key: "dashLength",    def: 14.0,  uniform: "u_dashLength",    type: "float", ui: { min: 1, max: 30, step: 0.5 } },
     { key: "dashDuty",      def: 0.32,  uniform: "u_dashDuty",      type: "float", ui: { min: 0.1, max: 0.9, step: 0.02 } }, // 塗り割合（小さいほど隙間が長い）
     { key: "laneEdge",      def: 0.93,  uniform: "u_laneEdge",      type: "float", ui: { min: 0.5, max: 1.0, step: 0.01 } },
-    { key: "swayAmount",    def: 0.0,   uniform: "u_swayAmount",    type: "float", ui: { min: 0, max: 0.02, step: 0.001 } },
+    { key: "swayAmount",    def: 0.006, uniform: "u_swayAmount",    type: "float", ui: { min: 0, max: 0.02, step: 0.001 } },  // 進路の緩やかなカーブ（0で直線）
 
     // --- 道路照明灯 ---
     { key: "lampSpacing",   def: 30.0,  uniform: "u_lampSpacing",   type: "float", ui: { min: 5, max: 80, step: 1 } },
@@ -62,6 +62,7 @@ NH.PARAMS = [
     { key: "skyCurve",      def: 0.60,  uniform: "u_skyCurve",      type: "float", ui: { min: 0.2, max: 1.5, step: 0.05 } },
     { key: "pixelRows",     def: 340,   ui: { min: 80, max: 600, step: 10 } },     // JS専用（描画解像度）
     { key: "paletteSteps",  def: 22,    uniform: "u_paletteSteps",  type: "float", ui: { min: 2, max: 64, step: 1 } },
+    { key: "exposure",      def: 1.5,   uniform: "u_exposure",      type: "float", ui: { min: 0.3, max: 3, step: 0.05 } },  // 露出（Reinhardトーンマップ前）
 
     // --- 月 ---
     { key: "moon",          def: true,  uniform: "u_moon",          type: "bool",  ui: { bool: true } },
@@ -72,6 +73,7 @@ NH.PARAMS = [
     // --- 遠くの都市 ---
     { key: "cityHeight",    def: 0.10,  uniform: "u_cityHeight",    type: "float", ui: { min: 0, max: 0.3, step: 0.005 } },
     { key: "cityCols",      def: 26.0,  uniform: "u_cityCols",      type: "float", ui: { min: 6, max: 80, step: 1 } },
+    { key: "cityParallax",  def: 0.12,  uniform: "u_cityParallax",  type: "float", ui: { min: 0, max: 0.5, step: 0.01 } }, // 進路の揺れに対する都市の流れ（視差）
     { key: "windowBright",  def: 0.55,  uniform: "u_windowBright",  type: "float", ui: { min: 0, max: 2, step: 0.05 } },
     { key: "windowDensity", def: 0.35,  uniform: "u_windowDensity", type: "float", ui: { min: 0, max: 1, step: 0.02 } },
     { key: "beaconMinH",    def: 0.70,  uniform: "u_beaconMinH",    type: "float", ui: { min: 0.3, max: 1.0, step: 0.02 } }, // 航空障害灯がつく高さの閾値

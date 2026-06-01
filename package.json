@@ -6,6 +6,7 @@
   "scripts": {
     "check": "node --check js/config.js && node --check js/shaders.js && node --check js/scene.js && node --check js/ui.js && node --check js/devpanel.js && node --check js/app.js",
     "lint": "eslint js/",
+    "test:uniforms": "node test/check-uniforms.js",
     "test:render": "node test/render-smoke.js",
     "serve": "python3 -m http.server 8000"
   },
