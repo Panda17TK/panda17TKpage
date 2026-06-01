@@ -9,6 +9,8 @@ NH.VERT = "attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }";
 
 // フラグメント本体（uniform 宣言は buildFragment が前置する）
 NH.FRAG_BODY = `
+float hash(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }
+
 float curveAt(float z){ return u_sway * u_swayAmount * z; }
 
 // ワールド相対座標 → 画面 uv（戻り値 .z は視空間Z。>0で前方）
