@@ -33,7 +33,7 @@
 
         "float hash(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }",
 
-        "const float HORIZON = 0.5;",  // 地平線＝車の目線
+        "const float HORIZON = 0.40;", // 低いカメラ＋やや見上げる目線（水平線は下めに）
         "const float SPEED   = 2.5;",  // 走行スピード
         "const float LSP     = 1.4;",  // 照明灯の間隔（ワールド単位）
 
@@ -68,7 +68,7 @@
         "        float v = z * 0.9 + u_time * SPEED;",
         "        float curve = sin(u_time * 0.3) * 0.18 * (1.0 - persp);",
         "        float cx = (uv.x - 0.5) - curve;",
-        "        float halfW = persp * 0.52 + 0.012;",
+        "        float halfW = persp * 0.58 + 0.012;",
         "        float adx = abs(cx);",
         // 地面（ニュートラルな暗色。紫を排除）
         "        col = mix(vec3(0.06, 0.06, 0.10), vec3(0.04, 0.08, 0.06), persp);",
@@ -80,6 +80,10 @@
         "            if (abs(laneAbs - 0.92) < 0.06) { col = vec3(0.9, 0.93, 0.98); }",
         "        }",
         "    }",
+
+        // 道路の水平線をうっすら（淡い光のライン）
+        "    float hb = exp(-(uv.y - HORIZON) * (uv.y - HORIZON) * 2400.0);",
+        "    col += vec3(0.12, 0.15, 0.22) * hb * 0.22;",
 
         // ===== 道路照明灯（両脇・一定間隔）+ 道路の縁に平行な残光 =====
         "    vec3 lampCol = vec3(1.0, 0.72, 0.36);",
@@ -97,7 +101,7 @@
         "        float perspk = hyk / HORIZON;",
         "        float scl = pow(perspk, 1.4);",                   // 遠いほど一気に小さく
         "        float curvek = sin(u_time * 0.3) * 0.18 * (1.0 - perspk);",
-        "        float halfWk = perspk * 0.52 + 0.012;",
+        "        float halfWk = perspk * 0.58 + 0.012;",
         "        float headH  = 0.05 + 0.17 * perspk;",
         "        float bright = perspk * 1.4 + 0.12;",
         "        for (int sgn = 0; sgn < 2; sgn++) {",
