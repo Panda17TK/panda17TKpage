@@ -13,7 +13,7 @@
             scene.start();
             // ?dev でパラメータ調整パネルを表示
             if (/[?&]dev\b/.test(location.search) && NH.createDevPanel) {
-                NH.createDevPanel(NH.config, scene, NH.schema);
+                NH.createDevPanel(NH.config, scene, NH.PARAMS);
             }
         } else {
             // WebGL 不可 → CSS のフォールバック背景に任せる

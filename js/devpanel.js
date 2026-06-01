@@ -1,12 +1,12 @@
 /* =============================================================
    開発用パラメータパネル（依存ライブラリなし）
-   URL に ?dev を付けたときだけ表示される。
-   スライダー / カラーで config を即時変更 → scene.applyConfig()。
-   "Copy config JSON" で調整値を config.js に貼り戻せる。
+   URL に ?dev を付けたときだけ表示。コントロールは NH.PARAMS の
+   ui 定義から自動生成される（slider / color / checkbox）。
+   "Copy config JSON" で現在値を NH.OVERRIDES に貼り戻せる。
    ============================================================= */
 window.NH = window.NH || {};
 
-NH.createDevPanel = function (config, scene, schema) {
+NH.createDevPanel = function (config, scene, params) {
     function toHex(c) {
         function h(v) { return ("0" + Math.round(v * 255).toString(16)).slice(-2); }
         return "#" + h(c[0]) + h(c[1]) + h(c[2]);
@@ -20,41 +20,45 @@ NH.createDevPanel = function (config, scene, schema) {
     var panel = document.createElement("div");
     panel.style.cssText = "position:fixed;top:10px;left:10px;z-index:9999;background:rgba(10,12,20,.86);" +
         "color:#dfe3ee;font:11px/1.5 monospace;padding:10px;border:1px solid rgba(255,255,255,.18);" +
-        "border-radius:10px;max-height:90vh;overflow:auto;width:240px;backdrop-filter:blur(6px)";
+        "border-radius:10px;max-height:90vh;overflow:auto;width:248px;backdrop-filter:blur(6px)";
 
     var title = document.createElement("div");
     title.textContent = "night-highway · dev";
     title.style.cssText = "font-weight:bold;margin-bottom:6px";
     panel.appendChild(title);
 
-    schema.forEach(function (item) {
+    params.forEach(function (p) {
+        if (!p.ui) return;
         var row = document.createElement("label");
         row.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:6px;margin:3px 0";
         var name = document.createElement("span");
-        name.textContent = item.key;
+        name.textContent = p.key;
         name.style.cssText = "flex:1;overflow:hidden;text-overflow:ellipsis";
         row.appendChild(name);
 
-        if (item.color) {
+        if (p.ui.color) {
             var ci = document.createElement("input");
             ci.type = "color";
-            ci.value = toHex(config[item.key]);
-            ci.addEventListener("input", function () {
-                config[item.key] = fromHex(ci.value);
-                scene.applyConfig();
-            });
+            ci.value = toHex(config[p.key]);
+            ci.addEventListener("input", function () { config[p.key] = fromHex(ci.value); scene.applyConfig(); });
             row.appendChild(ci);
+        } else if (p.ui.bool) {
+            var cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.checked = !!config[p.key];
+            cb.addEventListener("change", function () { config[p.key] = cb.checked; scene.applyConfig(); });
+            row.appendChild(cb);
         } else {
             var val = document.createElement("span");
-            val.textContent = String(config[item.key]);
-            val.style.cssText = "width:46px;text-align:right";
+            val.textContent = String(config[p.key]);
+            val.style.cssText = "width:48px;text-align:right";
             var r = document.createElement("input");
             r.type = "range";
-            r.min = item.min; r.max = item.max; r.step = item.step;
-            r.value = config[item.key];
-            r.style.width = "92px";
+            r.min = p.ui.min; r.max = p.ui.max; r.step = p.ui.step;
+            r.value = config[p.key];
+            r.style.width = "90px";
             r.addEventListener("input", function () {
-                config[item.key] = parseFloat(r.value);
+                config[p.key] = parseFloat(r.value);
                 val.textContent = r.value;
                 scene.applyConfig();
             });
@@ -71,8 +75,8 @@ NH.createDevPanel = function (config, scene, schema) {
         var out = JSON.stringify(config, null, 2);
         if (navigator.clipboard) navigator.clipboard.writeText(out);
         console.log(out);
-        copy.textContent = "Copied!";
-        setTimeout(function () { copy.textContent = "Copy config JSON"; }, 1200);
+        copy.textContent = "Copied! (paste into NH.OVERRIDES)";
+        setTimeout(function () { copy.textContent = "Copy config JSON"; }, 1500);
     });
     panel.appendChild(copy);
 

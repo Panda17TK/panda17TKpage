@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # headless-gl (gl) のビルド/実行に必要なシステムライブラリ
+      - name: Install system deps for headless-gl
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential libgl1-mesa-dev libxi-dev libxext-dev libglu1-mesa-dev xvfb
+
+      - name: Install npm deps
+        run: npm install
+
+      - name: Syntax check
+        run: npm run check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Headless render smoke test
+        run: xvfb-run -a -s "-screen 0 1280x1024x24" npm run test:render
