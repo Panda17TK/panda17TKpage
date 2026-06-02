@@ -63,7 +63,7 @@ NH.PARAMS = [
     { key: "skyCurve",      def: 0.60,  uniform: "u_skyCurve",      type: "float", ui: { min: 0.2, max: 1.5, step: 0.05 } },
     { key: "pixelRows",     def: 440,   ui: { min: 80, max: 700, step: 10 } },     // JS専用（描画解像度。大きいほど鮮明）
     { key: "paletteSteps",  def: 26,    uniform: "u_paletteSteps",  type: "float", ui: { min: 2, max: 64, step: 1 } },
-    { key: "exposure",      def: 1.7,   uniform: "u_exposure",      type: "float", ui: { min: 0.3, max: 3, step: 0.05 } },  // 露出（Reinhardトーンマップ前）
+    { key: "exposure",      def: 1.45,  uniform: "u_exposure",      type: "float", ui: { min: 0.3, max: 3, step: 0.05 } },  // 背景の露出（ライトはトーンマップ後に加算）
     { key: "saturation",    def: 1.18,  uniform: "u_saturation",    type: "float", ui: { min: 0, max: 2, step: 0.02 } },  // 彩度（鮮明さ）
 
     // --- 月 ---
