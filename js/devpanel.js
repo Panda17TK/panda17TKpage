@@ -2,11 +2,14 @@
    開発用パラメータパネル（依存ライブラリなし）
    URL に ?dev を付けたときだけ表示。コントロールは NH.PARAMS の
    ui 定義から自動生成される（slider / color / checkbox）。
-   "Copy config JSON" で現在値を NH.OVERRIDES に貼り戻せる。
+   調整値は localStorage に自動保存され、リロード後も復元される
+   （?dev 時のみ）。"Reset" で既定値に戻す。
    ============================================================= */
 window.NH = window.NH || {};
 
 NH.createDevPanel = function (config, scene, params) {
+    var STORE_KEY = "nh-dev-overrides";
+
     function toHex(c) {
         function h(v) { return ("0" + Math.round(v * 255).toString(16)).slice(-2); }
         return "#" + h(c[0]) + h(c[1]) + h(c[2]);
@@ -16,6 +19,27 @@ NH.createDevPanel = function (config, scene, params) {
                 parseInt(hex.substr(3, 2), 16) / 255,
                 parseInt(hex.substr(5, 2), 16) / 255];
     }
+
+    // 保存値を読み込み、検証(buildConfig)してから現行 config へ反映
+    function loadSaved() {
+        try {
+            var s = window.localStorage && localStorage.getItem(STORE_KEY);
+            if (!s) return;
+            var merged = NH.buildConfig(params, JSON.parse(s));
+            params.forEach(function (p) { config[p.key] = merged[p.key]; });
+            scene.applyConfig();
+        } catch (e) { /* localStorage 不可・破損 JSON は無視 */ }
+    }
+    function save() {
+        try {
+            if (!window.localStorage) return;
+            var o = {};
+            params.forEach(function (p) { o[p.key] = config[p.key]; });
+            localStorage.setItem(STORE_KEY, JSON.stringify(o));
+        } catch (e) { /* 容量超過等は無視 */ }
+    }
+
+    loadSaved();
 
     var panel = document.createElement("div");
     panel.style.cssText = "position:fixed;top:10px;left:10px;z-index:9999;background:rgba(10,12,20,.86);" +
@@ -40,13 +64,13 @@ NH.createDevPanel = function (config, scene, params) {
             var ci = document.createElement("input");
             ci.type = "color";
             ci.value = toHex(config[p.key]);
-            ci.addEventListener("input", function () { config[p.key] = fromHex(ci.value); scene.applyConfig(); });
+            ci.addEventListener("input", function () { config[p.key] = fromHex(ci.value); scene.applyConfig(); save(); });
             row.appendChild(ci);
         } else if (p.ui.bool) {
             var cb = document.createElement("input");
             cb.type = "checkbox";
             cb.checked = !!config[p.key];
-            cb.addEventListener("change", function () { config[p.key] = cb.checked; scene.applyConfig(); });
+            cb.addEventListener("change", function () { config[p.key] = cb.checked; scene.applyConfig(); save(); });
             row.appendChild(cb);
         } else {
             var val = document.createElement("span");
@@ -61,6 +85,7 @@ NH.createDevPanel = function (config, scene, params) {
                 config[p.key] = parseFloat(r.value);
                 val.textContent = r.value;
                 scene.applyConfig();
+                save();
             });
             row.appendChild(r);
             row.appendChild(val);
@@ -79,6 +104,15 @@ NH.createDevPanel = function (config, scene, params) {
         setTimeout(function () { copy.textContent = "Copy config JSON"; }, 1500);
     });
     panel.appendChild(copy);
+
+    var reset = document.createElement("button");
+    reset.textContent = "Reset to defaults";
+    reset.style.cssText = "margin-top:6px;width:100%;cursor:pointer";
+    reset.addEventListener("click", function () {
+        try { if (window.localStorage) localStorage.removeItem(STORE_KEY); } catch (e) { /* noop */ }
+        location.reload();
+    });
+    panel.appendChild(reset);
 
     document.body.appendChild(panel);
 };

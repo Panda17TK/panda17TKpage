@@ -11,19 +11,22 @@
     <!-- favicon（夜の高速道路モチーフ） -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
-    <!-- Open Graph / Twitter Card（SNS 共有時のプレビュー） -->
+    <!-- Open Graph / Twitter Card（SNS 共有時のプレビュー。多くの SNS は SVG 非対応のため PNG を使用） -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="Panda17TK">
     <meta property="og:description" content="my storeroom — endless night drive.">
     <meta property="og:url" content="https://panda17tk.github.io/panda17TKpage/">
-    <meta property="og:image" content="https://panda17tk.github.io/panda17TKpage/favicon.svg">
-    <meta name="twitter:card" content="summary">
+    <meta property="og:image" content="https://panda17tk.github.io/panda17TKpage/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Panda17TK">
     <meta name="twitter:description" content="my storeroom — endless night drive.">
-    <meta name="twitter:image" content="https://panda17tk.github.io/panda17TKpage/favicon.svg">
+    <meta name="twitter:image" content="https://panda17tk.github.io/panda17TKpage/og-image.png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bruno+Ace&family=Inter:wght@300;400;500;600&display=swap">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -35,11 +38,11 @@
         <nav class="nav">
             <a href="index.html" class="nav__brand">Panda17TK</a>
 
-            <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false">
+            <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
                 <span></span><span></span><span></span>
             </button>
 
-            <ul class="nav__links">
+            <ul class="nav__links" id="nav-links">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="https://github.com/Panda17TK?tab=repositories" target="_blank" rel="noopener noreferrer">Works</a></li>
                 <li><a href="https://github.com/Panda17TK" target="_blank" rel="noopener noreferrer">Biography</a></li>
