@@ -44,6 +44,7 @@ void main(){
     vec3 dir = vec3(rd.x, rd.y * cp + rd.z * sp, -rd.y * sp + rd.z * cp);
 
     vec3 col;
+    vec3 light = vec3(0.0);   // 加算ライト：トーンマップ後に重ねる→コアが純白まで届き glowBright が実際に効く
     bool onRoad = false;
 
     if (dir.y < -0.0008) {
@@ -164,18 +165,18 @@ void main(){
             float aaT = (a > 0.0) ? a / tail : a / wid;
             float bbT = b / wid;
             float glow = exp(-(aaT * aaT + bbT * bbT));
-            col += u_lampCol * glow * clamp(u_glowBright * pscale, 0.08, u_glowBright) * lf;
 
-            // ランプ頭部の白熱コア（明かりをともす）
-            float coreR = u_glowSize * 0.7 * pscale + 0.001;
-            float core = exp(-dot(rel2, rel2) / (coreR * coreR));
-            col += mix(u_lampCol, vec3(1.0), 0.6) * core * u_lampCore * lf;
-
-            // 支柱（AA 付き）
+            // 支柱（AA 付き）：ライトより先に背景へ描く（頭部中心の暗点を防ぐ）
             float pw = u_poleWidth * clamp(pscale, 0.3, 1.5);
             float pd = segDist(Pa, Ba, Ha);
             float paa = max(AAW(pd), 0.0008);
             col = mix(col, u_poleCol, (1.0 - smoothstep(pw, pw + paa, pd)) * 0.8 * lf);
+
+            // グロー（残光）と頭部の白熱コアは light に加算（トーンマップ後に重ねる）
+            light += u_lampCol * glow * clamp(u_glowBright * pscale, 0.08, u_glowBright) * lf;
+            float coreR = u_glowSize * 0.7 * pscale + 0.001;
+            float core = exp(-dot(rel2, rel2) / (coreR * coreR));
+            light += mix(u_lampCol, vec3(1.0), 0.6) * core * u_lampCore * lf;
 
             // 路面の反射：照明灯の真下（車道側）に円状の明かり。路面は基本暗いまま
             if (onRoad) {
@@ -184,18 +185,21 @@ void main(){
                     vec2 Pc = vec2(pc.x * aspect, pc.y);
                     float poolR = u_poolSize * pscale + 0.006;
                     float d = distance(Pa, Pc);
-                    col += u_lampCol * exp(-(d * d) / (poolR * poolR)) * u_poolIntensity * clamp(pscale, 0.1, 1.6) * lf;
+                    light += u_lampCol * exp(-(d * d) / (poolR * poolR)) * u_poolIntensity * clamp(pscale, 0.1, 1.6) * lf;
                 }
             }
         }
     }
 
-    // 彩度を少し上げて全体を鮮明に
+    // 彩度を少し上げて全体を鮮明に（背景のみ）
     float lum = dot(col, vec3(0.299, 0.587, 0.114));
     col = mix(vec3(lum), col, u_saturation);
-    // 露出補正＋Reinhard トーンマップ：加算光の白飛びを抑え、ランプの暖色を保つ
+    // 露出補正＋Reinhard トーンマップ（背景のみ）
     col *= u_exposure;
     col = col / (1.0 + col);
+    // 道路照明などのライトをトーンマップ後に重ねる：コアは純白(=眩しさ)まで届き、暖色の裾も残る
+    col += light;
+    col = min(col, vec3(1.0));
     // ドット絵風にパレット段階化
     col = floor(col * u_paletteSteps + 0.5) / u_paletteSteps;
     gl_FragColor = vec4(col, 1.0);
