@@ -49,12 +49,12 @@ NH.PARAMS = [
     { key: "poleHeight",    def: 10.0,  uniform: "u_poleHeight",    type: "float", ui: { min: 2, max: 20, step: 0.5 } },
     { key: "lampCount",     def: 16,    uniform: "u_lampCount",     type: "int",   ui: { min: 1, max: 32, step: 1 } },
     { key: "lampFade",      def: 0.80,  uniform: "u_lampFade",      type: "float", ui: { min: 0, max: 1, step: 0.01 } }, // 最遠の灯をフェードし始める割合
-    { key: "lampCore",      def: 4.2,   uniform: "u_lampCore",      type: "float", ui: { min: 0, max: 6, step: 0.1 } },  // ランプ頭部の白熱コア（明かり）
+    { key: "lampCore",      def: 5.2,   uniform: "u_lampCore",      type: "float", ui: { min: 0, max: 8, step: 0.1 } },  // ランプ頭部の白熱コア（明かり）
     { key: "glowSize",      def: 0.012, uniform: "u_glowSize",      type: "float", ui: { min: 0.002, max: 0.05, step: 0.001 } },
     { key: "tail",          def: 0.22,  uniform: "u_tail",          type: "float", ui: { min: 0.0, max: 0.6, step: 0.01 } },
-    { key: "glowBright",    def: 5.2,   uniform: "u_glowBright",    type: "float", ui: { min: 0.2, max: 10, step: 0.1 } },
+    { key: "glowBright",    def: 6.6,   uniform: "u_glowBright",    type: "float", ui: { min: 0.2, max: 12, step: 0.1 } },
     { key: "poleWidth",     def: 0.0030, uniform: "u_poleWidth",    type: "float", ui: { min: 0.001, max: 0.02, step: 0.0005 } },
-    { key: "poolIntensity", def: 0.28,  uniform: "u_poolIntensity", type: "float", ui: { min: 0, max: 1, step: 0.01 } },  // 照明灯の真下の円状の明かり
+    { key: "poolIntensity", def: 0.34,  uniform: "u_poolIntensity", type: "float", ui: { min: 0, max: 1, step: 0.01 } },  // 照明灯の真下の円状の明かり
     { key: "poolSize",      def: 0.12,  uniform: "u_poolSize",      type: "float", ui: { min: 0.02, max: 0.4, step: 0.01 } }, // その円の大きさ
 
     // --- 大気 / 見た目（旧ハードコード値を config 化）---
