@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bruno+Ace&family=Inter:wght@300;400;500;600&display=swap');
+/* フォントは index.html の <link> で読み込む（@import は描画ブロッキングのため廃止） */
 
 :root {
     --fg: #f3f4f8;

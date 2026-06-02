@@ -4,10 +4,12 @@
   "private": true,
   "description": "Animated dot-art night-highway homepage (dependency-free WebGL).",
   "scripts": {
-    "check": "node --check js/config.js && node --check js/shaders.js && node --check js/scene.js && node --check js/ui.js && node --check js/devpanel.js && node --check js/app.js",
+    "check": "node --check js/config.js && node --check js/shaders.js && node --check js/scene.js && node --check js/ui.js && node --check js/devpanel.js && node --check js/app.js && node --check scripts/make-og.js && node --check test/check-html.js",
     "lint": "eslint js/",
     "test:uniforms": "node test/check-uniforms.js",
+    "test:html": "node test/check-html.js",
     "test:render": "node test/render-smoke.js",
+    "make:og": "node scripts/make-og.js",
     "serve": "python3 -m http.server 8000"
   },
   "devDependencies": {

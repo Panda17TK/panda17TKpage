@@ -26,7 +26,8 @@ NH.PARAMS = [
     // --- 動き（JS専用：uniform 無し）---
     { key: "speed",         def: 16.0,  ui: { min: 0, max: 60, step: 0.5 } },
     { key: "swaySpeed",     def: 0.25,  ui: { min: 0, max: 1, step: 0.05 } },
-    { key: "cityFlowRate",  def: 0.3,   ui: { min: 0, max: 1, step: 0.05 } },  // 都市の流れ速度（swaySpeed に対する倍率。JS で u_cityPhase を生成）
+    { key: "cityFlowRate",  def: 0.3,   ui: { min: 0, max: 1, step: 0.05 } },  // 都市の揺れ速度（swaySpeed に対する倍率。JS で u_cityPhase を生成）
+    { key: "citySpeed",     def: 0.015, ui: { min: 0, max: 0.2, step: 0.005 } }, // 前進に伴う遠景都市の平行移動速度（アスペクトX/秒。JS で u_cityScroll を生成）
 
     // --- カメラ ---
     { key: "camHeight",     def: 1.4,   uniform: "u_camHeight",     type: "float", ui: { min: 0.2, max: 10, step: 0.1 } },
