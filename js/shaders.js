@@ -135,6 +135,43 @@ void main(){
     // 地平線の暖色かすみ（真の地平線 dir.y≈0 に沿う）
     col += u_hazeCol * exp(-(dir.y * dir.y) * u_hazeSharp) * u_hazeIntensity;
 
+    // ===== 道路脇の塀（左右の垂直な壁。x=±(roadHalfWidth+offset) の平面と交差）=====
+    if (u_wall > 0.5 && abs(dir.x) > 1e-4) {
+        float wallBestT = 1e9;
+        vec3 wallShade = vec3(0.0);
+        bool wallHit = false;
+        float tgRoad = (dir.y < -0.0008) ? (-u_camHeight / dir.y) : 1e9; // 道路面までの距離（手前遮蔽判定用）
+        for (int s = 0; s < 2; s++) {
+            float sgn = (s == 0) ? -1.0 : 1.0;
+            float baseX = sgn * (u_roadHalfWidth + u_wallOffset);
+            float t = (baseX - u_camX) / dir.x;
+            if (t <= 0.0) continue;
+            float zhit = t * dir.z;
+            if (zhit <= 0.0) continue;
+            // 道路のカーブに合わせて壁の X 位置を補正して再交差
+            float wx = baseX + curveAt(zhit);
+            t = (wx - u_camX) / dir.x;
+            if (t <= 0.0) continue;
+            zhit = t * dir.z;
+            if (zhit <= 0.0) continue;
+            float yhit = u_camHeight + t * dir.y;
+            if (yhit < 0.0 || yhit > u_wallHeight) continue;  // 壁の上下からはみ出したら背景
+            if (t >= tgRoad) continue;                        // 道路面が手前にあるなら見えない
+            if (t >= wallBestT) continue;
+            wallBestT = t;
+            wallHit = true;
+            float fog = exp(-zhit * u_fogDensity);
+            float yn = clamp(yhit / u_wallHeight, 0.0, 1.0);
+            vec3 c = mix(u_wallCol * 0.6, u_wallCol, yn);                 // 下ほど暗い
+            c = mix(c, u_wallTopCol, smoothstep(0.90, 1.0, yn));         // 笠木（上端）の明るい縁
+            float fz = fract(zhit / 3.0);                                // 3m ごとのパネル継ぎ目
+            float seam = smoothstep(0.0, 0.05, fz) * (1.0 - smoothstep(0.95, 1.0, fz));
+            c *= mix(0.78, 1.0, seam);
+            wallShade = c * fog;
+        }
+        if (wallHit) { col = wallShade; onRoad = false; }
+    }
+
     // ===== 道路照明灯（ワールド座標を順投影）=====
     float kStart = floor(u_scroll / u_lampSpacing) + 1.0;
     for (int i = 0; i < 32; i++) {

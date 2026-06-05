@@ -84,26 +84,12 @@ header,
     z-index: 3;
 }
 
-.nav__brand {
-    font-family: var(--display);
-    font-size: 1.15rem;
-    letter-spacing: 1.5px;
-    text-decoration: none;
-    color: #f6feff;
-    /* ネオン管のような多層グロー */
-    text-shadow:
-        0 0 4px #ffffff,
-        0 0 10px var(--accent),
-        0 0 22px var(--accent),
-        0 0 38px var(--accent-2);
-    animation: neonFlicker 7s infinite;
-}
-
 .nav__links {
     display: flex;
     align-items: center;
     gap: 1.5rem;
     list-style: none;
+    animation: neonFlicker 7s infinite;
 }
 
 .nav__links a {
@@ -161,16 +147,6 @@ header,
     justify-content: flex-start;
     text-align: center;
     padding: clamp(4.5rem, 16vh, 11rem) 1.5rem 0;
-}
-
-.hero__subtitle {
-    margin-top: 0;
-    font-size: clamp(1.05rem, 2.6vw, 1.4rem);
-    font-weight: 300;
-    letter-spacing: 0.25em;
-    color: var(--muted);
-    opacity: 0;
-    animation: rise 1s ease 0.2s forwards;
 }
 
 .hero__cta {
