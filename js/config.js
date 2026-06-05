@@ -43,6 +43,11 @@ NH.PARAMS = [
     { key: "laneEdge",      def: 0.93,  uniform: "u_laneEdge",      type: "float", ui: { min: 0.5, max: 1.0, step: 0.01 } },
     { key: "swayAmount",    def: 0.006, uniform: "u_swayAmount",    type: "float", ui: { min: 0, max: 0.02, step: 0.001 } },  // 進路の緩やかなカーブ（0で直線）
 
+    // --- 道路脇の塀（左右の垂直な壁）---
+    { key: "wall",          def: true,  uniform: "u_wall",          type: "bool",  ui: { bool: true } },
+    { key: "wallHeight",    def: 1.6,   uniform: "u_wallHeight",    type: "float", ui: { min: 0.2, max: 4, step: 0.1 } },   // 塀の高さ(m)
+    { key: "wallOffset",    def: 0.5,   uniform: "u_wallOffset",    type: "float", ui: { min: 0, max: 4, step: 0.1 } },     // 路端から塀までの距離(m)
+
     // --- 道路照明灯 ---
     { key: "lampSpacing",   def: 30.0,  uniform: "u_lampSpacing",   type: "float", ui: { min: 5, max: 80, step: 1 } },
     { key: "lampSide",      def: 2.0,   uniform: "u_lampSide",      type: "float", ui: { min: 0, max: 10, step: 0.25 } },
@@ -89,6 +94,8 @@ NH.PARAMS = [
     { key: "skyHorizon", def: [0.05, 0.06, 0.12],   uniform: "u_skyHorizon", type: "color", ui: { color: true } },
     { key: "ground",     def: [0.05, 0.07, 0.06],   uniform: "u_ground",     type: "color", ui: { color: true } },
     { key: "asphalt",    def: [0.11, 0.11, 0.14],   uniform: "u_asphalt",    type: "color", ui: { color: true } },
+    { key: "wallCol",    def: [0.12, 0.12, 0.15],   uniform: "u_wallCol",    type: "color", ui: { color: true } },
+    { key: "wallTopCol", def: [0.30, 0.31, 0.38],   uniform: "u_wallTopCol", type: "color", ui: { color: true } },
     { key: "laneCol",    def: [0.90, 0.92, 0.97],   uniform: "u_laneCol",    type: "color", ui: { color: true } },
     { key: "lampCol",    def: [1.00, 0.72, 0.36],   uniform: "u_lampCol",    type: "color", ui: { color: true } },
     { key: "hazeCol",    def: [0.22, 0.13, 0.06],   uniform: "u_hazeCol",    type: "color", ui: { color: true } },
