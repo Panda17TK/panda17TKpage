@@ -9,6 +9,15 @@
     --glass-border: rgba(255, 255, 255, 0.14);
     --display: "Bruno Ace", sans-serif;
     --body: "Inter", system-ui, sans-serif;
+
+    /* ナビ（右上ネオン）— ここを変えれば位置・サイズ・色をまとめて調整できる */
+    --nav-top: 1.4rem;          /* 上端からの距離 */
+    --nav-inset: 1.8rem;        /* 右端からの距離 */
+    --nav-gap: 1.4rem;          /* 項目間 */
+    --nav-link-size: 0.92rem;
+    --neon-fg: #e9fbff;         /* リンク文字色 */
+    --neon: var(--accent);      /* ネオンの主色 */
+    --neon-2: var(--accent-2);  /* ホバー時の差し色 */
 }
 
 * {
@@ -62,63 +71,59 @@ header,
     z-index: 2;
 }
 
-/* ---------- Navigation（右上・ネオンサイン風）---------- */
+/* ---------- Navigation（右上・ネオンサイン風）----------
+   レイアウトは CSS 変数で調整。点滅は filter(brightness) で行い、
+   モバイル開閉の opacity と衝突しないようにしている。 */
 .nav {
     position: fixed;
-    top: 1.5rem;
-    right: 1.8rem;
-    left: auto;
-    transform: none;
-    width: auto;
+    top: var(--nav-top);
+    right: var(--nav-inset);
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    gap: 1.7rem;
-    padding: 0;
-    border-radius: 0;
-    background: none;
-    border: 0;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    box-shadow: none;
+    gap: var(--nav-gap);
     z-index: 3;
 }
 
 .nav__links {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: var(--nav-gap);
+    margin: 0;
+    padding: 0;
     list-style: none;
-    animation: neonFlicker 7s infinite;
 }
 
 .nav__links a {
-    position: relative;
-    color: #e6fbff;
+    display: inline-block;
+    color: var(--neon-fg);
     text-decoration: none;
-    font-size: 0.92rem;
+    font-size: var(--nav-link-size);
     font-weight: 500;
     letter-spacing: 1px;
+    white-space: nowrap;
     text-shadow:
         0 0 3px rgba(255, 255, 255, 0.5),
         0 0 9px rgba(125, 249, 255, 0.55),
         0 0 18px rgba(125, 249, 255, 0.35);
+    /* 点滅は brightness のみ（不透明度には触れない） */
+    animation: neonFlicker 7s infinite;
     transition: color 0.25s ease, text-shadow 0.25s ease;
 }
 
-.nav__links a:hover {
+.nav__links a:hover,
+.nav__links a:focus-visible {
     color: #ffffff;
     text-shadow:
         0 0 4px #ffffff,
-        0 0 12px var(--accent),
-        0 0 26px var(--accent),
-        0 0 44px var(--accent-2);
+        0 0 12px var(--neon),
+        0 0 26px var(--neon),
+        0 0 44px var(--neon-2);
 }
 
-/* ネオンらしい微かなちらつき */
+/* ネオンらしい微かなちらつき（opacity ではなく brightness を揺らす）*/
 @keyframes neonFlicker {
-    0%, 19%, 21%, 23%, 54%, 56%, 100% { opacity: 1; }
-    20%, 22%, 55% { opacity: 0.68; }
+    0%, 18%, 22%, 25%, 53%, 57%, 100% { filter: brightness(1); }
+    20%, 24%, 55% { filter: brightness(0.72); }
 }
 
 .nav__toggle {
@@ -134,8 +139,9 @@ header,
 .nav__toggle span {
     width: 24px;
     height: 2px;
-    background: var(--fg);
+    background: var(--neon-fg);
     border-radius: 2px;
+    box-shadow: 0 0 6px var(--neon);
 }
 
 /* ---------- Hero ---------- */
@@ -255,29 +261,36 @@ header,
         display: flex;
     }
 
+    /* メニューはトグル直下のドロップダウン。開閉は opacity/transform、
+       点滅は各リンクの brightness なので干渉しない。 */
     .nav__links {
         position: absolute;
-        top: calc(100% + 0.6rem);
+        top: calc(100% + 0.7rem);
         right: 0;
         flex-direction: column;
-        align-items: flex-start;
+        align-items: flex-end;
         gap: 1.1rem;
-        padding: 1.3rem 1.6rem;
-        border-radius: 18px;
-        background: rgba(10, 12, 20, 0.92);
+        padding: 1.2rem 1.4rem;
+        border-radius: 16px;
+        background: rgba(8, 10, 18, 0.92);
         border: 1px solid var(--glass-border);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
-        transform: translateY(-10px);
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
+        transform-origin: top right;
+        transform: translateY(-8px) scale(0.98);
         opacity: 0;
+        visibility: hidden;
         pointer-events: none;
-        transition: transform 0.28s ease, opacity 0.28s ease;
+        transition: opacity 0.25s ease, transform 0.25s ease, visibility 0s linear 0.25s;
     }
 
     .nav__links.is-open {
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
         opacity: 1;
+        visibility: visible;
         pointer-events: auto;
+        transition: opacity 0.25s ease, transform 0.25s ease;
     }
 
     .footer { justify-content: center; }
@@ -285,10 +298,10 @@ header,
 }
 
 @media (max-width: 480px) {
-    .nav {
-        top: 1rem;
-        padding: 0.6rem 1rem;
-        width: calc(100% - 1.6rem);
+    :root {
+        --nav-top: 1rem;
+        --nav-inset: 1rem;
+        --nav-link-size: 0.98rem;   /* タップしやすく少し大きめ */
     }
 
     .hero { padding: 0 1.1rem; }
