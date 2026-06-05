@@ -34,6 +34,39 @@
     <!-- 夜の高速道路シェーダー背景（生WebGL・装飾要素）-->
     <canvas id="bg" aria-hidden="true"></canvas>
 
+    <!-- 運転席コックピット（フロントガラス越しの視点を演出する装飾オーバーレイ）-->
+    <div class="cockpit" aria-hidden="true">
+        <!-- ルーフ／Aピラー／ダッシュボード（アスペクトに合わせて伸縮）-->
+        <svg class="cockpit__frame" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <defs>
+                <linearGradient id="dashGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#08090f"/>
+                    <stop offset="1" stop-color="#010206"/>
+                </linearGradient>
+            </defs>
+            <path class="cockpit__fill" d="M0,0 H100 V4 C70,9 30,9 0,4 Z"/>          <!-- ルーフ上端 -->
+            <path class="cockpit__fill" d="M0,0 L16,3 L7,50 L0,68 Z"/>               <!-- 左Aピラー -->
+            <path class="cockpit__fill" d="M100,0 L84,3 L93,50 L100,68 Z"/>          <!-- 右Aピラー -->
+            <path d="M0,72 C28,86 72,86 100,72 L100,100 L0,100 Z" fill="url(#dashGrad)"/> <!-- ダッシュボード -->
+            <path class="cockpit__edge" d="M0,72 C28,86 72,86 100,72" fill="none"/>  <!-- ダッシュ上端の淡いハイライト -->
+        </svg>
+
+        <!-- ルームミラー -->
+        <svg class="cockpit__mirror" viewBox="0 0 120 40">
+            <rect x="2" y="2" width="116" height="30" rx="15"/>
+        </svg>
+
+        <!-- ステアリング（上端のリムだけが見える）-->
+        <svg class="cockpit__wheel" viewBox="0 0 300 300">
+            <g fill="none" stroke-linecap="round">
+                <circle class="cockpit__rim" cx="150" cy="150" r="132"/>
+                <circle class="cockpit__rimlight" cx="150" cy="150" r="132"/>
+                <path class="cockpit__spoke" d="M150,150 L42,205 M150,150 L258,205 M150,150 L150,30"/>
+            </g>
+            <circle class="cockpit__hub" cx="150" cy="150" r="28"/>
+        </svg>
+    </div>
+
     <header>
         <nav class="nav">
             <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">

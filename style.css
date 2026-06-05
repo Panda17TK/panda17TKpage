@@ -155,6 +155,62 @@ header,
     padding: clamp(4.5rem, 16vh, 11rem) 1.5rem 0;
 }
 
+/* ---------- 運転席コックピット（装飾オーバーレイ）----------
+   背景シーンは触らず、その上にフロントガラス越しの枠を重ねる。
+   色・サイズは下の変数で調整できる。 */
+.cockpit {
+    position: fixed;
+    inset: 0;
+    z-index: 2;            /* 背景(0)/ビネット(1)より上、ナビ(3)/フッター(4)より下 */
+    pointer-events: none;  /* クリックは常に背後へ通す */
+    --cockpit-fill: #05060c;                    /* 内装シルエットの色 */
+    --cockpit-line: rgba(125, 249, 255, 0.16);  /* ダッシュ上端のハイライト */
+    --cockpit-trim: #0b0e17;                     /* ステアリングのリム/スポーク */
+    --wheel-size: min(560px, 86vw);
+    --wheel-drop: 45%;     /* ステアリングを下へ逃がす量（大きいほど隠れる）*/
+}
+
+.cockpit__frame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.cockpit__fill { fill: var(--cockpit-fill); }
+
+.cockpit__edge {
+    stroke: var(--cockpit-line);
+    stroke-width: 1.2;
+    vector-effect: non-scaling-stroke;   /* 伸縮しても線幅一定 */
+}
+
+.cockpit__mirror {
+    position: absolute;
+    top: 1.6vh;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(150px, 32vw);
+    height: auto;
+    fill: var(--cockpit-fill);
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+}
+
+.cockpit__wheel {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: var(--wheel-size);
+    height: auto;                                   /* 正方形 viewBox → 円形を維持 */
+    transform: translate(-50%, var(--wheel-drop));  /* 下端を画面外へ逃がし上リムだけ見せる */
+}
+
+.cockpit__rim { stroke: var(--cockpit-trim); stroke-width: 26; }
+.cockpit__rimlight { stroke: rgba(150, 225, 255, 0.10); stroke-width: 3; }
+.cockpit__spoke { stroke: var(--cockpit-trim); stroke-width: 18; }
+.cockpit__hub { fill: var(--cockpit-trim); }
+
 /* ---------- Footer ---------- */
 .footer {
     position: fixed;
@@ -168,6 +224,7 @@ header,
     letter-spacing: 0.5px;
     color: var(--muted);
     pointer-events: none;
+    z-index: 4;            /* ダッシュボードより前面に文字を出す */
 }
 
 .footer__hint::before {
