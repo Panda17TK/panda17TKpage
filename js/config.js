@@ -36,7 +36,8 @@ NH.PARAMS = [
     { key: "laneOffset",    def: -4.0,  uniform: "u_camX",          type: "float", ui: { min: -12, max: 12, step: 0.5 } },
 
     // --- 道路 ---
-    { key: "roadHalfWidth", def: 8.0,   uniform: "u_roadHalfWidth", type: "float", ui: { min: 2, max: 20, step: 0.5 } },
+    { key: "roadHalfWidth", def: 9.0,   uniform: "u_roadHalfWidth", type: "float", ui: { min: 2, max: 20, step: 0.5 } },
+    { key: "lanes",         def: 3,     uniform: "u_laneCount",     type: "int",   ui: { min: 1, max: 6, step: 1 } },   // 車線数（破線で等分）
     { key: "roadRaise",     def: 0.25,  uniform: "u_roadRaise",     type: "float", ui: { min: 0, max: 2, step: 0.05 } },  // 外の地面より道路を高く
     { key: "dashLength",    def: 14.0,  uniform: "u_dashLength",    type: "float", ui: { min: 1, max: 30, step: 0.5 } },
     { key: "dashDuty",      def: 0.32,  uniform: "u_dashDuty",      type: "float", ui: { min: 0.1, max: 0.9, step: 0.02 } }, // 塗り割合（小さいほど隙間が長い）
