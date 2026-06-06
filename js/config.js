@@ -89,9 +89,18 @@ NH.PARAMS = [
     { key: "beaconSize",    def: 0.006, uniform: "u_beaconSize",    type: "float", ui: { min: 0.002, max: 0.02, step: 0.001 } },
     { key: "beaconBright",  def: 1.7,   uniform: "u_beaconBright",  type: "float", ui: { min: 0, max: 4, step: 0.1 } },
 
+    // --- 薄雲 ---
+    { key: "cloud",         def: true,  uniform: "u_cloud",         type: "bool",  ui: { bool: true } },
+    { key: "cloudOpacity",  def: 0.26,  uniform: "u_cloudOpacity",  type: "float", ui: { min: 0, max: 1, step: 0.02 } },   // 雲の濃さ
+    { key: "cloudCover",    def: 0.52,  uniform: "u_cloudCover",    type: "float", ui: { min: 0.2, max: 0.95, step: 0.02 } }, // 雲量の閾値（大きいほど少なく薄く）
+    { key: "cloudScale",    def: 1.7,   uniform: "u_cloudScale",    type: "float", ui: { min: 0.4, max: 5, step: 0.1 } },    // 雲のディテールの細かさ
+    { key: "cloudStretch",  def: 3.2,   uniform: "u_cloudStretch",  type: "float", ui: { min: 1, max: 8, step: 0.2 } },     // 横方向の引き伸ばし（大きいほど水平に流れる）
+    { key: "cloudDrift",    def: 0.18,  uniform: "u_cloudDrift",    type: "float", ui: { min: 0, max: 1, step: 0.02 } },    // 揺れに合わせた横流れ量
+
     // --- 色 ---
     { key: "skyTop",     def: [0.005, 0.005, 0.03], uniform: "u_skyTop",     type: "color", ui: { color: true } },
     { key: "skyHorizon", def: [0.05, 0.06, 0.12],   uniform: "u_skyHorizon", type: "color", ui: { color: true } },
+    { key: "cloudCol",   def: [0.26, 0.28, 0.36],   uniform: "u_cloudCol",   type: "color", ui: { color: true } },
     { key: "ground",     def: [0.05, 0.07, 0.06],   uniform: "u_ground",     type: "color", ui: { color: true } },
     { key: "asphalt",    def: [0.11, 0.11, 0.14],   uniform: "u_asphalt",    type: "color", ui: { color: true } },
     { key: "wallCol",    def: [0.12, 0.12, 0.15],   uniform: "u_wallCol",    type: "color", ui: { color: true } },

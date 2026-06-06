@@ -16,6 +16,20 @@ float hash(vec2 p){
     return fract((q.x + q.y) * q.z);
 }
 
+// 薄雲用の value noise と fbm
+float vnoise(vec2 p){
+    vec2 i = floor(p), f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    float a = hash(i), b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0)), d = hash(i + vec2(1.0, 1.0));
+    return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+}
+float fbm(vec2 p){
+    float v = 0.0, a = 0.5;
+    for (int i = 0; i < 4; i++){ v += a * vnoise(p); p *= 2.0; a *= 0.5; }
+    return v;
+}
+
 float curveAt(float z){ return u_sway * u_swayAmount * z; }
 
 // ワールド相対座標 → 画面 uv（戻り値 .z は視空間Z。>0で前方）
@@ -84,6 +98,18 @@ void main(){
             float md = distance(vec2((uv.x - 0.5) * aspect, uv.y), vec2(u_moonX * aspect, u_moonY));
             col = mix(col, u_moonCol, smoothstep(u_moonSize, 0.0, md));
             col += u_moonCol * smoothstep(u_moonSize * 2.4, u_moonSize, md) * 0.18;
+        }
+
+        // ===== 薄雲（地平線〜中空に漂う。u_cityPhase でゆっくり横へ流れる）=====
+        if (u_cloud > 0.5) {
+            float sxc = (uv.x - 0.5) * aspect;
+            // 横は低周波（広い）、縦は高周波（薄い層）→ 水平に伸びた薄雲
+            vec2 cuv = vec2(sxc * u_cloudScale + u_cityPhase * u_cloudDrift,
+                            dir.y * u_cloudScale * u_cloudStretch);
+            float dens = smoothstep(u_cloudCover, 1.0, fbm(cuv + 4.0));
+            // 地平線のすぐ上から立ち上がり、天頂に向けて薄れる帯
+            float band = smoothstep(0.0, 0.16, dir.y) * (1.0 - smoothstep(0.32, 0.85, dir.y));
+            col = mix(col, u_cloudCol, dens * u_cloudOpacity * band);
         }
 
         // ===== 遠くの都市のシルエット＋瞬く窓明かり（2層で奥行き）=====
