@@ -79,9 +79,17 @@ void main(){
         float dw = max(AAW(zc), 0.02);
         float f = fract(zc);
         float dash = smoothstep(0.0, dw * 1.5, f) * (1.0 - smoothstep(u_dashDuty - dw * 1.5, u_dashDuty, f));
-        float center = (1.0 - smoothstep(0.035, 0.035 + aa, laneAbs)) * dash;
+        // 破線の車線分離（内側を laneCount 等分）＋ 実線の外側エッジ＝多車線の高速道路
+        float marks = 0.0;
+        for (int j = 1; j < 8; j++) {
+            if (j >= u_laneCount) break;
+            float pos = -u_laneEdge + float(j) * (2.0 * u_laneEdge / float(u_laneCount));
+            float dline = 1.0 - smoothstep(0.020, 0.020 + aa, abs(lane - pos));
+            marks = max(marks, dline * dash);
+        }
         float edge = 1.0 - smoothstep(0.025, 0.025 + aa, abs(laneAbs - u_laneEdge));
-        road = mix(road, u_laneCol, clamp(max(center, edge), 0.0, 1.0));
+        marks = max(marks, edge);
+        road = mix(road, u_laneCol, clamp(marks, 0.0, 1.0));
         road *= exp(-Zr * u_fogDensity);
 
         // 外の地面：道路より u_roadRaise だけ低い面に交差させる
