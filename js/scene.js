@@ -19,6 +19,9 @@ NH.createScene = function (canvas, config) {
     var lastT = 0, scrollDist = 0, animTime = 0, wrapMeters = 1.0, cityScroll = 0, cloudScroll = 0;
     var cars = [], carTimer = 6 + Math.random() * 24;     // 対向車（最大4台）＋次の出現までの秒数
     var carData = new Float32Array(8);                    // u_cars[4] = (laneX, Z)
+    var carColData = new Float32Array(12);                // u_carCol[4] = body color
+    // セダンのボディ色：白 / 黒 / 青 / シルバー
+    var CAR_COLORS = [[0.90, 0.91, 0.93], [0.05, 0.05, 0.06], [0.10, 0.20, 0.52], [0.58, 0.60, 0.64]];
     var ro = null;
     var reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
 
@@ -85,7 +88,8 @@ NH.createScene = function (canvas, config) {
             u_cityPhase: gl.getUniformLocation(prog, "u_cityPhase"),
             u_cityScroll: gl.getUniformLocation(prog, "u_cityScroll"),
             u_cloudScroll: gl.getUniformLocation(prog, "u_cloudScroll"),
-            u_cars: gl.getUniformLocation(prog, "u_cars[0]")
+            u_cars: gl.getUniformLocation(prog, "u_cars[0]"),
+            u_carCol: gl.getUniformLocation(prog, "u_carCol[0]")
         };
         for (var i = 0; i < params.length; i++) {
             if (params[i].uniform) U[params[i].uniform] = gl.getUniformLocation(prog, params[i].uniform);
@@ -147,8 +151,11 @@ NH.createScene = function (canvas, config) {
                 var car = cars[ci];
                 carData[ci * 2] = car ? car.x : 0.0;
                 carData[ci * 2 + 1] = car ? car.z : -1.0;   // Z<=0 は非アクティブ
+                var cc = car ? car.col : CAR_COLORS[0];
+                carColData[ci * 3] = cc[0]; carColData[ci * 3 + 1] = cc[1]; carColData[ci * 3 + 2] = cc[2];
             }
             gl.uniform2fv(U.u_cars, carData);
+            if (U.u_carCol) gl.uniform3fv(U.u_carCol, carColData);
         }
         gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
@@ -168,7 +175,8 @@ NH.createScene = function (canvas, config) {
                 var laneC = (Math.random() < 0.5 ? 0.25 : 0.75) * hw;     // 反対側2車線のどちらか
                 var x = laneC + (Math.random() - 0.5) * hw * 0.12;        // 車線内の微小ばらつき
                 var sp = config.carSpeed * (0.85 + Math.random() * 0.3);  // 速度ばらつき
-                cars.push({ x: x, z: config.carSpawnDist, speed: sp });
+                var col = CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)];
+                cars.push({ x: x, z: config.carSpawnDist, speed: sp, col: col });
             }
         }
     }

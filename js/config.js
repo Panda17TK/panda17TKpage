@@ -39,7 +39,7 @@ NH.PARAMS = [
     { key: "camHeight",     def: 1.4,   uniform: "u_camHeight",     type: "float", ui: { min: 0.2, max: 10, step: 0.1 } },
     { key: "pitchDeg",      def: 2.0,   uniform: "u_pitch",         type: "float", map: function (v) { return v * D2R; }, ui: { min: -10, max: 20, step: 0.5 } },
     { key: "fovDeg",        def: 55.0,  uniform: "u_fovTan",        type: "float", map: function (v) { return Math.tan(v * D2R * 0.5); }, ui: { min: 30, max: 90, step: 1 } },
-    { key: "laneOffset",    def: -2.5,  uniform: "u_camX",          type: "float", ui: { min: -12, max: 12, step: 0.5 } }, // 中央分離帯寄りの内側車線
+    { key: "laneOffset",    def: -7.0,  uniform: "u_camX",          type: "float", ui: { min: -12, max: 12, step: 0.5 } }, // 一番左の車線
 
     // --- 道路 ---
     { key: "roadHalfWidth", def: 10.0,  uniform: "u_roadHalfWidth", type: "float", ui: { min: 2, max: 20, step: 0.5 } },
@@ -57,11 +57,12 @@ NH.PARAMS = [
     { key: "wallLight",     def: 0.3,   uniform: "u_wallLight",     type: "float", ui: { min: 0, max: 1, step: 0.05 } },   // 塀ピクセルでの灯ライトの残し量（小さいほど塀越しの滲みが減る）
     { key: "medianHeight",  def: 0.9,   uniform: "u_medianHeight",  type: "float", ui: { min: 0, max: 2, step: 0.05 } },  // 中央分離帯ガードレールの高さ(m)
 
-    // --- 対向車のヘッドライト ---
-    { key: "carHeadH",      def: 0.7,   uniform: "u_carHeadH",      type: "float", ui: { min: 0.2, max: 1.5, step: 0.05 } }, // ヘッドライトの高さ(m)
-    { key: "carTrack",      def: 0.85,  uniform: "u_carTrack",      type: "float", ui: { min: 0.3, max: 1.5, step: 0.05 } }, // 左右ライトの間隔(半幅, m)
-    { key: "carHeadSize",   def: 0.018, uniform: "u_carHeadSize",   type: "float", ui: { min: 0.005, max: 0.06, step: 0.001 } },
-    { key: "carHeadBright", def: 3.2,   uniform: "u_carHeadBright", type: "float", ui: { min: 0.5, max: 8, step: 0.1 } },
+    // --- 対向車（セダン）---
+    { key: "carHeadH",      def: 0.62,  uniform: "u_carHeadH",      type: "float", ui: { min: 0.2, max: 1.5, step: 0.05 } }, // ヘッドライトの高さ(m)
+    { key: "carTrack",      def: 0.66,  uniform: "u_carTrack",      type: "float", ui: { min: 0.3, max: 1.5, step: 0.05 } }, // 左右ライトの間隔(半幅, m)
+    { key: "carHeadSize",   def: 0.014, uniform: "u_carHeadSize",   type: "float", ui: { min: 0.005, max: 0.06, step: 0.001 } },
+    { key: "carHeadBright", def: 3.0,   uniform: "u_carHeadBright", type: "float", ui: { min: 0.5, max: 8, step: 0.1 } },
+    { key: "carBodyBright", def: 0.42,  uniform: "u_carBodyBright", type: "float", ui: { min: 0, max: 1.5, step: 0.02 } },   // 夜間のボディの明るさ
 
     // --- 道路照明灯 ---
     { key: "lampSpacing",   def: 30.0,  uniform: "u_lampSpacing",   type: "float", ui: { min: 5, max: 80, step: 1 } },

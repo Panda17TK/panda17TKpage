@@ -211,6 +211,48 @@ void main(){
         if (wallHit) { col = wallShade; onRoad = false; onWall = true; }
     }
 
+    // ===== 対向車（セダンの正面シルエット。反対車線。中央分離帯で下部が隠れる）=====
+    for (int k = 0; k < 4; k++) {
+        vec2 car = u_cars[k];
+        float cz = car.y;
+        if (cz <= 0.5) continue;
+        float carX = car.x + curveAt(cz);                 // 車中心のワールドX
+        vec3 bp = project(vec3(carX - u_camX, -u_camHeight, cz), cp, sp, tanX, tanY); // 足元（路面）
+        if (bp.z <= 0.05) continue;
+        float s = 0.5 / (bp.z * tanY);                    // アスペクト空間での 1m あたりのスクリーンスケール
+        vec2 Bc = vec2(bp.x * aspect, bp.y);
+        vec2 lp = (vec2(uv.x * aspect, uv.y) - Bc) / s;   // 車ローカル座標(m)：lp.x=横, lp.y=高さ
+        if (abs(lp.x) > 1.0 || lp.y < 0.12 || lp.y > 1.55) continue;
+        // 正面シルエット：下=ボディ(幅広)、上=キャビン(幅狭)
+        float halfAt = (lp.y < 0.78) ? 0.92 : mix(0.92, 0.52, clamp((lp.y - 0.78) / 0.62, 0.0, 1.0));
+        float aaC = 0.05;
+        float m = smoothstep(halfAt, halfAt - aaC, abs(lp.x))
+                * smoothstep(0.14, 0.14 + aaC, lp.y) * smoothstep(1.46, 1.46 - aaC, lp.y);
+        if (m < 0.004) continue;
+        // 中央分離帯による遮蔽：視線が x=0 を越える高さ < medianHeight なら隠れる
+        float occ = 1.0;
+        if (u_wall > 0.5) {
+            float denom = (carX + lp.x) - u_camX;
+            if (denom > 1e-3) {
+                float tm = -u_camX / denom;
+                if (tm > 0.0 && tm < 1.0) {
+                    float yc = u_camHeight + tm * (lp.y - u_camHeight);
+                    occ = smoothstep(u_medianHeight - 0.04, u_medianHeight + 0.04, yc);
+                }
+            }
+        }
+        if (occ < 0.004) continue;
+        vec3 body = u_carCol[k] * u_carBodyBright;
+        body += u_carCol[k] * 0.18 * smoothstep(0.7, 1.45, lp.y);       // 上部の僅かな照り
+        float winw = mix(0.7, 0.46, clamp((lp.y - 0.84) / 0.5, 0.0, 1.0));
+        if (lp.y > 0.86 && lp.y < 1.34 && abs(lp.x) < winw)             // フロントガラス（暗いガラス＋空の映り）
+            body = mix(vec3(0.02, 0.03, 0.05), u_skyHorizon, 0.35);
+        if (lp.y < 0.5) body *= 0.7;                                    // バンパー/グリルの陰
+        vec2 hl = vec2(abs(lp.x) - u_carTrack, lp.y - u_carHeadH);      // ヘッドライトのレンズ
+        if (dot(hl, hl) < 0.018) body = mix(body, vec3(1.0, 0.98, 0.9), 0.85);
+        col = mix(col, body, m * occ);
+    }
+
     // ===== 道路照明灯（ワールド座標を順投影）=====
     float kStart = floor(u_scroll / u_lampSpacing) + 1.0;
     for (int i = 0; i < 32; i++) {
@@ -329,7 +371,7 @@ NH.buildFragment = function (opts) {
     head += opts.derivatives ? "#define AAW(x) (fwidth(x))\n" : "#define AAW(x) (0.0)\n";
 
     // エンジン uniform ＋ PARAMS 由来 uniform
-    var decls = "uniform vec2 u_res;\nuniform float u_scroll;\nuniform float u_sway;\nuniform float u_time;\nuniform float u_cityPhase;\nuniform float u_cityScroll;\nuniform float u_cloudScroll;\nuniform vec2 u_cars[4];\n";
+    var decls = "uniform vec2 u_res;\nuniform float u_scroll;\nuniform float u_sway;\nuniform float u_time;\nuniform float u_cityPhase;\nuniform float u_cityScroll;\nuniform float u_cloudScroll;\nuniform vec2 u_cars[4];\nuniform vec3 u_carCol[4];\n";
     for (var i = 0; i < params.length; i++) {
         var p = params[i];
         if (p.uniform) decls += "uniform " + glType(p.type) + " " + p.uniform + ";\n";
