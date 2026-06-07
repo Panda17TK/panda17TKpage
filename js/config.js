@@ -29,15 +29,21 @@ NH.PARAMS = [
     { key: "cityFlowRate",  def: 0.3,   ui: { min: 0, max: 1, step: 0.05 } },  // 都市の揺れ速度（swaySpeed に対する倍率。JS で u_cityPhase を生成）
     { key: "citySpeed",     def: 0.015, ui: { min: 0, max: 0.2, step: 0.005 } }, // 前進に伴う遠景都市の平行移動速度（アスペクトX/秒。JS で u_cityScroll を生成）
 
+    // --- 対向車（JS専用：たまに反対車線を走る）---
+    { key: "carMinGap",     def: 40.0,  ui: { min: 5, max: 120, step: 1 } },   // 出現間隔の最小(秒)
+    { key: "carMaxGap",     def: 120.0, ui: { min: 10, max: 300, step: 5 } },  // 出現間隔の最大(秒)
+    { key: "carSpeed",      def: 42.0,  ui: { min: 10, max: 90, step: 1 } },   // 相対接近速度(m/s)
+    { key: "carSpawnDist",  def: 235.0, ui: { min: 60, max: 400, step: 5 } },  // 出現距離(m)
+
     // --- カメラ ---
     { key: "camHeight",     def: 1.4,   uniform: "u_camHeight",     type: "float", ui: { min: 0.2, max: 10, step: 0.1 } },
     { key: "pitchDeg",      def: 2.0,   uniform: "u_pitch",         type: "float", map: function (v) { return v * D2R; }, ui: { min: -10, max: 20, step: 0.5 } },
     { key: "fovDeg",        def: 55.0,  uniform: "u_fovTan",        type: "float", map: function (v) { return Math.tan(v * D2R * 0.5); }, ui: { min: 30, max: 90, step: 1 } },
-    { key: "laneOffset",    def: -4.0,  uniform: "u_camX",          type: "float", ui: { min: -12, max: 12, step: 0.5 } },
+    { key: "laneOffset",    def: -2.5,  uniform: "u_camX",          type: "float", ui: { min: -12, max: 12, step: 0.5 } }, // 中央分離帯寄りの内側車線
 
     // --- 道路 ---
-    { key: "roadHalfWidth", def: 9.0,   uniform: "u_roadHalfWidth", type: "float", ui: { min: 2, max: 20, step: 0.5 } },
-    { key: "lanes",         def: 3,     uniform: "u_laneCount",     type: "int",   ui: { min: 1, max: 6, step: 1 } },   // 車線数（破線で等分）
+    { key: "roadHalfWidth", def: 10.0,  uniform: "u_roadHalfWidth", type: "float", ui: { min: 2, max: 20, step: 0.5 } },
+    { key: "lanes",         def: 4,     uniform: "u_laneCount",     type: "int",   ui: { min: 1, max: 8, step: 1 } },   // 車線数（2+2を中央分離帯で区切る）
     { key: "roadRaise",     def: 0.25,  uniform: "u_roadRaise",     type: "float", ui: { min: 0, max: 2, step: 0.05 } },  // 外の地面より道路を高く
     { key: "dashLength",    def: 14.0,  uniform: "u_dashLength",    type: "float", ui: { min: 1, max: 30, step: 0.5 } },
     { key: "dashDuty",      def: 0.32,  uniform: "u_dashDuty",      type: "float", ui: { min: 0.1, max: 0.9, step: 0.02 } }, // 塗り割合（小さいほど隙間が長い）
@@ -49,6 +55,13 @@ NH.PARAMS = [
     { key: "wallHeight",    def: 1.6,   uniform: "u_wallHeight",    type: "float", ui: { min: 0.2, max: 4, step: 0.1 } },   // 塀の高さ(m)
     { key: "wallOffset",    def: 0.5,   uniform: "u_wallOffset",    type: "float", ui: { min: 0, max: 4, step: 0.1 } },     // 路端から塀までの距離(m)
     { key: "wallLight",     def: 0.3,   uniform: "u_wallLight",     type: "float", ui: { min: 0, max: 1, step: 0.05 } },   // 塀ピクセルでの灯ライトの残し量（小さいほど塀越しの滲みが減る）
+    { key: "medianHeight",  def: 0.9,   uniform: "u_medianHeight",  type: "float", ui: { min: 0, max: 2, step: 0.05 } },  // 中央分離帯ガードレールの高さ(m)
+
+    // --- 対向車のヘッドライト ---
+    { key: "carHeadH",      def: 0.7,   uniform: "u_carHeadH",      type: "float", ui: { min: 0.2, max: 1.5, step: 0.05 } }, // ヘッドライトの高さ(m)
+    { key: "carTrack",      def: 0.85,  uniform: "u_carTrack",      type: "float", ui: { min: 0.3, max: 1.5, step: 0.05 } }, // 左右ライトの間隔(半幅, m)
+    { key: "carHeadSize",   def: 0.018, uniform: "u_carHeadSize",   type: "float", ui: { min: 0.005, max: 0.06, step: 0.001 } },
+    { key: "carHeadBright", def: 3.2,   uniform: "u_carHeadBright", type: "float", ui: { min: 0.5, max: 8, step: 0.1 } },
 
     // --- 道路照明灯 ---
     { key: "lampSpacing",   def: 30.0,  uniform: "u_lampSpacing",   type: "float", ui: { min: 5, max: 80, step: 1 } },
@@ -116,7 +129,8 @@ NH.PARAMS = [
     { key: "poleCol",    def: [0.04, 0.04, 0.05],   uniform: "u_poleCol",    type: "color", ui: { color: true } },
     { key: "cityCol",    def: [0.02, 0.025, 0.05],  uniform: "u_cityCol",    type: "color", ui: { color: true } },
     { key: "windowCol",  def: [1.00, 0.85, 0.50],   uniform: "u_windowCol",  type: "color", ui: { color: true } },
-    { key: "beaconCol",  def: [1.00, 0.06, 0.03],   uniform: "u_beaconCol",  type: "color", ui: { color: true } }
+    { key: "beaconCol",  def: [1.00, 0.06, 0.03],   uniform: "u_beaconCol",  type: "color", ui: { color: true } },
+    { key: "carHeadCol", def: [0.85, 0.92, 1.00],   uniform: "u_carHeadCol", type: "color", ui: { color: true } }
 ];
 
 // 調整済みの値を残すならここに（"Copy config JSON" の出力を貼る）

@@ -26,7 +26,7 @@ function fail(msg) { console.error("FAIL: " + msg); process.exit(1); }
 if (!NH || !NH.PARAMS || !NH.FRAG_BODY) fail("NH not initialized from browser scripts");
 
 // エンジン uniform（buildFragment が常に前置する）＋ PARAMS 由来の uniform
-var ENGINE = ["u_res", "u_scroll", "u_sway", "u_time", "u_cityPhase", "u_cityScroll", "u_cloudScroll"];
+var ENGINE = ["u_res", "u_scroll", "u_sway", "u_time", "u_cityPhase", "u_cityScroll", "u_cloudScroll", "u_cars"];
 var declared = {};
 ENGINE.forEach(function (u) { declared[u] = true; });
 NH.PARAMS.forEach(function (p) { if (p.uniform) declared[p.uniform] = true; });

@@ -17,6 +17,8 @@ NH.createScene = function (canvas, config) {
     var prog = null, buf = null, U = {}, locReady = false;
     var raf = 0, running = false, lost = false, disposed = false;
     var lastT = 0, scrollDist = 0, animTime = 0, wrapMeters = 1.0, cityScroll = 0, cloudScroll = 0;
+    var cars = [], carTimer = 6 + Math.random() * 24;     // 対向車（最大4台）＋次の出現までの秒数
+    var carData = new Float32Array(8);                    // u_cars[4] = (laneX, Z)
     var ro = null;
     var reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
 
@@ -82,7 +84,8 @@ NH.createScene = function (canvas, config) {
             u_time: gl.getUniformLocation(prog, "u_time"),
             u_cityPhase: gl.getUniformLocation(prog, "u_cityPhase"),
             u_cityScroll: gl.getUniformLocation(prog, "u_cityScroll"),
-            u_cloudScroll: gl.getUniformLocation(prog, "u_cloudScroll")
+            u_cloudScroll: gl.getUniformLocation(prog, "u_cloudScroll"),
+            u_cars: gl.getUniformLocation(prog, "u_cars[0]")
         };
         for (var i = 0; i < params.length; i++) {
             if (params[i].uniform) U[params[i].uniform] = gl.getUniformLocation(prog, params[i].uniform);
@@ -139,7 +142,35 @@ NH.createScene = function (canvas, config) {
         // 薄雲の連続ドリフト。mediump 安全のため有界化
         gl.uniform1f(U.u_cloudScroll, cloudScroll % 100.0);
         gl.uniform1f(U.u_time, animTime % 100.0);   // 窓の瞬き用（有界）
+        if (U.u_cars) {
+            for (var ci = 0; ci < 4; ci++) {
+                var car = cars[ci];
+                carData[ci * 2] = car ? car.x : 0.0;
+                carData[ci * 2 + 1] = car ? car.z : -1.0;   // Z<=0 は非アクティブ
+            }
+            gl.uniform2fv(U.u_cars, carData);
+        }
         gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+
+    // 対向車：反対車線(x>0)を手前へ走る。たまに(carMinGap〜carMaxGap秒)1台出現。
+    function updateCars(dt) {
+        for (var i = cars.length - 1; i >= 0; i--) {
+            cars[i].z -= cars[i].speed * dt;       // 接近（Zが減る）
+            if (cars[i].z < -8) cars.splice(i, 1); // 通過したら消す
+        }
+        carTimer -= dt;
+        if (carTimer <= 0) {
+            var gap = config.carMinGap + Math.random() * Math.max(0, config.carMaxGap - config.carMinGap);
+            carTimer = gap;
+            if (cars.length < 4) {
+                var hw = config.roadHalfWidth;
+                var laneC = (Math.random() < 0.5 ? 0.25 : 0.75) * hw;     // 反対側2車線のどちらか
+                var x = laneC + (Math.random() - 0.5) * hw * 0.12;        // 車線内の微小ばらつき
+                var sp = config.carSpeed * (0.85 + Math.random() * 0.3);  // 速度ばらつき
+                cars.push({ x: x, z: config.carSpawnDist, speed: sp });
+            }
+        }
     }
 
     function loop(now) {
@@ -152,6 +183,7 @@ NH.createScene = function (canvas, config) {
             cloudScroll += dt * config.cloudSpeed;
             animTime += dt;
             if (animTime > 1e4) animTime -= 1e4;
+            updateCars(dt);
         }
         render();
         raf = requestAnimationFrame(loop);
