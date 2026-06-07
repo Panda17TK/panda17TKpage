@@ -85,6 +85,7 @@ void main(){
         for (int j = 1; j < 8; j++) {
             if (j >= u_laneCount) break;
             float pos = -u_laneEdge + float(j) * (2.0 * u_laneEdge / float(u_laneCount));
+            if (abs(pos) < 0.03) continue;   // 中央（分離帯）は破線でなくガードレール
             float dline = 1.0 - smoothstep(0.020, 0.020 + aa, abs(lane - pos));
             marks = max(marks, dline * dash);
         }
@@ -171,35 +172,37 @@ void main(){
     // 地平線の暖色かすみ（真の地平線 dir.y≈0 に沿う）
     col += u_hazeCol * exp(-(dir.y * dir.y) * u_hazeSharp) * u_hazeIntensity;
 
-    // ===== 道路脇の塀（左右の垂直な壁。x=±(roadHalfWidth+offset) の平面と交差）=====
+    // ===== 塀（左右の壁）＋ 中央分離帯のガードレール（垂直面 x=baseX と交差）=====
     if (u_wall > 0.5 && abs(dir.x) > 1e-4) {
         float wallBestT = 1e9;
         vec3 wallShade = vec3(0.0);
         bool wallHit = false;
         float tgRoad = (dir.y < -0.0008) ? (-u_camHeight / dir.y) : 1e9; // 道路面までの距離（手前遮蔽判定用）
-        for (int s = 0; s < 2; s++) {
-            float sgn = (s == 0) ? -1.0 : 1.0;
-            float baseX = sgn * (u_roadHalfWidth + u_wallOffset);
+        for (int s = 0; s < 3; s++) {
+            // s=0:左壁  s=1:右壁  s=2:中央分離帯（低いガードレール）
+            float baseX = (s == 0) ? -(u_roadHalfWidth + u_wallOffset)
+                        : (s == 1) ?  (u_roadHalfWidth + u_wallOffset) : 0.0;
+            float hgt = (s == 2) ? u_medianHeight : u_wallHeight;
             float t = (baseX - u_camX) / dir.x;
             if (t <= 0.0) continue;
             float zhit = t * dir.z;
             if (zhit <= 0.0) continue;
-            // 道路のカーブに合わせて壁の X 位置を補正して再交差
+            // 道路のカーブに合わせて X 位置を補正して再交差
             float wx = baseX + curveAt(zhit);
             t = (wx - u_camX) / dir.x;
             if (t <= 0.0) continue;
             zhit = t * dir.z;
             if (zhit <= 0.0) continue;
             float yhit = u_camHeight + t * dir.y;
-            if (yhit < 0.0 || yhit > u_wallHeight) continue;  // 壁の上下からはみ出したら背景
+            if (yhit < 0.0 || yhit > hgt) continue;           // 壁の上下からはみ出したら背景
             if (t >= tgRoad) continue;                        // 道路面が手前にあるなら見えない
             if (t >= wallBestT) continue;
             wallBestT = t;
             wallHit = true;
             float fog = exp(-zhit * u_fogDensity);
-            float yn = clamp(yhit / u_wallHeight, 0.0, 1.0);
+            float yn = clamp(yhit / hgt, 0.0, 1.0);
             vec3 c = mix(u_wallCol * 0.6, u_wallCol, yn);                 // 下ほど暗い
-            c = mix(c, u_wallTopCol, smoothstep(0.90, 1.0, yn));         // 笠木（上端）の明るい縁
+            c = mix(c, u_wallTopCol, smoothstep(0.88, 1.0, yn));         // 笠木（上端）の明るい縁
             float fz = fract(zhit / 3.0);                                // 3m ごとのパネル継ぎ目
             float seam = smoothstep(0.0, 0.05, fz) * (1.0 - smoothstep(0.95, 1.0, fz));
             c *= mix(0.78, 1.0, seam);
@@ -273,7 +276,27 @@ void main(){
         }
     }
 
-    // 塀は不透明な手前の面なので、灯のライトの滲みを抑える
+    // ===== 対向車のヘッドライト（反対車線。u_cars[k] = (laneX, Z)。Z<=0 は非アクティブ）=====
+    for (int k = 0; k < 4; k++) {
+        vec2 car = u_cars[k];
+        float cz = car.y;
+        if (cz <= 0.5) continue;
+        float cxBase = car.x + curveAt(cz) - u_camX;
+        for (int hl = 0; hl < 2; hl++) {
+            float off = (hl == 0) ? -u_carTrack : u_carTrack;
+            vec3 hp = project(vec3(cxBase + off, u_carHeadH - u_camHeight, cz), cp, sp, tanX, tanY);
+            if (hp.z <= 0.05) continue;
+            float ps = clamp(1.0 / hp.z, 0.05, 3.0);
+            vec2 Hp = vec2(hp.x * aspect, hp.y);
+            vec2 Pp = vec2(uv.x * aspect, uv.y);
+            float r = u_carHeadSize * ps + 0.0025;   // 近いほど大きく
+            float d = distance(Pp, Hp);
+            float fade = exp(-cz * u_fogDensity);     // ヘッドライトは点光源：減衰は大気フェードのみ
+            light += u_carHeadCol * exp(-(d * d) / (r * r)) * u_carHeadBright * fade;
+        }
+    }
+
+    // 塀は不透明な手前の面なので、灯のライト（対向車含む）の滲みを抑える
     if (onWall) light *= u_wallLight;
 
     // 彩度を少し上げて全体を鮮明に（背景のみ）
@@ -306,7 +329,7 @@ NH.buildFragment = function (opts) {
     head += opts.derivatives ? "#define AAW(x) (fwidth(x))\n" : "#define AAW(x) (0.0)\n";
 
     // エンジン uniform ＋ PARAMS 由来 uniform
-    var decls = "uniform vec2 u_res;\nuniform float u_scroll;\nuniform float u_sway;\nuniform float u_time;\nuniform float u_cityPhase;\nuniform float u_cityScroll;\nuniform float u_cloudScroll;\n";
+    var decls = "uniform vec2 u_res;\nuniform float u_scroll;\nuniform float u_sway;\nuniform float u_time;\nuniform float u_cityPhase;\nuniform float u_cityScroll;\nuniform float u_cloudScroll;\nuniform vec2 u_cars[4];\n";
     for (var i = 0; i < params.length; i++) {
         var p = params[i];
         if (p.uniform) decls += "uniform " + glType(p.type) + " " + p.uniform + ";\n";

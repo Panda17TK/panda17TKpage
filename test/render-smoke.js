@@ -58,6 +58,7 @@ function setUniforms(gl, prog, W, H) {
     gl.uniform1f(loc("u_cityScroll"), 2.0);  // 都市の前進平行移動
     gl.uniform1f(loc("u_cloudScroll"), 1.0); // 薄雲の連続ドリフト
     gl.uniform1f(loc("u_time"), 3.0);        // 窓の瞬き・障害灯点滅の時間依存パスを踏む
+    gl.uniform2fv(loc("u_cars[0]"), new Float32Array([2.5, 28, 7.5, 60, 0, -1, 0, -1])); // 対向車2台
     NH.PARAMS.forEach(function (p) {
         if (!p.uniform) return;
         var l = loc(p.uniform);
