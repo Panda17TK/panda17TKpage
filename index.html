@@ -8,8 +8,9 @@
     <meta name="theme-color" content="#05060a">
     <title>Panda17TK</title>
 
-    <!-- favicon（夜の高速道路モチーフ） -->
+    <!-- favicon（夜の高速道路モチーフ）。SVG 非対応環境向けに PNG フォールバック -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
 
     <!-- Open Graph / Twitter Card（SNS 共有時のプレビュー。多くの SNS は SVG 非対応のため PNG を使用） -->
     <meta property="og:type" content="website">
@@ -51,7 +52,9 @@
         </nav>
     </header>
 
-    <main class="hero"></main>
+    <main class="hero">
+        <h1 class="visually-hidden">Panda17TK — my storeroom</h1>
+    </main>
 
     <footer class="footer">
         <span>&copy; <span id="year"></span> Panda17TK</span>

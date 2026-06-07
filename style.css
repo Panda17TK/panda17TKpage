@@ -144,6 +144,20 @@ header,
     box-shadow: 0 0 6px var(--neon);
 }
 
+/* スクリーンリーダ/SEO 用の視覚非表示（見た目には出さない） */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
 /* ---------- Hero ---------- */
 .hero {
     min-height: 100vh;

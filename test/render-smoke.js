@@ -56,6 +56,7 @@ function setUniforms(gl, prog, W, H) {
     gl.uniform1f(loc("u_sway"), 0.4);        // 進路のカーブを踏む
     gl.uniform1f(loc("u_cityPhase"), 0.5);   // 都市の揺れ
     gl.uniform1f(loc("u_cityScroll"), 2.0);  // 都市の前進平行移動
+    gl.uniform1f(loc("u_cloudScroll"), 1.0); // 薄雲の連続ドリフト
     gl.uniform1f(loc("u_time"), 3.0);        // 窓の瞬き・障害灯点滅の時間依存パスを踏む
     NH.PARAMS.forEach(function (p) {
         if (!p.uniform) return;
@@ -96,23 +97,27 @@ function render(W, H) {
 
     var px = new Uint8Array(W * H * 4);
     gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, px);
-    var maxv = 0, lit = 0, total = W * H;
-    for (var i = 0; i < px.length; i += 4) {
+    // readPixels は下が原点。手前路面＝下端30%の行で白い車線マーキングを数える。
+    var maxv = 0, lit = 0, total = W * H, marks = 0, bandRows = Math.floor(H * 0.3);
+    for (var p = 0; p < total; p++) {
+        var i = p * 4, y = Math.floor(p / W);
         var m = Math.max(px[i], px[i + 1], px[i + 2]);
         if (m > maxv) maxv = m;
         if (m > 8) lit++;
+        if (y < bandRows && m > 120) marks++;   // 路面の白マーキング（実線エッジ＋破線）
     }
-    return { W: W, H: H, deriv: deriv, maxv: maxv, lit: lit, total: total };
+    return { W: W, H: H, deriv: deriv, maxv: maxv, lit: lit, total: total, marks: marks };
 }
 
-function check(r, requireBrightHighlight) {
+function check(r, strict) {
     if (r.maxv < 5) fail(r.W + "x" + r.H + ": frame is essentially black (maxChannel=" + r.maxv + ")");
     if (r.lit < r.total * 0.2) fail(r.W + "x" + r.H + ": too few lit pixels (" + r.lit + "/" + r.total + ") — scene may be failing to render");
-    if (requireBrightHighlight && r.maxv < 100) fail(r.W + "x" + r.H + ": no bright highlight (maxChannel=" + r.maxv + ") — tonemap/light pipeline may be broken");
-    console.log("OK: " + r.W + "x" + r.H + " maxChannel=" + r.maxv + " litPixels=" + r.lit + "/" + r.total + " derivatives=" + r.deriv);
+    if (strict && r.maxv < 100) fail(r.W + "x" + r.H + ": no bright highlight (maxChannel=" + r.maxv + ") — tonemap/light pipeline may be broken");
+    if (strict && r.marks < 3) fail(r.W + "x" + r.H + ": no road lane markings detected (marks=" + r.marks + ") — road/markings may be broken");
+    console.log("OK: " + r.W + "x" + r.H + " maxChannel=" + r.maxv + " lit=" + r.lit + "/" + r.total + " marks=" + r.marks + " derivatives=" + r.deriv);
 }
 
-check(render(96, 64), true);   // 横長：明るいハイライト必須（ライト/トーンマップの回帰防止）
+check(render(96, 64), true);   // 横長：明るいハイライト＋路面マーキング必須（ライト/道路の回帰防止）
 check(render(64, 96), false);  // 縦長：黒画面リグレッション防止
 
 console.log("render-smoke passed");

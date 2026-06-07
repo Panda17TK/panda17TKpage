@@ -16,7 +16,7 @@ NH.createScene = function (canvas, config) {
     var derivExt = gl.getExtension("OES_standard_derivatives");
     var prog = null, buf = null, U = {}, locReady = false;
     var raf = 0, running = false, lost = false, disposed = false;
-    var lastT = 0, scrollDist = 0, animTime = 0, wrapMeters = 1.0, cityScroll = 0;
+    var lastT = 0, scrollDist = 0, animTime = 0, wrapMeters = 1.0, cityScroll = 0, cloudScroll = 0;
     var ro = null;
     var reduceMQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
 
@@ -81,7 +81,8 @@ NH.createScene = function (canvas, config) {
             u_sway: gl.getUniformLocation(prog, "u_sway"),
             u_time: gl.getUniformLocation(prog, "u_time"),
             u_cityPhase: gl.getUniformLocation(prog, "u_cityPhase"),
-            u_cityScroll: gl.getUniformLocation(prog, "u_cityScroll")
+            u_cityScroll: gl.getUniformLocation(prog, "u_cityScroll"),
+            u_cloudScroll: gl.getUniformLocation(prog, "u_cloudScroll")
         };
         for (var i = 0; i < params.length; i++) {
             if (params[i].uniform) U[params[i].uniform] = gl.getUniformLocation(prog, params[i].uniform);
@@ -135,6 +136,8 @@ NH.createScene = function (canvas, config) {
         gl.uniform1f(U.u_cityPhase, Math.sin(animTime * config.swaySpeed * config.cityFlowRate));
         // 前進に伴う遠景都市の平行移動。基層が256セル周期で継ぎ目なく繰り返すよう 256/cityCols でラップ
         gl.uniform1f(U.u_cityScroll, cityScroll % (256.0 / Math.max(1, config.cityCols)));
+        // 薄雲の連続ドリフト。mediump 安全のため有界化
+        gl.uniform1f(U.u_cloudScroll, cloudScroll % 100.0);
         gl.uniform1f(U.u_time, animTime % 100.0);   // 窓の瞬き用（有界）
         gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
@@ -146,6 +149,7 @@ NH.createScene = function (canvas, config) {
         if (!reduceMQ.matches) {
             scrollDist += dt * config.speed;
             cityScroll += dt * config.citySpeed;
+            cloudScroll += dt * config.cloudSpeed;
             animTime += dt;
             if (animTime > 1e4) animTime -= 1e4;
         }

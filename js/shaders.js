@@ -26,7 +26,7 @@ float vnoise(vec2 p){
 }
 float fbm(vec2 p){
     float v = 0.0, a = 0.5;
-    for (int i = 0; i < 4; i++){ v += a * vnoise(p); p *= 2.0; a *= 0.5; }
+    for (int i = 0; i < 4; i++){ if (i >= u_cloudOctaves) break; v += a * vnoise(p); p *= 2.0; a *= 0.5; }
     return v;
 }
 
@@ -60,6 +60,7 @@ void main(){
     vec3 col;
     vec3 light = vec3(0.0);   // 加算ライト：トーンマップ後に重ねる→コアが純白まで届き glowBright が実際に効く
     bool onRoad = false;
+    bool onWall = false;      // 塀ピクセルでは灯のライトを抑える（塀越しの滲み低減）
 
     if (dir.y < -0.0008) {
         // ===== 道路面（y=0 相対）と、それより低い外の地面 =====
@@ -111,8 +112,9 @@ void main(){
         // ===== 薄雲（地平線〜中空に漂う。u_cityPhase でゆっくり横へ流れる）=====
         if (u_cloud > 0.5) {
             float sxc = (uv.x - 0.5) * aspect;
-            // 横は低周波（広い）、縦は高周波（薄い層）→ 水平に伸びた薄雲
-            vec2 cuv = vec2(sxc * u_cloudScale + u_cityPhase * u_cloudDrift,
+            // 横は低周波（広い）、縦は高周波（薄い層）→ 水平に伸びた薄雲。
+            // u_cloudScroll で前進方向へ連続的に流れる（有界値で mediump 安全）。
+            vec2 cuv = vec2(sxc * u_cloudScale + u_cloudScroll * u_cloudDrift,
                             dir.y * u_cloudScale * u_cloudStretch);
             float dens = smoothstep(u_cloudCover, 1.0, fbm(cuv + 4.0));
             // 地平線のすぐ上から立ち上がり、天頂に向けて薄れる帯
@@ -203,7 +205,7 @@ void main(){
             c *= mix(0.78, 1.0, seam);
             wallShade = c * fog;
         }
-        if (wallHit) { col = wallShade; onRoad = false; }
+        if (wallHit) { col = wallShade; onRoad = false; onWall = true; }
     }
 
     // ===== 道路照明灯（ワールド座標を順投影）=====
@@ -271,6 +273,9 @@ void main(){
         }
     }
 
+    // 塀は不透明な手前の面なので、灯のライトの滲みを抑える
+    if (onWall) light *= u_wallLight;
+
     // 彩度を少し上げて全体を鮮明に（背景のみ）
     float lum = dot(col, vec3(0.299, 0.587, 0.114));
     col = mix(vec3(lum), col, u_saturation);
@@ -301,7 +306,7 @@ NH.buildFragment = function (opts) {
     head += opts.derivatives ? "#define AAW(x) (fwidth(x))\n" : "#define AAW(x) (0.0)\n";
 
     // エンジン uniform ＋ PARAMS 由来 uniform
-    var decls = "uniform vec2 u_res;\nuniform float u_scroll;\nuniform float u_sway;\nuniform float u_time;\nuniform float u_cityPhase;\nuniform float u_cityScroll;\n";
+    var decls = "uniform vec2 u_res;\nuniform float u_scroll;\nuniform float u_sway;\nuniform float u_time;\nuniform float u_cityPhase;\nuniform float u_cityScroll;\nuniform float u_cloudScroll;\n";
     for (var i = 0; i < params.length; i++) {
         var p = params[i];
         if (p.uniform) decls += "uniform " + glType(p.type) + " " + p.uniform + ";\n";
