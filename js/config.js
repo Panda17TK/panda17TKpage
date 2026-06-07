@@ -48,6 +48,7 @@ NH.PARAMS = [
     { key: "wall",          def: true,  uniform: "u_wall",          type: "bool",  ui: { bool: true } },
     { key: "wallHeight",    def: 1.6,   uniform: "u_wallHeight",    type: "float", ui: { min: 0.2, max: 4, step: 0.1 } },   // 塀の高さ(m)
     { key: "wallOffset",    def: 0.5,   uniform: "u_wallOffset",    type: "float", ui: { min: 0, max: 4, step: 0.1 } },     // 路端から塀までの距離(m)
+    { key: "wallLight",     def: 0.3,   uniform: "u_wallLight",     type: "float", ui: { min: 0, max: 1, step: 0.05 } },   // 塀ピクセルでの灯ライトの残し量（小さいほど塀越しの滲みが減る）
 
     // --- 道路照明灯 ---
     { key: "lampSpacing",   def: 30.0,  uniform: "u_lampSpacing",   type: "float", ui: { min: 5, max: 80, step: 1 } },
@@ -95,8 +96,10 @@ NH.PARAMS = [
     { key: "cloudOpacity",  def: 0.26,  uniform: "u_cloudOpacity",  type: "float", ui: { min: 0, max: 1, step: 0.02 } },   // 雲の濃さ
     { key: "cloudCover",    def: 0.52,  uniform: "u_cloudCover",    type: "float", ui: { min: 0.2, max: 0.95, step: 0.02 } }, // 雲量の閾値（大きいほど少なく薄く）
     { key: "cloudScale",    def: 1.7,   uniform: "u_cloudScale",    type: "float", ui: { min: 0.4, max: 5, step: 0.1 } },    // 雲のディテールの細かさ
-    { key: "cloudStretch",  def: 3.2,   uniform: "u_cloudStretch",  type: "float", ui: { min: 1, max: 8, step: 0.2 } },     // 横方向の引き伸ばし（大きいほど水平に流れる）
-    { key: "cloudDrift",    def: 0.18,  uniform: "u_cloudDrift",    type: "float", ui: { min: 0, max: 1, step: 0.02 } },    // 揺れに合わせた横流れ量
+    { key: "cloudStretch",  def: 3.6,   uniform: "u_cloudStretch",  type: "float", ui: { min: 1, max: 8, step: 0.2 } },     // 縦の層の細かさ（大きいほど薄い層が増える）
+    { key: "cloudDrift",    def: 0.10,  uniform: "u_cloudDrift",    type: "float", ui: { min: 0, max: 1, step: 0.02 } },    // u_cloudScroll に対する横流れ量
+    { key: "cloudSpeed",    def: 0.5,   ui: { min: 0, max: 3, step: 0.1 } },                                                 // 雲の流れ速度（JS で u_cloudScroll を生成）
+    { key: "cloudOctaves",  def: 4,     uniform: "u_cloudOctaves",  type: "int",   ui: { min: 1, max: 4, step: 1 } },       // fbm のオクターブ数（モバイルで下げて軽量化）
 
     // --- 色 ---
     { key: "skyTop",     def: [0.005, 0.005, 0.03], uniform: "u_skyTop",     type: "color", ui: { color: true } },

@@ -60,6 +60,7 @@ gl.uniform1f(loc("u_scroll"), 6.0);       // 灯が手前に来る構図
 gl.uniform1f(loc("u_sway"), 0.35);
 gl.uniform1f(loc("u_cityPhase"), 0.4);
 gl.uniform1f(loc("u_cityScroll"), 1.5);
+gl.uniform1f(loc("u_cloudScroll"), 1.2);
 gl.uniform1f(loc("u_time"), 2.0);
 NH.PARAMS.forEach(function (p) {
     if (!p.uniform) return;
