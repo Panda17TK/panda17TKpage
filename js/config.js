@@ -66,7 +66,8 @@ NH.PARAMS = [
 
     // --- 道路照明灯 ---
     { key: "lampSpacing",   def: 30.0,  uniform: "u_lampSpacing",   type: "float", ui: { min: 5, max: 80, step: 1 } },
-    { key: "lampSide",      def: 2.0,   uniform: "u_lampSide",      type: "float", ui: { min: 0, max: 10, step: 0.25 } },
+    { key: "lampSide",      def: 0.5,   uniform: "u_lampSide",      type: "float", ui: { min: 0, max: 10, step: 0.25 } }, // 路端からの支柱位置（塀と同じ＝0.5）
+    { key: "lampArm",       def: 2.6,   uniform: "u_lampArm",       type: "float", ui: { min: 0, max: 8, step: 0.2 } },  // アームで車道側へ張り出す長さ(m)
     { key: "poleHeight",    def: 10.0,  uniform: "u_poleHeight",    type: "float", ui: { min: 2, max: 20, step: 0.5 } },
     { key: "lampCount",     def: 16,    uniform: "u_lampCount",     type: "int",   ui: { min: 1, max: 32, step: 1 } },
     { key: "lampFade",      def: 0.80,  uniform: "u_lampFade",      type: "float", ui: { min: 0, max: 1, step: 0.01 } }, // 最遠の灯をフェードし始める割合

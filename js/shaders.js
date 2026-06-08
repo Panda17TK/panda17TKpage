@@ -263,23 +263,26 @@ void main(){
         float curv = curveAt(Zrel);
         for (int s = 0; s < 2; s++) {
             float sd = (s == 0) ? -1.0 : 1.0;
-            float Xl = sd * (u_roadHalfWidth + u_lampSide) + curv - u_camX;
-            vec3 hp = project(vec3(Xl, u_poleHeight - u_camHeight, Zrel), cp, sp, tanX, tanY);
+            float edgeX = sd * (u_roadHalfWidth + u_lampSide) + curv - u_camX;  // 支柱（道路端＝塀の位置）
+            float headX = edgeX - sd * u_lampArm;                              // アームで車道側へ張り出した灯具
+            vec3 hp = project(vec3(headX, u_poleHeight - u_camHeight, Zrel), cp, sp, tanX, tanY);  // 灯具(頭部)
             if (hp.z <= 0.05) continue;
-            vec3 bp = project(vec3(Xl, -(u_camHeight + u_roadRaise), Zrel), cp, sp, tanX, tanY);
-            vec3 ahp = project(vec3(sd * (u_roadHalfWidth + u_lampSide) + curveAt(Zrel * 1.4) - u_camX,
+            vec3 tp = project(vec3(edgeX, u_poleHeight - u_camHeight, Zrel), cp, sp, tanX, tanY);  // 支柱の頂部
+            vec3 bp = project(vec3(edgeX, u_wallHeight - u_camHeight, Zrel), cp, sp, tanX, tanY);  // 塀上端＝支柱の根元
+            vec3 ahp = project(vec3(sd * (u_roadHalfWidth + u_lampSide) - sd * u_lampArm + curveAt(Zrel * 1.4) - u_camX,
                                     u_poleHeight - u_camHeight, Zrel * 1.4), cp, sp, tanX, tanY);
             float pscale = clamp(1.0 / hp.z, 0.02, 2.5);
             float gscale = min(pscale, 1.6);   // 見た目サイズの上限（至近灯が巨大な白塊にならないように）
 
             vec2 Pa = vec2(uv.x * aspect, uv.y);
             vec2 Ha = vec2(hp.x * aspect, hp.y);
+            vec2 Ta = vec2(tp.x * aspect, tp.y);
             vec2 Ba = vec2(bp.x * aspect, bp.y);
             vec2 Aa = vec2(ahp.x * aspect, ahp.y);
 
-            // 縦スパン早期スキップ：この灯（支柱〜頭部＋残光余白）が当該ピクセルの高さを含まなければ重い計算を省く
+            // 縦スパン早期スキップ：支柱〜アーム〜頭部＋残光余白を含まなければ重い計算を省く
             float yPad = u_tail * gscale + 0.06;
-            if (uv.y < min(Ba.y, Ha.y) - yPad || uv.y > max(Ba.y, Ha.y) + yPad) continue;
+            if (uv.y < min(min(Ba.y, Ta.y), Ha.y) - yPad || uv.y > max(max(Ba.y, Ta.y), Ha.y) + yPad) continue;
 
             // 残光：消失点方向（道路の縁に平行）に伸びる異方性グロー
             vec2 rel2 = Pa - Ha;
@@ -293,11 +296,11 @@ void main(){
             float bbT = b / wid;
             float glow = exp(-(aaT * aaT + bbT * bbT));
 
-            // 支柱（AA 付き）：ライトより先に背景へ描く（頭部中心の暗点を防ぐ）
+            // 支柱（塀から立つ）＋アーム（車道側へ張り出す）：ライトより先に背景へ
             float pw = u_poleWidth * clamp(pscale, 0.3, 1.5);
-            float pd = segDist(Pa, Ba, Ha);
-            float paa = max(AAW(pd), 0.0015);
-            col = mix(col, u_poleCol, (1.0 - smoothstep(pw, pw + paa, pd)) * 0.8 * lf);
+            float structD = min(segDist(Pa, Ba, Ta), segDist(Pa, Ta, Ha));
+            float paa = max(AAW(structD), 0.0015);
+            col = mix(col, u_poleCol, (1.0 - smoothstep(pw, pw + paa, structD)) * 0.8 * lf);
 
             // グロー（残光）と頭部の白熱コアは light に加算（トーンマップ後に重ねる）
             light += u_lampCol * glow * clamp(u_glowBright * pscale, 0.08, u_glowBright) * lf;
@@ -305,9 +308,9 @@ void main(){
             float core = exp(-dot(rel2, rel2) / (coreR * coreR));
             light += mix(u_lampCol, vec3(1.0), 0.6) * core * u_lampCore * lf;
 
-            // 路面の反射：照明灯の真下（車道側）に円状の明かり。路面は基本暗いまま
+            // 路面の反射：灯具の真下（車道）に円状の明かり。路面は基本暗いまま
             if (onRoad) {
-                vec3 pc = project(vec3(sd * u_roadHalfWidth * 0.6, 0.0, Zrel), cp, sp, tanX, tanY);
+                vec3 pc = project(vec3(headX, -u_camHeight, Zrel), cp, sp, tanX, tanY);
                 if (pc.z > 0.05) {
                     vec2 Pc = vec2(pc.x * aspect, pc.y);
                     float poolR = u_poolSize * gscale + 0.006;
