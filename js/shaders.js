@@ -51,6 +51,7 @@ void main(){
     float tanY = u_fovTan;
     float tanX = tanY * aspect;
     float cp = cos(u_pitch), sp = sin(u_pitch);
+    float horizonY = 0.5 - 0.5 * (sp / cp) / tanY;   // 画面上の地平線Y（反射・空で共用）
 
     // ピクセル → ワールド方向（ピッチで上に傾ける）
     vec2 ndc = uv * 2.0 - 1.0;
@@ -94,6 +95,19 @@ void main(){
         road = mix(road, u_laneCol, clamp(marks, 0.0, 1.0));
         road *= exp(-Zr * u_fogDensity);
 
+        // 濡れ路面：地平線で折り返した夜空＋月を映す（遠い＝grazing ほど強い）
+        if (u_wetness > 0.0) {
+            float refY = 2.0 * horizonY - uv.y;                       // 地平線で鏡映したスクリーンY
+            float tt = clamp((refY - horizonY) / max(u_skyCurve, 1e-3), 0.0, 1.0);
+            vec3 refl = mix(u_skyHorizon, u_skyTop, tt);
+            if (u_moon > 0.5) {
+                float mdR = distance(vec2((uv.x - 0.5) * aspect, refY), vec2(u_moonX * aspect, u_moonY));
+                refl += u_moonCol * smoothstep(u_moonSize * 2.8, 0.0, mdR) * 0.6;   // 月の映り込み（柔らかく縦に滲む）
+            }
+            float wet = u_wetness * clamp(uv.y / max(horizonY, 1e-3), 0.0, 1.0);
+            road = mix(road, refl, wet);
+        }
+
         // 外の地面：道路より u_roadRaise だけ低い面に交差させる
         float tG = -(u_camHeight + u_roadRaise) / dir.y;
         float Zg = dir.z * tG;
@@ -105,9 +119,17 @@ void main(){
         float t = clamp(dir.y / u_skyCurve, 0.0, 1.0);
         col = mix(u_skyHorizon, u_skyTop, t);
         if (u_moon > 0.5) {
-            float md = distance(vec2((uv.x - 0.5) * aspect, uv.y), vec2(u_moonX * aspect, u_moonY));
-            col = mix(col, u_moonCol, smoothstep(u_moonSize, 0.0, md));
-            col += u_moonCol * smoothstep(u_moonSize * 2.4, u_moonSize, md) * 0.18;
+            vec2 mp = vec2((uv.x - 0.5) * aspect, uv.y) - vec2(u_moonX * aspect, u_moonY);
+            float md = length(mp);
+            float disc = smoothstep(u_moonSize, u_moonSize * 0.93, md);     // 縁を少しソフトに
+            vec2 luv = mp / u_moonSize;                                     // 月内ローカル(-1..1)
+            float shade = 1.0 - 0.32 * dot(luv, luv);                       // 限縁減光（中心が明るい）
+            shade -= 0.20 * smoothstep(0.34, 0.0, distance(luv, vec2(-0.26, 0.22)));  // クレーター/海
+            shade -= 0.15 * smoothstep(0.30, 0.0, distance(luv, vec2(0.30, -0.12)));
+            shade -= 0.10 * smoothstep(0.22, 0.0, distance(luv, vec2(0.12, 0.46)));
+            shade -= 0.07 * fbm(luv * 3.0 + 11.0);                          // 微細なまだら
+            col = mix(col, u_moonCol * clamp(shade, 0.5, 1.05), disc);
+            col += u_moonCol * smoothstep(u_moonSize * 2.4, u_moonSize, md) * 0.18;  // ハロー
         }
 
         // ===== 薄雲（地平線〜中空に漂う。u_cityPhase でゆっくり横へ流れる）=====
@@ -128,7 +150,6 @@ void main(){
         // drift = 揺れ(u_cityPhase) ＋ 前進に伴う平行移動(u_cityScroll)。どちらも連続値。
         // ハッシュ入力は mod 256 で有界化し、mediump 環境でも破綻しないようにする。
         float sx = (uv.x - 0.5) * aspect;
-        float horizonY = 0.5 - 0.5 * (sp / cp) / tanY;
         for (int L = 0; L < 2; L++) {
             float layer = float(L);
             float par = 1.0 + layer * 0.6;                                     // 近層ほど大きく動く
@@ -211,6 +232,10 @@ void main(){
             float fz = fract(zhit / 3.0);                                // 3m ごとのパネル継ぎ目
             float seam = smoothstep(0.0, 0.05, fz) * (1.0 - smoothstep(0.95, 1.0, fz));
             c *= mix(0.78, 1.0, seam);
+            // 反射板（デリニエータ）：一定間隔・一定高さに小さく明るい点（再帰反射でよく目立つ）
+            float rDot = smoothstep(0.07, 0.0, abs(fract(zhit / 6.0) - 0.5))   // 6m ごと
+                       * smoothstep(0.12, 0.0, abs(yn - 0.6));                  // 高さ 0.6*hgt 付近
+            c += u_reflectorCol * rDot * u_reflectorBright;
             wallShade = c * fog;
         }
         if (wallHit) { col = wallShade; onRoad = false; onWall = true; }
@@ -336,6 +361,13 @@ void main(){
                     float poolR = u_poolSize * gscale + 0.006;
                     float d = distance(Pa, Pc);
                     light += u_lampCol * exp(-(d * d) / (poolR * poolR)) * u_poolIntensity * clamp(pscale, 0.1, 1.6) * lf;
+                }
+                // 濡れ反射：灯を地平線で折り返した縦長のグレア（wet road の光の筋）
+                if (u_wetness > 0.0) {
+                    vec2 rr = Pa - vec2(Ha.x, 2.0 * horizonY - Ha.y);
+                    float rw = u_glowSize * gscale * 1.3 + 0.004;
+                    float streak = exp(-(rr.x * rr.x) / (rw * rw) - (rr.y * rr.y) / (rw * rw * 40.0));
+                    light += u_lampCol * streak * u_glowBright * 0.45 * u_wetness * lf;
                 }
             }
         }
