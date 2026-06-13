@@ -108,6 +108,11 @@ void main(){
             road = mix(road, refl, wet);
         }
 
+        // 自車のヘッドライト：目の前〜中距離の路面を照らす（自車レーン中心、遠くで減衰）
+        float egoBeam = smoothstep(0.5, 5.0, Zr) * exp(-Zr * 0.05);
+        float egoLat = exp(-((Xr - u_camX) * (Xr - u_camX)) / (u_egoWidth * u_egoWidth));
+        road += u_egoCol * u_egoBright * egoBeam * egoLat;
+
         // 外の地面：道路より u_roadRaise だけ低い面に交差させる
         float tG = -(u_camHeight + u_roadRaise) / dir.y;
         float Zg = dir.z * tG;
@@ -246,6 +251,8 @@ void main(){
         vec2 car = u_cars[k];
         float cz = car.y;
         if (cz <= 0.5) continue;
+        float nearFade = smoothstep(2.0, 7.0, cz);        // 至近で消す（ビルボードの巨大化＝飛んでくる感を防ぐ）
+        if (nearFade < 0.01) continue;
         float carX = car.x + curveAt(cz);                 // 車中心のワールドX
         vec3 bp = project(vec3(carX - u_camX, -u_camHeight, cz), cp, sp, tanX, tanY); // 足元（路面）
         if (bp.z <= 0.05) continue;
@@ -287,7 +294,7 @@ void main(){
         else if (lp.y < 0.82 && abs(lp.x) < 0.86) body *= 1.05;              // ボンネット面を僅かに起こす
         vec2 hl = vec2(abs(lp.x) - u_carTrack, lp.y - u_carHeadH);           // ヘッドライトのレンズ
         body = mix(body, vec3(1.0, 0.97, 0.88), smoothstep(0.14, 0.0, length(hl)) * 0.9);
-        col = mix(col, body, m * occ);
+        col = mix(col, body, m * occ * nearFade);
     }
 
     // ===== 道路照明灯（ワールド座標を順投影）=====
@@ -378,6 +385,8 @@ void main(){
         vec2 car = u_cars[k];
         float cz = car.y;
         if (cz <= 0.5) continue;
+        float nearFade = smoothstep(2.0, 7.0, cz);        // 至近フェード（ボディと同じ）
+        if (nearFade < 0.01) continue;
         float cxBase = car.x + curveAt(cz) - u_camX;
         for (int hl = 0; hl < 2; hl++) {
             float off = (hl == 0) ? -u_carTrack : u_carTrack;
@@ -389,7 +398,7 @@ void main(){
             float r = u_carHeadSize * ps + 0.0025;   // 近いほど大きく
             float d = distance(Pp, Hp);
             float fade = exp(-cz * u_fogDensity);     // ヘッドライトは点光源：減衰は大気フェードのみ
-            light += u_carHeadCol * exp(-(d * d) / (r * r)) * u_carHeadBright * fade;
+            light += u_carHeadCol * exp(-(d * d) / (r * r)) * u_carHeadBright * fade * nearFade;
         }
         // ヘッドライトが照らす路面の淡いプール（車の手前側の車道に落ちる）
         if (onRoad) {
@@ -399,7 +408,7 @@ void main(){
                 vec2 Prc = vec2(pr.x * aspect, pr.y);
                 float prR = u_carHeadSize * 7.0 * pps + 0.012;
                 float dd = distance(vec2(uv.x * aspect, uv.y), Prc);
-                light += u_carHeadCol * exp(-(dd * dd) / (prR * prR)) * u_carHeadBright * 0.22 * exp(-cz * u_fogDensity);
+                light += u_carHeadCol * exp(-(dd * dd) / (prR * prR)) * u_carHeadBright * 0.22 * exp(-cz * u_fogDensity) * nearFade;
             }
         }
     }

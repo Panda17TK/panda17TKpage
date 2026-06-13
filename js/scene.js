@@ -164,7 +164,7 @@ NH.createScene = function (canvas, config) {
     function updateCars(dt) {
         for (var i = cars.length - 1; i >= 0; i--) {
             cars[i].z -= cars[i].speed * dt;       // 接近（Zが減る）
-            if (cars[i].z < -8) cars.splice(i, 1); // 通過したら消す
+            if (cars[i].z < 2) cars.splice(i, 1);  // 至近でフェード済み→消す（巨大化前に除去）
         }
         carTimer -= dt;
         if (carTimer <= 0) {

@@ -83,6 +83,8 @@ NH.PARAMS = [
     // --- 大気 / 見た目（旧ハードコード値を config 化）---
     { key: "fogDensity",    def: 0.012, uniform: "u_fogDensity",    type: "float", ui: { min: 0, max: 0.05, step: 0.001 } },
     { key: "wetness",       def: 0.34,  uniform: "u_wetness",       type: "float", ui: { min: 0, max: 1, step: 0.02 } },  // 路面の濡れ反射の強さ
+    { key: "egoBright",     def: 0.5,   uniform: "u_egoBright",     type: "float", ui: { min: 0, max: 2, step: 0.05 } },  // 自車ヘッドライトの路面照明
+    { key: "egoWidth",      def: 6.0,   uniform: "u_egoWidth",      type: "float", ui: { min: 2, max: 14, step: 0.5 } },  // その横方向の広がり(m)
     { key: "hazeSharp",     def: 220.0, uniform: "u_hazeSharp",     type: "float", ui: { min: 20, max: 600, step: 10 } },
     { key: "hazeIntensity", def: 0.45,  uniform: "u_hazeIntensity", type: "float", ui: { min: 0, max: 1.5, step: 0.05 } },
     { key: "skyCurve",      def: 0.60,  uniform: "u_skyCurve",      type: "float", ui: { min: 0.2, max: 1.5, step: 0.05 } },
@@ -135,7 +137,8 @@ NH.PARAMS = [
     { key: "cityCol",    def: [0.02, 0.025, 0.05],  uniform: "u_cityCol",    type: "color", ui: { color: true } },
     { key: "windowCol",  def: [1.00, 0.85, 0.50],   uniform: "u_windowCol",  type: "color", ui: { color: true } },
     { key: "beaconCol",  def: [1.00, 0.06, 0.03],   uniform: "u_beaconCol",  type: "color", ui: { color: true } },
-    { key: "carHeadCol", def: [0.85, 0.92, 1.00],   uniform: "u_carHeadCol", type: "color", ui: { color: true } }
+    { key: "carHeadCol", def: [0.85, 0.92, 1.00],   uniform: "u_carHeadCol", type: "color", ui: { color: true } },
+    { key: "egoCol",     def: [0.85, 0.88, 0.98],   uniform: "u_egoCol",     type: "color", ui: { color: true } }
 ];
 
 // 調整済みの値を残すならここに（"Copy config JSON" の出力を貼る）
