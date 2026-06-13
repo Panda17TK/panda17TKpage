@@ -62,7 +62,7 @@ gl.uniform1f(loc("u_cityPhase"), 0.4);
 gl.uniform1f(loc("u_cityScroll"), 1.5);
 gl.uniform1f(loc("u_cloudScroll"), 1.2);
 gl.uniform1f(loc("u_time"), 2.0);
-gl.uniform2fv(loc("u_cars[0]"), new Float32Array([2.5, 22, 7.5, 95, 0, -1, 0, -1])); // 対向車2台（手前/奥）
+gl.uniform2fv(loc("u_cars[0]"), new Float32Array([2.5, 34, 7.5, 110, 0, -1, 0, -1])); // 対向車2台（中/奥）
 gl.uniform3fv(loc("u_carCol[0]"), new Float32Array([0.90, 0.91, 0.93, 0.10, 0.20, 0.52, 0, 0, 0, 0, 0, 0])); // 白/青
 NH.PARAMS.forEach(function (p) {
     if (!p.uniform) return;
