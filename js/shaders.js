@@ -362,12 +362,12 @@ void main(){
                     float d = distance(Pa, Pc);
                     light += u_lampCol * exp(-(d * d) / (poolR * poolR)) * u_poolIntensity * clamp(pscale, 0.1, 1.6) * lf;
                 }
-                // 濡れ反射：灯を地平線で折り返した縦長のグレア（wet road の光の筋）
+                // 濡れ反射：灯を地平線で折り返した縦長のグレア。遠い灯ほど弱く（消失点での溜まりを防ぐ）
                 if (u_wetness > 0.0) {
                     vec2 rr = Pa - vec2(Ha.x, 2.0 * horizonY - Ha.y);
-                    float rw = u_glowSize * gscale * 1.3 + 0.004;
-                    float streak = exp(-(rr.x * rr.x) / (rw * rw) - (rr.y * rr.y) / (rw * rw * 40.0));
-                    light += u_lampCol * streak * u_glowBright * 0.45 * u_wetness * lf;
+                    float rw = u_glowSize * gscale * 1.2 + 0.004;
+                    float streak = exp(-(rr.x * rr.x) / (rw * rw) - (rr.y * rr.y) / (rw * rw * 18.0));
+                    light += u_lampCol * streak * u_glowBright * 0.30 * u_wetness * lf * clamp(pscale, 0.04, 1.2);
                 }
             }
         }
