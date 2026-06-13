@@ -154,7 +154,12 @@ void main(){
                     float iny = fract((uv.y - baseY) / cellH);
                     if (wseed > (1.0 - u_windowDensity) && inx > 0.22 && inx < 0.78 && iny > 0.22 && iny < 0.78) {
                         float tw = 0.45 + 0.55 * sin(u_time * 1.7 + wseed * 30.0);   // 瞬き
-                        col += u_windowCol * u_windowBright * tw;
+                        // 窓ごとに色味を散らす：電球(暖色)/蛍光灯(白)/寒色
+                        float wtint = hash(vec2(ch * 7.0 + cwx, cwy * 2.3 + layer * 9.0));
+                        vec3 wcol = (wtint < 0.55) ? u_windowCol
+                                  : (wtint < 0.82) ? vec3(0.86, 0.90, 1.00)
+                                  :                  vec3(0.55, 0.82, 1.00);
+                        col += wcol * u_windowBright * tw;
                     }
                 }
             }
@@ -242,14 +247,21 @@ void main(){
             }
         }
         if (occ < 0.004) continue;
-        vec3 body = u_carCol[k] * u_carBodyBright;
-        body += u_carCol[k] * 0.18 * smoothstep(0.7, 1.45, lp.y);       // 上部の僅かな照り
+        // ボディの陰影：平面塗りから立体感のある面に
+        float topLit = smoothstep(0.5, 1.45, lp.y);                          // 上面ほど明るい
+        float sideDark = 1.0 - 0.32 * smoothstep(0.45, 1.0, abs(lp.x) / max(halfAt, 0.001)); // 端は暗く（丸み）
+        vec3 body = u_carCol[k] * (u_carBodyBright * sideDark);
+        body += u_carCol[k] * 0.22 * topLit;                                 // 上部の照り
+        body += u_skyHorizon * 0.12 * smoothstep(1.18, 1.46, lp.y);          // ルーフが空を僅かに映す
         float winw = mix(0.7, 0.46, clamp((lp.y - 0.84) / 0.5, 0.0, 1.0));
-        if (lp.y > 0.86 && lp.y < 1.34 && abs(lp.x) < winw)             // フロントガラス（暗いガラス＋空の映り）
-            body = mix(vec3(0.02, 0.03, 0.05), u_skyHorizon, 0.35);
-        if (lp.y < 0.5) body *= 0.7;                                    // バンパー/グリルの陰
-        vec2 hl = vec2(abs(lp.x) - u_carTrack, lp.y - u_carHeadH);      // ヘッドライトのレンズ
-        if (dot(hl, hl) < 0.018) body = mix(body, vec3(1.0, 0.98, 0.9), 0.85);
+        if (lp.y > 0.86 && lp.y < 1.34 && abs(lp.x) < winw) {                // フロントガラス（暗いガラス＋空の映り）
+            body = mix(vec3(0.02, 0.03, 0.05), u_skyHorizon, 0.30);
+            body += u_skyTop * 0.06;
+        }
+        if (lp.y < 0.5) body *= 0.6;                                         // バンパー/グリルの陰
+        else if (lp.y < 0.82 && abs(lp.x) < 0.86) body *= 1.05;              // ボンネット面を僅かに起こす
+        vec2 hl = vec2(abs(lp.x) - u_carTrack, lp.y - u_carHeadH);           // ヘッドライトのレンズ
+        body = mix(body, vec3(1.0, 0.97, 0.88), smoothstep(0.14, 0.0, length(hl)) * 0.9);
         col = mix(col, body, m * occ);
     }
 
@@ -302,6 +314,14 @@ void main(){
             float paa = max(AAW(structD), 0.0015);
             col = mix(col, u_poleCol, (1.0 - smoothstep(pw, pw + paa, structD)) * 0.8 * lf);
 
+            // 灯具のハウジング（アーム先端の小さな箱。グローはこの直下からにじむ）
+            float housW = u_glowSize * 1.3 * gscale + 0.0025;
+            float housH = housW * 0.5;
+            vec2 hd = Pa - Ha; hd.y += housH * 0.7;   // アームからぶら下がるよう少し下に
+            float housing = (1.0 - smoothstep(housW, housW + paa, abs(hd.x)))
+                          * (1.0 - smoothstep(housH, housH + paa, abs(hd.y)));
+            col = mix(col, u_poleCol * 1.4, housing * 0.85 * lf);
+
             // グロー（残光）と頭部の白熱コアは light に加算（トーンマップ後に重ねる）
             light += u_lampCol * glow * clamp(u_glowBright * pscale, 0.08, u_glowBright) * lf;
             float coreR = u_glowSize * 0.7 * gscale + 0.001;
@@ -338,6 +358,17 @@ void main(){
             float d = distance(Pp, Hp);
             float fade = exp(-cz * u_fogDensity);     // ヘッドライトは点光源：減衰は大気フェードのみ
             light += u_carHeadCol * exp(-(d * d) / (r * r)) * u_carHeadBright * fade;
+        }
+        // ヘッドライトが照らす路面の淡いプール（車の手前側の車道に落ちる）
+        if (onRoad) {
+            vec3 pr = project(vec3(cxBase, -u_camHeight, cz - 5.0), cp, sp, tanX, tanY);
+            if (pr.z > 0.05) {
+                float pps = clamp(1.0 / pr.z, 0.05, 2.0);
+                vec2 Prc = vec2(pr.x * aspect, pr.y);
+                float prR = u_carHeadSize * 7.0 * pps + 0.012;
+                float dd = distance(vec2(uv.x * aspect, uv.y), Prc);
+                light += u_carHeadCol * exp(-(dd * dd) / (prR * prR)) * u_carHeadBright * 0.22 * exp(-cz * u_fogDensity);
+            }
         }
     }
 
