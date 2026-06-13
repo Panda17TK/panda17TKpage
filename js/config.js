@@ -56,6 +56,7 @@ NH.PARAMS = [
     { key: "wallOffset",    def: 0.5,   uniform: "u_wallOffset",    type: "float", ui: { min: 0, max: 4, step: 0.1 } },     // 路端から塀までの距離(m)
     { key: "wallLight",     def: 0.3,   uniform: "u_wallLight",     type: "float", ui: { min: 0, max: 1, step: 0.05 } },   // 塀ピクセルでの灯ライトの残し量（小さいほど塀越しの滲みが減る）
     { key: "medianHeight",  def: 0.9,   uniform: "u_medianHeight",  type: "float", ui: { min: 0, max: 2, step: 0.05 } },  // 中央分離帯ガードレールの高さ(m)
+    { key: "reflectorBright", def: 1.5, uniform: "u_reflectorBright", type: "float", ui: { min: 0, max: 4, step: 0.1 } }, // 塀の反射板（デリニエータ）の明るさ
 
     // --- 対向車（セダン）---
     { key: "carHeadH",      def: 0.62,  uniform: "u_carHeadH",      type: "float", ui: { min: 0.2, max: 1.5, step: 0.05 } }, // ヘッドライトの高さ(m)
@@ -81,6 +82,7 @@ NH.PARAMS = [
 
     // --- 大気 / 見た目（旧ハードコード値を config 化）---
     { key: "fogDensity",    def: 0.012, uniform: "u_fogDensity",    type: "float", ui: { min: 0, max: 0.05, step: 0.001 } },
+    { key: "wetness",       def: 0.34,  uniform: "u_wetness",       type: "float", ui: { min: 0, max: 1, step: 0.02 } },  // 路面の濡れ反射の強さ
     { key: "hazeSharp",     def: 220.0, uniform: "u_hazeSharp",     type: "float", ui: { min: 20, max: 600, step: 10 } },
     { key: "hazeIntensity", def: 0.45,  uniform: "u_hazeIntensity", type: "float", ui: { min: 0, max: 1.5, step: 0.05 } },
     { key: "skyCurve",      def: 0.60,  uniform: "u_skyCurve",      type: "float", ui: { min: 0.2, max: 1.5, step: 0.05 } },
@@ -124,6 +126,7 @@ NH.PARAMS = [
     { key: "asphalt",    def: [0.11, 0.11, 0.14],   uniform: "u_asphalt",    type: "color", ui: { color: true } },
     { key: "wallCol",    def: [0.12, 0.12, 0.15],   uniform: "u_wallCol",    type: "color", ui: { color: true } },
     { key: "wallTopCol", def: [0.30, 0.31, 0.38],   uniform: "u_wallTopCol", type: "color", ui: { color: true } },
+    { key: "reflectorCol", def: [1.00, 0.62, 0.18], uniform: "u_reflectorCol", type: "color", ui: { color: true } },
     { key: "laneCol",    def: [0.90, 0.92, 0.97],   uniform: "u_laneCol",    type: "color", ui: { color: true } },
     { key: "lampCol",    def: [1.00, 0.72, 0.36],   uniform: "u_lampCol",    type: "color", ui: { color: true } },
     { key: "hazeCol",    def: [0.22, 0.13, 0.06],   uniform: "u_hazeCol",    type: "color", ui: { color: true } },
