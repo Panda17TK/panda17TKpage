@@ -109,7 +109,7 @@ void main(){
         }
 
         // 自車のヘッドライト：目の前〜中距離の路面を照らす（自車レーン中心、遠くで減衰）
-        float egoBeam = smoothstep(0.5, 5.0, Zr) * exp(-Zr * 0.05);
+        float egoBeam = smoothstep(0.4, 3.0, Zr) * exp(-Zr * u_egoReach);
         float egoLat = exp(-((Xr - u_camX) * (Xr - u_camX)) / (u_egoWidth * u_egoWidth));
         road += u_egoCol * u_egoBright * egoBeam * egoLat;
 
