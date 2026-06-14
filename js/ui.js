@@ -10,7 +10,7 @@ NH.initUI = function () {
     var links = document.querySelector(".nav__links");
     if (toggle && links) {
         // メニュー以外の主要領域（開いている間は inert / aria-hidden）
-        var others = [document.querySelector(".hero"), document.querySelector(".footer")].filter(Boolean);
+        var others = [document.querySelector("main"), document.querySelector(".footer")].filter(Boolean);
 
         function focusables() {
             return Array.prototype.slice.call(
