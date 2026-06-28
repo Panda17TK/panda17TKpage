@@ -13,6 +13,7 @@
     /* レイアウト */
     --maxw: 1080px;
     --section-pad: clamp(4.5rem, 10vw, 8rem);
+    --content-inset: clamp(1.2rem, 5vw, 3rem); /* セクション/フッターの左右余白（ナビとは独立） */
 
     /* ナビ（上部バー・ネオン）— ここを変えれば位置・サイズ・色をまとめて調整できる */
     --nav-top: 1.2rem;          /* 上端からの距離 */
@@ -77,6 +78,17 @@ main,
 .footer {
     position: relative;
     z-index: 2;
+}
+
+/* ナビ可読性：画面上部にだけ薄い暗幕を敷き、明るい場面でも文字が沈まないようにする */
+header::before {
+    content: "";
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: 6rem;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(5, 6, 10, 0.6) 0%, rgba(5, 6, 10, 0.24) 55%, transparent 100%);
 }
 
 /* キーボード操作者向けスキップリンク（通常は隠し、フォーカスで出現） */
@@ -337,7 +349,7 @@ main,
 
 /* ---------- Sections ---------- */
 .section {
-    padding: var(--section-pad) var(--nav-inset);
+    padding: var(--section-pad) var(--content-inset);
 }
 
 .section__inner {
@@ -381,7 +393,9 @@ main,
     margin: 2.6rem 0 0;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    /* auto-fill＋上限幅で、カードが1枚でも全幅に間延びせず左から詰む */
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 360px));
+    justify-content: start;
     gap: 1.2rem;
 }
 
@@ -562,7 +576,7 @@ main,
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
-    padding: 2rem var(--nav-inset) 2.4rem;
+    padding: 2rem var(--content-inset) 2.4rem;
     font-size: 0.75rem;
     letter-spacing: 0.5px;
     color: var(--muted);

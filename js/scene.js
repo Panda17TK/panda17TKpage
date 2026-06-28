@@ -172,8 +172,10 @@ NH.createScene = function (canvas, config) {
             carTimer = gap;
             if (cars.length < 4) {
                 var hw = config.roadHalfWidth;
-                var laneC = (Math.random() < 0.5 ? 0.25 : 0.75) * hw;     // 反対側2車線のどちらか
-                var x = laneC + (Math.random() - 0.5) * hw * 0.12;        // 車線内の微小ばらつき
+                // 反対車線(x>0)の2車線中心。シェーダーの車線分離線（破線 ±laneEdge*0.5、
+                // 外側エッジ ±laneEdge）に合わせ、内側=laneEdge*0.25 / 外側=laneEdge*0.75。
+                var laneC = (Math.random() < 0.5 ? 0.25 : 0.75) * config.laneEdge * hw;
+                var x = laneC + (Math.random() - 0.5) * hw * 0.10;        // 車線内の微小ばらつき
                 var sp = config.carSpeed * (0.85 + Math.random() * 0.3);  // 速度ばらつき
                 var col = CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)];
                 cars.push({ x: x, z: config.carSpawnDist, speed: sp, col: col });
@@ -189,8 +191,7 @@ NH.createScene = function (canvas, config) {
             scrollDist += dt * config.speed;
             cityScroll += dt * config.citySpeed;
             cloudScroll += dt * config.cloudSpeed;
-            animTime += dt;
-            if (animTime > 1e4) animTime -= 1e4;
+            animTime = (animTime + dt) % 1e4;   // 有界化（時間依存パスの mediump 精度を保つ）
             updateCars(dt);
         }
         render();

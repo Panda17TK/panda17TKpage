@@ -115,8 +115,11 @@ void main(){
 
         // 外の地面：道路より u_roadRaise だけ低い面に交差させる
         float tG = -(u_camHeight + u_roadRaise) / dir.y;
+        float Xg = u_camX + dir.x * tG;
         float Zg = dir.z * tG;
-        vec3 grnd = u_ground * exp(-Zg * u_fogDensity);
+        // 路肩のまだら（前進でスクロールする微かな起伏）。単色のフラットさを解消
+        float gnz = vnoise(vec2(Xg * 0.35, (Zg + u_scroll) * 0.18));
+        vec3 grnd = u_ground * (0.78 + 0.5 * gnz) * exp(-Zg * u_fogDensity);
 
         col = mix(grnd, road, roadMask);
     } else {
@@ -313,6 +316,8 @@ void main(){
             if (hp.z <= 0.05) continue;
             vec3 tp = project(vec3(edgeX, u_poleHeight - u_camHeight, Zrel), cp, sp, tanX, tanY);  // 支柱の頂部
             vec3 bp = project(vec3(edgeX, u_wallHeight - u_camHeight, Zrel), cp, sp, tanX, tanY);  // 塀上端＝支柱の根元
+            // 残光の向き決め用に、同じ灯具をさらに奥(Zrel*1.4)へ置いた点を投影する。
+            // Aa-Ha が「道路の縁に平行な消失点方向」を与える（係数はこの先読み距離）。
             vec3 ahp = project(vec3(sd * (u_roadHalfWidth + u_lampSide) - sd * u_lampArm + curveAt(Zrel * 1.4) - u_camX,
                                     u_poleHeight - u_camHeight, Zrel * 1.4), cp, sp, tanX, tanY);
             float pscale = clamp(1.0 / hp.z, 0.02, 2.5);

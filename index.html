@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -140,15 +140,16 @@
     </main>
 
     <footer class="footer">
-        <span>&copy; <span id="year"></span> Panda17TK</span>
+        <!-- JS 無効時も年が出るよう 2025 を初期値に。app/ui 起動時に現在年へ更新 -->
+        <span>&copy; <span id="year">2025</span> Panda17TK</span>
         <span class="footer__hint">endless night drive</span>
     </footer>
 
+    <!-- devpanel.js は ?dev のときだけ app.js が動的ロードする（通常時は読み込まない） -->
     <script defer src="js/config.js"></script>
     <script defer src="js/shaders.js"></script>
     <script defer src="js/ui.js"></script>
     <script defer src="js/scene.js"></script>
-    <script defer src="js/devpanel.js"></script>
     <script defer src="js/app.js"></script>
 </body>
 </html>
