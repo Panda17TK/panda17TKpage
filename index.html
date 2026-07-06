@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Panda17TK — my storeroom. Maker working across Rust, Python and JavaScript. Tools, experiments and links on an endless night drive.">
+    <meta name="description" content="Panda17TK — 私の物置。Rust・Python・JavaScript でつくる小さく鋭い道具と描画実験。果てなき夜のドライブとともに。">
     <meta name="theme-color" content="#05060a">
-    <title>Panda17TK — my storeroom</title>
+    <title>Panda17TK — ものおき</title>
 
     <!-- favicon（夜の高速道路モチーフ）。SVG 非対応環境向けに PNG フォールバック -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -15,19 +15,19 @@
     <!-- Open Graph / Twitter Card（SNS 共有時のプレビュー。多くの SNS は SVG 非対応のため PNG を使用） -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="Panda17TK">
-    <meta property="og:description" content="my storeroom — endless night drive.">
+    <meta property="og:description" content="私の物置 — 果てなき夜のドライブ。">
     <meta property="og:url" content="https://panda17tk.github.io/panda17TKpage/">
     <meta property="og:image" content="https://panda17tk.github.io/panda17TKpage/og-image.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Panda17TK">
-    <meta name="twitter:description" content="my storeroom — endless night drive.">
+    <meta name="twitter:description" content="私の物置 — 果てなき夜のドライブ。">
     <meta name="twitter:image" content="https://panda17tk.github.io/panda17TKpage/og-image.png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bruno+Ace&family=Inter:wght@300;400;500;600&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;600;700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -36,21 +36,21 @@
     <canvas id="bg" aria-hidden="true"></canvas>
 
     <!-- キーボード操作者向け：本文へ一気に飛ぶ -->
-    <a class="skip-link" href="#about">Skip to content</a>
+    <a class="skip-link" href="#about">本文へ移動</a>
 
     <header>
-        <nav class="nav" aria-label="Main navigation">
+        <nav class="nav" aria-label="メインナビゲーション">
             <a class="nav__brand" href="#top">Panda17TK</a>
 
-            <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+            <button class="nav__toggle" aria-label="メニューを開閉" aria-expanded="false" aria-controls="nav-links">
                 <span></span><span></span><span></span>
             </button>
 
             <ul class="nav__links" id="nav-links">
-                <li><a href="#top">Home</a></li>
-                <li><a href="#works">Works</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#contact">Contact</a></li>
+                <li><a href="#top">ホーム</a></li>
+                <li><a href="#works">作品</a></li>
+                <li><a href="#about">私について</a></li>
+                <li><a href="#contact">連絡先</a></li>
                 <li><a href="https://github.com/Panda17TK" target="_blank" rel="noopener noreferrer">GitHub</a></li>
             </ul>
         </nav>
@@ -59,15 +59,18 @@
     <main>
         <!-- ---------- Hero ---------- -->
         <section class="hero" id="top">
-            <p class="hero__eyebrow">my storeroom</p>
+            <p class="hero__eyebrow">私の物置</p>
             <h1 class="hero__title">Panda17TK</h1>
-            <p class="hero__tagline">small, sharp tools &amp; rendering experiments — on an endless night drive.</p>
+            <p class="hero__tagline">小さく鋭い道具と、描画の実験 — 果てなき夜のドライブとともに。</p>
             <div class="hero__cta">
-                <a class="btn btn--primary" href="#works">View works</a>
+                <a class="btn btn--primary" href="#works">作品を見る</a>
                 <a class="btn" href="https://github.com/Panda17TK" target="_blank" rel="noopener noreferrer">GitHub</a>
             </div>
-            <a class="hero__scroll" href="#works" aria-label="Scroll to works">
-                <span class="hero__scroll-text">scroll</span>
+            <!-- 落款（らっかん）風の朱印。装飾要素 -->
+            <!-- Google Fonts の和文フォントは縦書きメトリクス非対応のため <br> で縦に積む -->
+            <span class="hero__seal" aria-hidden="true">熊<br>猫</span>
+            <a class="hero__scroll" href="#works" aria-label="作品セクションへスクロール">
+                <span class="hero__scroll-text">下へ</span>
                 <span class="hero__scroll-arrow" aria-hidden="true"></span>
             </a>
         </section>
@@ -75,23 +78,23 @@
         <!-- ---------- Works ---------- -->
         <section class="section" id="works" aria-labelledby="works-heading">
             <div class="section__inner">
-                <p class="section__kicker">01 — Works</p>
-                <h2 class="section__title" id="works-heading">Things in the storeroom</h2>
-                <p class="section__lead">A few selected builds. Everything else lives on GitHub.</p>
+                <p class="section__kicker">壱 — 作品</p>
+                <h2 class="section__title" id="works-heading">物置の中身</h2>
+                <p class="section__lead">選りすぐりをいくつか。そのほかはすべて GitHub にあります。</p>
 
                 <ul class="works">
                     <li class="card">
                         <a class="card__link" href="https://github.com/Panda17TK/TailKVM" target="_blank" rel="noopener noreferrer">
                             <span class="card__tag">Rust</span>
                             <h3 class="card__title">TailKVM</h3>
-                            <p class="card__desc">Software KVM for Windows over Tailscale — share one mouse, keyboard and clipboard across PCs, with seamless screen-edge crossing.</p>
-                            <span class="card__cta" aria-hidden="true">View on GitHub →</span>
+                            <p class="card__desc">Tailscale 越しに使う Windows 向けソフトウェア KVM。ひと組のマウス・キーボード・クリップボードを複数の PC で共有し、画面の端を越えてなめらかに行き来できます。</p>
+                            <span class="card__cta" aria-hidden="true">GitHub で見る →</span>
                         </a>
                     </li>
                 </ul>
 
                 <a class="section__more" href="https://github.com/Panda17TK?tab=repositories" target="_blank" rel="noopener noreferrer">
-                    View all repositories →
+                    すべてのリポジトリを見る →
                 </a>
             </div>
         </section>
@@ -99,26 +102,26 @@
         <!-- ---------- About ---------- -->
         <section class="section" id="about" aria-labelledby="about-heading">
             <div class="section__inner section__inner--narrow">
-                <p class="section__kicker">02 — About</p>
-                <h2 class="section__title" id="about-heading">Maker on the night shift</h2>
+                <p class="section__kicker">弐 — 私について</p>
+                <h2 class="section__title" id="about-heading">夜更けのものづくり</h2>
                 <p class="about__lead">
-                    I build small, sharp tools across <strong>Rust</strong>, <strong>Python</strong>
-                    and <strong>JavaScript</strong> — remote-control and KVM utilities, scheduling
-                    apps, network simulators, and the occasional rendering experiment.
+                    <strong>Rust</strong>・<strong>Python</strong>・<strong>JavaScript</strong> で、
+                    小さく鋭い道具をつくっています — 遠隔操作や KVM のユーティリティ、
+                    スケジュール管理アプリ、ネットワークシミュレータ、そして時々の描画実験。
                 </p>
                 <p class="about__body">
-                    This page is my storeroom: a quiet place on an endless night drive where finished
-                    and half-finished things are kept. Nothing here tries to be loud — just useful,
-                    and built the way I like to build.
+                    このページは私の物置です。果てなき夜のドライブの途中にある静かな場所に、
+                    完成したものも作りかけのものも仕舞ってあります。声高なものは何もありません —
+                    ただ役に立つものを、自分の好きなやり方で。
                 </p>
-                <ul class="chips" aria-label="Tools and topics">
+                <ul class="chips" aria-label="道具と関心事">
                     <li>Rust</li>
                     <li>Python</li>
                     <li>JavaScript</li>
                     <li>WebGL</li>
-                    <li>Networking</li>
-                    <li>Remote control</li>
-                    <li>Automation</li>
+                    <li>ネットワーク</li>
+                    <li>遠隔操作</li>
+                    <li>自動化</li>
                 </ul>
             </div>
         </section>
@@ -126,9 +129,9 @@
         <!-- ---------- Contact ---------- -->
         <section class="section" id="contact" aria-labelledby="contact-heading">
             <div class="section__inner section__inner--narrow">
-                <p class="section__kicker">03 — Contact</p>
-                <h2 class="section__title" id="contact-heading">Find me</h2>
-                <p class="section__lead">The fastest way to reach the work is GitHub.</p>
+                <p class="section__kicker">参 — 連絡先</p>
+                <h2 class="section__title" id="contact-heading">連絡はこちらへ</h2>
+                <p class="section__lead">いちばんの近道は GitHub です。</p>
                 <div class="links">
                     <a class="link-card" href="https://github.com/Panda17TK" target="_blank" rel="noopener noreferrer">
                         <span class="link-card__label">GitHub</span>
@@ -142,7 +145,7 @@
     <footer class="footer">
         <!-- JS 無効時も年が出るよう 2025 を初期値に。app/ui 起動時に現在年へ更新 -->
         <span>&copy; <span id="year">2025</span> Panda17TK</span>
-        <span class="footer__hint">endless night drive</span>
+        <span class="footer__hint">果てなき夜のドライブ</span>
     </footer>
 
     <!-- devpanel.js は ?dev のときだけ app.js が動的ロードする（通常時は読み込まない） -->
