@@ -237,15 +237,6 @@ header::before {
     position: relative;
 }
 
-.hero__eyebrow {
-    font-family: var(--display);
-    font-size: clamp(0.8rem, 1.6vw, 0.95rem);
-    letter-spacing: 0.42em;
-    color: var(--accent);
-    margin-bottom: 1.1rem;
-    text-shadow: 0 0 12px rgba(255, 109, 77, 0.55);
-}
-
 .hero__title {
     font-family: var(--display);
     font-weight: 400;
@@ -258,15 +249,6 @@ header::before {
         0 0 26px rgba(255, 109, 77, 0.45),
         0 0 60px rgba(255, 109, 77, 0.28),
         0 4px 30px rgba(0, 0, 0, 0.6);
-}
-
-.hero__tagline {
-    max-width: 34ch;
-    margin: 1.4rem auto 0;
-    font-size: clamp(1rem, 2.4vw, 1.2rem);
-    font-weight: 300;
-    color: rgba(243, 244, 248, 0.86);
-    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.7);
 }
 
 .hero__cta {
