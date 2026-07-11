@@ -99,6 +99,7 @@ NH.PARAMS = [
     { key: "moonX",         def: 0.30,  uniform: "u_moonX",         type: "float", ui: { min: 0, max: 1, step: 0.01 } },
     { key: "moonY",         def: 0.82,  uniform: "u_moonY",         type: "float", ui: { min: 0.3, max: 1, step: 0.01 } },
     { key: "moonSize",      def: 0.06,  uniform: "u_moonSize",      type: "float", ui: { min: 0.01, max: 0.2, step: 0.005 } },
+    { key: "moonShadowX",   def: 2.2,   uniform: "u_moonShadowX",   type: "float", ui: { min: -2.2, max: 2.2, step: 0.05 } }, // 月相の影円オフセット（0=新月, ±2.2=満月。app.js が実日付から設定）
 
     // --- 遠くの都市 ---
     { key: "cityHeight",    def: 0.10,  uniform: "u_cityHeight",    type: "float", ui: { min: 0, max: 0.3, step: 0.005 } },
@@ -117,7 +118,7 @@ NH.PARAMS = [
     { key: "cloudCover",    def: 0.52,  uniform: "u_cloudCover",    type: "float", ui: { min: 0.2, max: 0.95, step: 0.02 } }, // 雲量の閾値（大きいほど少なく薄く）
     { key: "cloudScale",    def: 1.7,   uniform: "u_cloudScale",    type: "float", ui: { min: 0.4, max: 5, step: 0.1 } },    // 雲のディテールの細かさ
     { key: "cloudStretch",  def: 3.6,   uniform: "u_cloudStretch",  type: "float", ui: { min: 1, max: 8, step: 0.2 } },     // 縦の層の細かさ（大きいほど薄い層が増える）
-    { key: "cloudDrift",    def: 0.10,  uniform: "u_cloudDrift",    type: "float", ui: { min: 0, max: 1, step: 0.02 } },    // u_cloudScroll に対する横流れ量
+    { key: "cloudDrift",    def: 0.10,  ui: { min: 0, max: 1, step: 0.02 } },   // 雲の横流れ量（JS で u_cloudScroll に乗算し 128 でラップ）
     { key: "cloudSpeed",    def: 0.5,   ui: { min: 0, max: 3, step: 0.1 } },                                                 // 雲の流れ速度（JS で u_cloudScroll を生成）
     { key: "cloudOctaves",  def: 4,     uniform: "u_cloudOctaves",  type: "int",   ui: { min: 1, max: 4, step: 1 } },       // fbm のオクターブ数（モバイルで下げて軽量化）
 
