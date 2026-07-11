@@ -16,12 +16,16 @@ float hash(vec2 p){
     return fract((q.x + q.y) * q.z);
 }
 
-// 薄雲用の value noise と fbm
+// 薄雲・路肩用の value noise と fbm。
+// セル番号を mod 128 で巡回させた周期ノイズ：スクロールを 128 の倍数で
+// ラップすれば模様が飛ばない（雲=u_cloudScroll / 路肩=u_groundScroll が前提）。
 float vnoise(vec2 p){
     vec2 i = floor(p), f = fract(p);
     vec2 u = f * f * (3.0 - 2.0 * f);
-    float a = hash(i), b = hash(i + vec2(1.0, 0.0));
-    float c = hash(i + vec2(0.0, 1.0)), d = hash(i + vec2(1.0, 1.0));
+    float a = hash(mod(i, 128.0));
+    float b = hash(mod(i + vec2(1.0, 0.0), 128.0));
+    float c = hash(mod(i + vec2(0.0, 1.0), 128.0));
+    float d = hash(mod(i + vec2(1.0, 1.0), 128.0));
     return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
 }
 float fbm(vec2 p){
@@ -102,7 +106,9 @@ void main(){
             vec3 refl = mix(u_skyHorizon, u_skyTop, tt);
             if (u_moon > 0.5) {
                 float mdR = distance(vec2((uv.x - 0.5) * aspect, refY), vec2(u_moonX * aspect, u_moonY));
-                refl += u_moonCol * smoothstep(u_moonSize * 2.8, 0.0, mdR) * 0.6;   // 月の映り込み（柔らかく縦に滲む）
+                // 月の映り込み（柔らかく縦に滲む）。月相ぶん減光
+                refl += u_moonCol * smoothstep(u_moonSize * 2.8, 0.0, mdR) * 0.6
+                      * clamp(abs(u_moonShadowX) / 2.2, 0.15, 1.0);
             }
             float wet = u_wetness * clamp(uv.y / max(horizonY, 1e-3), 0.0, 1.0);
             road = mix(road, refl, wet);
@@ -115,8 +121,13 @@ void main(){
 
         // 外の地面：道路より u_roadRaise だけ低い面に交差させる
         float tG = -(u_camHeight + u_roadRaise) / dir.y;
+        float Xg = u_camX + dir.x * tG;
         float Zg = dir.z * tG;
-        vec3 grnd = u_ground * exp(-Zg * u_fogDensity);
+        // 路肩のまだら（前進でスクロールする微かな起伏）。単色のフラットさを解消。
+        // u_scroll（wrapMeters 周期）ではなく専用の u_groundScroll（128 周期＝
+        // 周期ノイズと同期）を使い、ラップ時に模様が組み変わらないようにする。
+        float gnz = vnoise(vec2(Xg * 0.35, Zg * 0.18 + u_groundScroll));
+        vec3 grnd = u_ground * (0.78 + 0.5 * gnz) * exp(-Zg * u_fogDensity);
 
         col = mix(grnd, road, roadMask);
     } else {
@@ -133,8 +144,12 @@ void main(){
             shade -= 0.15 * smoothstep(0.30, 0.0, distance(luv, vec2(0.30, -0.12)));
             shade -= 0.10 * smoothstep(0.22, 0.0, distance(luv, vec2(0.12, 0.46)));
             shade -= 0.07 * fbm(luv * 3.0 + 11.0);                          // 微細なまだら
-            col = mix(col, u_moonCol * clamp(shade, 0.5, 1.05), disc);
-            col += u_moonCol * smoothstep(u_moonSize * 2.4, u_moonSize, md) * 0.18;  // ハロー
+            // 月相：同径の影円をずらして欠けを表現（0=新月、|2.2|=満月。app.js が実日付から設定）
+            float sdist = distance(luv, vec2(u_moonShadowX, 0.0));
+            shade *= mix(1.0, 0.12, 1.0 - smoothstep(0.92, 1.12, sdist));
+            float moonIll = clamp(abs(u_moonShadowX) / 2.2, 0.15, 1.0);     // ハロー/映り込みの減光係数
+            col = mix(col, u_moonCol * clamp(shade, 0.06, 1.05), disc);
+            col += u_moonCol * smoothstep(u_moonSize * 2.4, u_moonSize, md) * 0.18 * moonIll;  // ハロー
         }
 
         // ===== 薄雲（地平線〜中空に漂う。u_cityPhase でゆっくり横へ流れる）=====
@@ -142,7 +157,9 @@ void main(){
             float sxc = (uv.x - 0.5) * aspect;
             // 横は低周波（広い）、縦は高周波（薄い層）→ 水平に伸びた薄雲。
             // u_cloudScroll で前進方向へ連続的に流れる（有界値で mediump 安全）。
-            vec2 cuv = vec2(sxc * u_cloudScale + u_cloudScroll * u_cloudDrift,
+            // u_cloudScroll は JS 側で cloudDrift を乗算済み・128 でラップ済み
+            // （周期ノイズと同期し、ラップ時に雲が飛ばない）
+            vec2 cuv = vec2(sxc * u_cloudScale + u_cloudScroll,
                             dir.y * u_cloudScale * u_cloudStretch);
             float dens = smoothstep(u_cloudCover, 1.0, fbm(cuv + 4.0));
             // 地平線のすぐ上から立ち上がり、天頂に向けて薄れる帯
@@ -157,8 +174,11 @@ void main(){
         float sx = (uv.x - 0.5) * aspect;
         for (int L = 0; L < 2; L++) {
             float layer = float(L);
-            float par = 1.0 + layer * 0.6;                                     // 近層ほど大きく動く
-            float scale = u_cityCols * (1.0 + layer * 0.7);                    // 手前ほど大きいビル
+            // par×scale係数の積が整数(=近層2.0×1.5=3.0)になる組合せにする：
+            // u_cityScroll のラップ(256/cityCols)時に両層とも 256 セルの整数倍だけ
+            // ずれ、パターンが飛ばない（旧 1.6×1.7=2.72 は近層だけ組み変わっていた）
+            float par = 1.0 + layer * 0.5;                                     // 近層ほど大きく動く
+            float scale = u_cityCols * (1.0 + layer);                          // 手前ほど密なビル
             float drift = (u_cityPhase * u_cityParallax + u_cityScroll) * par; // 揺れ＋前進の平行移動
             float maxH = u_cityHeight * (0.55 + layer * 0.75);
             float baseY = horizonY - layer * 0.004;
@@ -179,7 +199,8 @@ void main(){
                     float inx = fract(wx * winCols);
                     float iny = fract((uv.y - baseY) / cellH);
                     if (wseed > (1.0 - u_windowDensity) && inx > 0.22 && inx < 0.78 && iny > 0.22 && iny < 0.78) {
-                        float tw = 0.45 + 0.55 * sin(u_time * 1.7 + wseed * 30.0);   // 瞬き
+                        // 瞬き。周波数は 2π×27/100（u_time の100秒ラップと同期し位相が飛ばない）
+                        float tw = 0.45 + 0.55 * sin(u_time * 1.6964600 + wseed * 30.0);
                         // 窓ごとに色味を散らす：電球(暖色)/蛍光灯(白)/寒色
                         float wtint = hash(vec2(ch * 7.0 + cwx, cwy * 2.3 + layer * 9.0));
                         vec3 wcol = (wtint < 0.55) ? u_windowCol
@@ -194,7 +215,8 @@ void main(){
                 float sxc = (c + 0.5) / scale - drift;                  // ビル中心の横位置（アスペクト空間）
                 vec2 bpos = vec2(sxc, top + 0.006);
                 float bd = distance(vec2(sx, uv.y), bpos);
-                float blink = 0.3 + 0.7 * pow(0.5 + 0.5 * sin(u_time * 2.2 + h * 12.0), 2.0);
+                // 点滅周波数は 2π×35/100（u_time の100秒ラップと同期）
+                float blink = 0.3 + 0.7 * pow(0.5 + 0.5 * sin(u_time * 2.1991149 + h * 12.0), 2.0);
                 col += u_beaconCol * exp(-(bd * bd) / (u_beaconSize * u_beaconSize)) * u_beaconBright * blink;
             }
         }
@@ -234,11 +256,13 @@ void main(){
             float yn = clamp(yhit / hgt, 0.0, 1.0);
             vec3 c = mix(u_wallCol * 0.6, u_wallCol, yn);                 // 下ほど暗い
             c = mix(c, u_wallTopCol, smoothstep(0.88, 1.0, yn));         // 笠木（上端）の明るい縁
-            float fz = fract(zhit / 3.0);                                // 3m ごとのパネル継ぎ目
+            // 継ぎ目・反射板は u_scroll を足してワールド固定にする（前進で手前に流れる。
+            // wrapMeters は 6 の倍数に揃えてあるためラップ時も連続）
+            float fz = fract((zhit + u_scroll) / 3.0);                   // 3m ごとのパネル継ぎ目
             float seam = smoothstep(0.0, 0.05, fz) * (1.0 - smoothstep(0.95, 1.0, fz));
             c *= mix(0.78, 1.0, seam);
             // 反射板（デリニエータ）：一定間隔・一定高さに小さく明るい点（再帰反射でよく目立つ）
-            float rDot = smoothstep(0.07, 0.0, abs(fract(zhit / 6.0) - 0.5))   // 6m ごと
+            float rDot = smoothstep(0.07, 0.0, abs(fract((zhit + u_scroll) / 6.0) - 0.5))   // 6m ごと
                        * smoothstep(0.12, 0.0, abs(yn - 0.6));                  // 高さ 0.6*hgt 付近
             c += u_reflectorCol * rDot * u_reflectorBright;
             wallShade = c * fog;
@@ -313,6 +337,8 @@ void main(){
             if (hp.z <= 0.05) continue;
             vec3 tp = project(vec3(edgeX, u_poleHeight - u_camHeight, Zrel), cp, sp, tanX, tanY);  // 支柱の頂部
             vec3 bp = project(vec3(edgeX, u_wallHeight - u_camHeight, Zrel), cp, sp, tanX, tanY);  // 塀上端＝支柱の根元
+            // 残光の向き決め用に、同じ灯具をさらに奥(Zrel*1.4)へ置いた点を投影する。
+            // Aa-Ha が「道路の縁に平行な消失点方向」を与える（係数はこの先読み距離）。
             vec3 ahp = project(vec3(sd * (u_roadHalfWidth + u_lampSide) - sd * u_lampArm + curveAt(Zrel * 1.4) - u_camX,
                                     u_poleHeight - u_camHeight, Zrel * 1.4), cp, sp, tanX, tanY);
             float pscale = clamp(1.0 / hp.z, 0.02, 2.5);
@@ -446,7 +472,7 @@ NH.buildFragment = function (opts) {
     head += opts.derivatives ? "#define AAW(x) (fwidth(x))\n" : "#define AAW(x) (0.0)\n";
 
     // エンジン uniform ＋ PARAMS 由来 uniform
-    var decls = "uniform vec2 u_res;\nuniform float u_scroll;\nuniform float u_sway;\nuniform float u_time;\nuniform float u_cityPhase;\nuniform float u_cityScroll;\nuniform float u_cloudScroll;\nuniform vec2 u_cars[4];\nuniform vec3 u_carCol[4];\n";
+    var decls = "uniform vec2 u_res;\nuniform float u_scroll;\nuniform float u_sway;\nuniform float u_time;\nuniform float u_cityPhase;\nuniform float u_cityScroll;\nuniform float u_cloudScroll;\nuniform float u_groundScroll;\nuniform vec2 u_cars[4];\nuniform vec3 u_carCol[4];\n";
     for (var i = 0; i < params.length; i++) {
         var p = params[i];
         if (p.uniform) decls += "uniform " + glType(p.type) + " " + p.uniform + ";\n";

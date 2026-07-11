@@ -16,7 +16,14 @@ NH.createScene = function (canvas, config) {
     var derivExt = gl.getExtension("OES_standard_derivatives");
     var prog = null, buf = null, U = {}, locReady = false;
     var raf = 0, running = false, lost = false, disposed = false;
-    var lastT = 0, scrollDist = 0, animTime = 0, wrapMeters = 1.0, cityScroll = 0, cloudScroll = 0;
+    var lastT = 0, scrollDist = 0, wrapMeters = 1.0, cityScroll = 0, cloudScroll = 0;
+    var TAU = Math.PI * 2;
+    // 位相アキュムレータ：sin に渡す位相そのものを 2π でラップし、
+    // 時間の有界化（旧 animTime % 1e4 / u_time % 100）で起きていた位相ジャンプを根絶する
+    var swayPhase = 0, cityPhaseV = 0, blinkTime = 0;
+    var GROUND_NOISE_SCALE = 0.18;                        // shaders.js の路肩ノイズ係数と同期
+    var fpsAcc = 0, fpsN = 0;                             // 実測FPSによる品質自動ダウン用
+    var flashT = -1, flashHasCar = false;                 // パッシング（クリックのハイビーム）
     var cars = [], carTimer = 6 + Math.random() * 24;     // 対向車（最大4台）＋次の出現までの秒数
     var carData = new Float32Array(8);                    // u_cars[4] = (laneX, Z)
     var carColData = new Float32Array(12);                // u_carCol[4] = body color
@@ -36,6 +43,13 @@ NH.createScene = function (canvas, config) {
         var CAP = 1e4;
         if (!isFinite(wrapMeters) || wrapMeters < 1 || wrapMeters > CAP) {
             wrapMeters = l * Math.max(1, Math.ceil(d / l));
+        }
+        // 塀の継ぎ目(3m)/反射板(6m)も u_scroll 基準で流れるため、6 の倍数にも揃える
+        // （既定値 210 は 6 の倍数なので変化なし。揃わない場合のみ拡張）
+        var g6 = gcd(Math.max(wrapMeters, 6.0), Math.min(wrapMeters, 6.0));
+        if (g6 > 1e-4) {
+            var w6 = wrapMeters * 6.0 / g6;
+            if (isFinite(w6) && w6 <= CAP) wrapMeters = w6;
         }
     }
 
@@ -88,6 +102,7 @@ NH.createScene = function (canvas, config) {
             u_cityPhase: gl.getUniformLocation(prog, "u_cityPhase"),
             u_cityScroll: gl.getUniformLocation(prog, "u_cityScroll"),
             u_cloudScroll: gl.getUniformLocation(prog, "u_cloudScroll"),
+            u_groundScroll: gl.getUniformLocation(prog, "u_groundScroll"),
             u_cars: gl.getUniformLocation(prog, "u_cars[0]"),
             u_carCol: gl.getUniformLocation(prog, "u_carCol[0]")
         };
@@ -116,7 +131,7 @@ NH.createScene = function (canvas, config) {
         for (var i = 0; i < params.length; i++) {
             if (params[i].uniform) setUniform(params[i]);
         }
-        render();
+        resize();   // pixelRows の変更も即時反映（サイズ不変なら viewport 設定＋再描画のみ）
     }
 
     function resize() {
@@ -138,14 +153,27 @@ NH.createScene = function (canvas, config) {
         gl.useProgram(prog);
         gl.uniform2f(U.u_res, canvas.width, canvas.height);
         gl.uniform1f(U.u_scroll, scrollDist % wrapMeters);
-        gl.uniform1f(U.u_sway, Math.sin(animTime * config.swaySpeed));
+        gl.uniform1f(U.u_sway, Math.sin(swayPhase));
         // 都市は道路の揺れと切り離し、cityFlowRate 倍のゆっくりした位相で流す
-        gl.uniform1f(U.u_cityPhase, Math.sin(animTime * config.swaySpeed * config.cityFlowRate));
-        // 前進に伴う遠景都市の平行移動。基層が256セル周期で継ぎ目なく繰り返すよう 256/cityCols でラップ
+        gl.uniform1f(U.u_cityPhase, Math.sin(cityPhaseV));
+        // 前進に伴う遠景都市の平行移動。両層のセルパターンが256セル周期で継ぎ目なく
+        // 繰り返すよう 256/cityCols でラップ（近層は par×scale 積が整数になる係数を採用）
         gl.uniform1f(U.u_cityScroll, cityScroll % (256.0 / Math.max(1, config.cityCols)));
-        // 薄雲の連続ドリフト。mediump 安全のため有界化
-        gl.uniform1f(U.u_cloudScroll, cloudScroll % 100.0);
-        gl.uniform1f(U.u_time, animTime % 100.0);   // 窓の瞬き用（有界）
+        // 薄雲：drift 乗算後の値を 128（周期ノイズの周期）でラップ → ラップ時も模様が連続
+        gl.uniform1f(U.u_cloudScroll, (cloudScroll * config.cloudDrift) % 128.0);
+        // 路肩ノイズ：係数乗算後の値を 128 でラップ（shaders.js の 0.18 と同期）
+        gl.uniform1f(U.u_groundScroll, (scrollDist * GROUND_NOISE_SCALE) % 128.0);
+        gl.uniform1f(U.u_time, blinkTime);   // 窓の瞬き用（100秒でラップ。瞬き周波数は 2π/100 の整数倍）
+        // パッシング：クリック起因のハイビーム2連発と、対向車の応答2連発
+        if (U.u_egoBright != null) {
+            var eb = 1.0, cb = 1.0;
+            if (flashT >= 0) {
+                eb += 2.4 * (flashPulse(flashT, 0.0) + flashPulse(flashT, 0.28));
+                if (flashHasCar) cb += 1.8 * (flashPulse(flashT, 0.75) + flashPulse(flashT, 1.0));
+            }
+            gl.uniform1f(U.u_egoBright, config.egoBright * eb);
+            if (U.u_carHeadBright != null) gl.uniform1f(U.u_carHeadBright, config.carHeadBright * cb);
+        }
         if (U.u_cars) {
             for (var ci = 0; ci < 4; ci++) {
                 var car = cars[ci];
@@ -172,12 +200,38 @@ NH.createScene = function (canvas, config) {
             carTimer = gap;
             if (cars.length < 4) {
                 var hw = config.roadHalfWidth;
-                var laneC = (Math.random() < 0.5 ? 0.25 : 0.75) * hw;     // 反対側2車線のどちらか
-                var x = laneC + (Math.random() - 0.5) * hw * 0.12;        // 車線内の微小ばらつき
+                // 反対車線(x>0)の2車線中心。シェーダーの車線分離線（破線 ±laneEdge*0.5、
+                // 外側エッジ ±laneEdge）に合わせ、内側=laneEdge*0.25 / 外側=laneEdge*0.75。
+                var laneC = (Math.random() < 0.5 ? 0.25 : 0.75) * config.laneEdge * hw;
+                var x = laneC + (Math.random() - 0.5) * hw * 0.10;        // 車線内の微小ばらつき
                 var sp = config.carSpeed * (0.85 + Math.random() * 0.3);  // 速度ばらつき
                 var col = CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)];
                 cars.push({ x: x, z: config.carSpawnDist, speed: sp, col: col });
             }
+        }
+    }
+
+    // パッシングの明滅エンベロープ（t0 を中心とした短いガウシアンパルス）
+    function flashPulse(t, t0) {
+        var x = (t - t0) / 0.11;
+        return Math.exp(-x * x);
+    }
+
+    // クリックでハイビーム（対向車がいれば少し遅れて応答が返る）
+    function flash() {
+        if (reduceMQ.matches || lost || disposed || !running) return;
+        flashT = 0;
+        flashHasCar = cars.length > 0;
+    }
+
+    // 実測FPSが低いままなら描画解像度を段階的に下げる（デバイス推定の誤判定への保険）
+    function autoTune() {
+        if (fpsN < 120) return;
+        var avg = fpsAcc / fpsN;
+        fpsAcc = 0; fpsN = 0;
+        if (avg > 1 / 40 && config.pixelRows > 190) {
+            config.pixelRows = Math.max(180, Math.round(config.pixelRows * 0.75));
+            resize();
         }
     }
 
@@ -189,9 +243,13 @@ NH.createScene = function (canvas, config) {
             scrollDist += dt * config.speed;
             cityScroll += dt * config.citySpeed;
             cloudScroll += dt * config.cloudSpeed;
-            animTime += dt;
-            if (animTime > 1e4) animTime -= 1e4;
+            swayPhase = (swayPhase + dt * config.swaySpeed) % TAU;
+            cityPhaseV = (cityPhaseV + dt * config.swaySpeed * config.cityFlowRate) % TAU;
+            blinkTime = (blinkTime + dt) % 100.0;
+            if (flashT >= 0 && (flashT += dt) > 1.6) flashT = -1;
             updateCars(dt);
+            fpsAcc += dt; fpsN++;
+            autoTune();
         }
         render();
         raf = requestAnimationFrame(loop);
@@ -212,6 +270,9 @@ NH.createScene = function (canvas, config) {
     function onContextLost(e) { e.preventDefault(); lost = true; stop(); }
     function onContextRestored() {
         lost = false;
+        // 拡張オブジェクトはコンテキストロストで無効化される。再取得しないと
+        // #extension GL_OES_standard_derivatives のコンパイルが失敗する
+        derivExt = gl.getExtension("OES_standard_derivatives");
         if (buildProgram()) { applyConfig(); resize(); start(); }
     }
 
@@ -245,6 +306,8 @@ NH.createScene = function (canvas, config) {
         resize: resize,
         start: start,
         stop: stop,
-        dispose: dispose
+        dispose: dispose,
+        flash: flash,                                       // パッシング（クリックのハイビーム）
+        distance: function () { return scrollDist; }        // 累計走行距離(m)：オドメーター用
     };
 };

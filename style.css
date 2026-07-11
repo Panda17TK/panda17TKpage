@@ -1,25 +1,27 @@
 /* フォントは index.html の <link> で読み込む（@import は描画ブロッキングのため廃止） */
 
 :root {
-    --fg: #f3f4f8;
-    --muted: rgba(243, 244, 248, 0.6);
-    --accent: #7df9ff;
-    --accent-2: #ff5fc8;
+    --fg: #f8f4ee;
+    --muted: rgba(248, 244, 238, 0.62);
+    /* 和の配色：朱色（しゅいろ）×金色（こんじき）。夜のネオンに映える提灯の色味 */
+    --accent: #ff6d4d;
+    --accent-2: #ffd76a;
     --glass: rgba(255, 255, 255, 0.06);
     --glass-border: rgba(255, 255, 255, 0.14);
-    --display: "Bruno Ace", sans-serif;
-    --body: "Inter", system-ui, sans-serif;
+    --display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+    --body: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", system-ui, sans-serif;
 
     /* レイアウト */
     --maxw: 1080px;
     --section-pad: clamp(4.5rem, 10vw, 8rem);
+    --content-inset: clamp(1.2rem, 5vw, 3rem); /* セクション/フッターの左右余白（ナビとは独立） */
 
     /* ナビ（上部バー・ネオン）— ここを変えれば位置・サイズ・色をまとめて調整できる */
     --nav-top: 1.2rem;          /* 上端からの距離 */
     --nav-inset: clamp(1rem, 4vw, 2.4rem); /* 左右端からの距離 */
     --nav-gap: 1.4rem;          /* 項目間 */
     --nav-link-size: 0.92rem;
-    --neon-fg: #e9fbff;         /* リンク文字色 */
+    --neon-fg: #fff4ec;         /* リンク文字色（和紙のような温白色） */
     --neon: var(--accent);      /* ネオンの主色 */
     --neon-2: var(--accent-2);  /* ホバー時の差し色 */
 }
@@ -72,11 +74,28 @@ body::after {
     background: radial-gradient(120% 120% at 50% 35%, transparent 45%, rgba(5, 6, 10, 0.55) 100%);
 }
 
-header,
 main,
 .footer {
     position: relative;
     z-index: 2;
+}
+
+/* main(z-index:2)と同値だと DOM 後勝ちで hero がナビを覆い、
+   リンクがクリックできなくなるため、header は一段上に置く */
+header {
+    position: relative;
+    z-index: 3;
+}
+
+/* ナビ可読性：画面上部にだけ薄い暗幕を敷き、明るい場面でも文字が沈まないようにする */
+header::before {
+    content: "";
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: 6rem;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(5, 6, 10, 0.6) 0%, rgba(5, 6, 10, 0.24) 55%, transparent 100%);
 }
 
 /* キーボード操作者向けスキップリンク（通常は隠し、フォーカスで出現） */
@@ -121,7 +140,7 @@ main,
     text-decoration: none;
     text-shadow:
         0 0 4px rgba(255, 255, 255, 0.5),
-        0 0 14px rgba(125, 249, 255, 0.5);
+        0 0 14px rgba(255, 109, 77, 0.5);
     transition: color 0.25s ease, text-shadow 0.25s ease;
 }
 
@@ -150,8 +169,8 @@ main,
     white-space: nowrap;
     text-shadow:
         0 0 3px rgba(255, 255, 255, 0.5),
-        0 0 9px rgba(125, 249, 255, 0.55),
-        0 0 18px rgba(125, 249, 255, 0.35);
+        0 0 9px rgba(255, 109, 77, 0.55),
+        0 0 18px rgba(255, 109, 77, 0.35);
     /* 点滅は brightness のみ（不透明度には触れない） */
     animation: neonFlicker 7s infinite;
     transition: color 0.25s ease, text-shadow 0.25s ease;
@@ -218,15 +237,6 @@ main,
     position: relative;
 }
 
-.hero__eyebrow {
-    font-size: clamp(0.8rem, 1.6vw, 0.95rem);
-    letter-spacing: 0.42em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 1.1rem;
-    text-shadow: 0 0 12px rgba(125, 249, 255, 0.55);
-}
-
 .hero__title {
     font-family: var(--display);
     font-weight: 400;
@@ -236,18 +246,9 @@ main,
     color: #fff;
     text-shadow:
         0 0 6px rgba(255, 255, 255, 0.45),
-        0 0 26px rgba(125, 249, 255, 0.45),
-        0 0 60px rgba(125, 249, 255, 0.28),
+        0 0 26px rgba(255, 109, 77, 0.45),
+        0 0 60px rgba(255, 109, 77, 0.28),
         0 4px 30px rgba(0, 0, 0, 0.6);
-}
-
-.hero__tagline {
-    max-width: 34ch;
-    margin: 1.4rem auto 0;
-    font-size: clamp(1rem, 2.4vw, 1.2rem);
-    font-weight: 300;
-    color: rgba(243, 244, 248, 0.86);
-    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.7);
 }
 
 .hero__cta {
@@ -263,7 +264,8 @@ main,
     align-items: center;
     gap: 0.5rem;
     padding: 0.72rem 1.5rem;
-    border-radius: 999px;
+    /* 角丸を抑えて、印判・木札のような佇まいに */
+    border-radius: 4px;
     border: 1px solid var(--glass-border);
     background: rgba(8, 10, 18, 0.45);
     backdrop-filter: blur(8px);
@@ -282,20 +284,21 @@ main,
 .btn:focus-visible {
     transform: translateY(-2px);
     border-color: var(--accent);
-    box-shadow: 0 0 0 1px rgba(125, 249, 255, 0.25), 0 10px 30px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 0 0 1px rgba(255, 109, 77, 0.25), 0 10px 30px rgba(0, 0, 0, 0.45);
 }
 
 .btn--primary {
-    border-color: rgba(125, 249, 255, 0.55);
-    color: #06121a;
-    background: linear-gradient(135deg, var(--accent), #b9fbff);
-    box-shadow: 0 0 24px rgba(125, 249, 255, 0.35);
+    /* 朱肉のような深い朱のグラデーション。白抜き文字で判子らしく */
+    border-color: rgba(255, 109, 77, 0.55);
+    color: #fff6ee;
+    background: linear-gradient(135deg, #c93a26, var(--accent));
+    box-shadow: 0 0 24px rgba(255, 109, 77, 0.35);
 }
 
 .btn--primary:hover,
 .btn--primary:focus-visible {
-    color: #06121a;
-    box-shadow: 0 0 34px rgba(125, 249, 255, 0.55), 0 10px 30px rgba(0, 0, 0, 0.45);
+    color: #ffffff;
+    box-shadow: 0 0 34px rgba(255, 109, 77, 0.55), 0 10px 30px rgba(0, 0, 0, 0.45);
 }
 
 /* スクロール誘導 */
@@ -312,7 +315,6 @@ main,
     text-decoration: none;
     font-size: 0.72rem;
     letter-spacing: 0.3em;
-    text-transform: uppercase;
 }
 
 .hero__scroll-arrow {
@@ -321,7 +323,7 @@ main,
     border-right: 2px solid var(--accent);
     border-bottom: 2px solid var(--accent);
     transform: rotate(45deg);
-    box-shadow: 2px 2px 8px rgba(125, 249, 255, 0.3);
+    box-shadow: 2px 2px 8px rgba(255, 109, 77, 0.3);
     animation: scrollBob 1.8s ease-in-out infinite;
 }
 
@@ -335,9 +337,34 @@ main,
     border-color: var(--accent-2);
 }
 
+/* 落款（らっかん）風の朱印。書画の署名印のように右下へ縦組みで置く
+   （writing-mode は Web フォントの縦書きメトリクス欠落で崩れるため <br> 縦積み） */
+.hero__seal {
+    position: absolute;
+    right: clamp(1.4rem, 9vw, 7rem);
+    bottom: clamp(5.5rem, 16vh, 9rem);
+    display: inline-block;
+    text-align: center;
+    line-height: 1.3;
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: #ff543a;
+    padding: 0.55rem 0.45rem;
+    border: 2px solid rgba(255, 84, 58, 0.8);
+    border-radius: 3px;
+    transform: rotate(2deg);
+    background: rgba(120, 22, 10, 0.22);
+    box-shadow:
+        0 0 16px rgba(255, 84, 58, 0.35),
+        inset 0 0 10px rgba(255, 84, 58, 0.18);
+    text-shadow: 0 0 10px rgba(255, 84, 58, 0.55);
+    user-select: none;
+}
+
 /* ---------- Sections ---------- */
 .section {
-    padding: var(--section-pad) var(--nav-inset);
+    padding: var(--section-pad) var(--content-inset);
 }
 
 .section__inner {
@@ -350,12 +377,12 @@ main,
 }
 
 .section__kicker {
+    font-family: var(--display);
     font-size: 0.78rem;
     letter-spacing: 0.32em;
-    text-transform: uppercase;
     color: var(--accent);
     margin-bottom: 0.9rem;
-    text-shadow: 0 0 10px rgba(125, 249, 255, 0.4);
+    text-shadow: 0 0 10px rgba(255, 109, 77, 0.4);
 }
 
 .section__title {
@@ -381,12 +408,15 @@ main,
     margin: 2.6rem 0 0;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    /* auto-fill＋上限幅で、カードが1枚でも全幅に間延びせず左から詰む */
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 360px));
+    justify-content: start;
     gap: 1.2rem;
 }
 
 .card {
-    border-radius: 18px;
+    /* 角を立てて掛け軸・木箱のような静けさを出す */
+    border-radius: 6px;
     background: var(--glass);
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(14px);
@@ -398,8 +428,8 @@ main,
 .card:hover,
 .card:focus-within {
     transform: translateY(-4px);
-    border-color: rgba(125, 249, 255, 0.5);
-    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(125, 249, 255, 0.15);
+    border-color: rgba(255, 109, 77, 0.5);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 109, 77, 0.15);
 }
 
 .card__link {
@@ -420,9 +450,10 @@ main,
     text-transform: uppercase;
     color: var(--accent);
     padding: 0.25rem 0.6rem;
-    border-radius: 999px;
-    border: 1px solid rgba(125, 249, 255, 0.3);
-    background: rgba(125, 249, 255, 0.06);
+    /* 短冊のような矩形タグ */
+    border-radius: 2px;
+    border: 1px solid rgba(255, 109, 77, 0.3);
+    background: rgba(255, 109, 77, 0.06);
 }
 
 .card__title {
@@ -483,7 +514,8 @@ main,
 }
 
 .about__lead strong {
-    font-weight: 600;
+    /* Zen角ゴシックは 600 を読み込んでいないため、実在するウェイトを指定 */
+    font-weight: 700;
     color: var(--accent);
 }
 
@@ -509,7 +541,8 @@ main,
     letter-spacing: 0.04em;
     color: rgba(243, 244, 248, 0.82);
     padding: 0.4rem 0.85rem;
-    border-radius: 999px;
+    /* 千社札・短冊風の矩形チップ */
+    border-radius: 2px;
     border: 1px solid var(--glass-border);
     background: rgba(255, 255, 255, 0.04);
 }
@@ -528,7 +561,7 @@ main,
     gap: 0.3rem;
     min-width: 200px;
     padding: 1.2rem 1.4rem;
-    border-radius: 16px;
+    border-radius: 6px;
     border: 1px solid var(--glass-border);
     background: var(--glass);
     backdrop-filter: blur(14px);
@@ -542,7 +575,7 @@ main,
 .link-card:focus-visible {
     transform: translateY(-3px);
     border-color: var(--accent);
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(125, 249, 255, 0.2);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 109, 77, 0.2);
 }
 
 .link-card__label {
@@ -562,16 +595,16 @@ main,
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
-    padding: 2rem var(--nav-inset) 2.4rem;
+    padding: 2rem var(--content-inset) 2.4rem;
     font-size: 0.75rem;
     letter-spacing: 0.5px;
     color: var(--muted);
     border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.footer__hint::before {
-    content: "✦ ";
-    color: var(--accent);
+/* オドメーター（数字が毎秒更新されても幅が揺れないよう等幅数字に） */
+.footer__odo {
+    font-variant-numeric: tabular-nums;
 }
 
 /* ---------- Responsive ---------- */
@@ -590,7 +623,7 @@ main,
         align-items: flex-end;
         gap: 1.1rem;
         padding: 1.2rem 1.4rem;
-        border-radius: 16px;
+        border-radius: 8px;
         background: rgba(8, 10, 18, 0.92);
         border: 1px solid var(--glass-border);
         backdrop-filter: blur(16px);
@@ -616,6 +649,11 @@ main,
         flex-direction: column;
         justify-content: center;
         text-align: center;
+    }
+
+    /* 狭い画面ではスクロール誘導と干渉しやすいため朱印は隠す */
+    .hero__seal {
+        display: none;
     }
 }
 

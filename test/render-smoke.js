@@ -57,6 +57,7 @@ function setUniforms(gl, prog, W, H) {
     gl.uniform1f(loc("u_cityPhase"), 0.5);   // 都市の揺れ
     gl.uniform1f(loc("u_cityScroll"), 2.0);  // 都市の前進平行移動
     gl.uniform1f(loc("u_cloudScroll"), 1.0); // 薄雲の連続ドリフト
+    gl.uniform1f(loc("u_groundScroll"), 5.0); // 路肩ノイズのスクロール
     gl.uniform1f(loc("u_time"), 3.0);        // 窓の瞬き・障害灯点滅の時間依存パスを踏む
     gl.uniform2fv(loc("u_cars[0]"), new Float32Array([2.5, 28, 7.5, 60, 0, -1, 0, -1])); // 対向車2台
     gl.uniform3fv(loc("u_carCol[0]"), new Float32Array([0.9, 0.91, 0.93, 0.1, 0.2, 0.52, 0, 0, 0, 0, 0, 0])); // 白/青
