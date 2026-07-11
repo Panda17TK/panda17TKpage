@@ -27,7 +27,8 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap">
+    <!-- ドット絵背景に合わせたピクセルフォント（ウェイトは400のみ） -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -74,7 +75,6 @@
         <!-- 他セクションと同じ narrow 幅に揃える（幅広だと壱だけ左に寄って見える） -->
         <section class="section" id="works" aria-labelledby="works-heading">
             <div class="section__inner section__inner--narrow">
-                <p class="section__kicker">壱 — 作品</p>
                 <h2 class="section__title" id="works-heading">つくったもの</h2>
                 <p class="section__lead">選りすぐりをいくつか。そのほかはすべて GitHub にあります。</p>
 
@@ -98,16 +98,6 @@
         <!-- ---------- About ---------- -->
         <section class="section" id="about" aria-label="私について">
             <div class="section__inner section__inner--narrow">
-                <p class="section__kicker">弐 — 私について</p>
-                <p class="about__lead">
-                    <strong>Rust</strong>・<strong>Python</strong>・<strong>JavaScript</strong> で、
-                    小道具づくりに勤しんでいます — 遠隔操作や KVM のユーティリティ、
-                    スケジュール管理アプリ、ネットワークシミュレータ、そして時々の描画実験。
-                </p>
-                <p class="about__body">
-                    ここには、完成したものも作りかけのものも並べてあります。
-                    声高なものは何もありません — 役に立つものを、自分の好きなやり方で。
-                </p>
                 <ul class="chips" aria-label="道具と関心事">
                     <li>Rust</li>
                     <li>Python</li>
@@ -123,7 +113,6 @@
         <!-- ---------- Contact ---------- -->
         <section class="section" id="contact" aria-labelledby="contact-heading">
             <div class="section__inner section__inner--narrow">
-                <p class="section__kicker">参 — 連絡先</p>
                 <h2 class="section__title" id="contact-heading">連絡はこちらへ</h2>
                 <p class="section__lead">いちばんの近道は GitHub です。</p>
                 <div class="links">

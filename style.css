@@ -8,8 +8,9 @@
     --accent-2: #ffd76a;
     --glass: rgba(255, 255, 255, 0.06);
     --glass-border: rgba(255, 255, 255, 0.14);
-    --display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
-    --body: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", system-ui, sans-serif;
+    /* ドット絵背景に合わせてピクセルフォントで統一（読み込み失敗時は従来系へ） */
+    --display: "DotGothic16", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    --body: "DotGothic16", "Hiragino Kaku Gothic ProN", system-ui, sans-serif;
 
     /* レイアウト */
     --maxw: 1080px;
@@ -351,15 +352,6 @@ header::before {
     max-width: 720px;
 }
 
-.section__kicker {
-    font-family: var(--display);
-    font-size: 0.78rem;
-    letter-spacing: 0.32em;
-    color: var(--accent);
-    margin-bottom: 0.9rem;
-    text-shadow: 0 0 10px rgba(255, 109, 77, 0.4);
-}
-
 .section__title {
     font-family: var(--display);
     font-weight: 400;
@@ -480,28 +472,6 @@ header::before {
 }
 
 /* ---------- About ---------- */
-.about__lead {
-    margin-top: 1.6rem;
-    font-size: clamp(1.05rem, 2.6vw, 1.35rem);
-    font-weight: 300;
-    line-height: 1.6;
-    color: var(--fg);
-}
-
-.about__lead strong {
-    /* Zen角ゴシックは 600 を読み込んでいないため、実在するウェイトを指定 */
-    font-weight: 700;
-    color: var(--accent);
-}
-
-.about__body {
-    margin-top: 1.2rem;
-    font-size: 1rem;
-    font-weight: 300;
-    line-height: 1.75;
-    color: var(--muted);
-}
-
 .chips {
     list-style: none;
     display: flex;
