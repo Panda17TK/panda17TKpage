@@ -337,31 +337,6 @@ header::before {
     border-color: var(--accent-2);
 }
 
-/* 落款（らっかん）風の朱印。書画の署名印のように右下へ縦組みで置く
-   （writing-mode は Web フォントの縦書きメトリクス欠落で崩れるため <br> 縦積み） */
-.hero__seal {
-    position: absolute;
-    right: clamp(1.4rem, 9vw, 7rem);
-    bottom: clamp(5.5rem, 16vh, 9rem);
-    display: inline-block;
-    text-align: center;
-    line-height: 1.3;
-    font-family: var(--display);
-    font-weight: 700;
-    font-size: 1.15rem;
-    color: #ff543a;
-    padding: 0.55rem 0.45rem;
-    border: 2px solid rgba(255, 84, 58, 0.8);
-    border-radius: 3px;
-    transform: rotate(2deg);
-    background: rgba(120, 22, 10, 0.22);
-    box-shadow:
-        0 0 16px rgba(255, 84, 58, 0.35),
-        inset 0 0 10px rgba(255, 84, 58, 0.18);
-    text-shadow: 0 0 10px rgba(255, 84, 58, 0.55);
-    user-select: none;
-}
-
 /* ---------- Sections ---------- */
 .section {
     padding: var(--section-pad) var(--content-inset);
@@ -651,10 +626,6 @@ header::before {
         text-align: center;
     }
 
-    /* 狭い画面ではスクロール誘導と干渉しやすいため朱印は隠す */
-    .hero__seal {
-        display: none;
-    }
 }
 
 @media (max-width: 480px) {
