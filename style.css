@@ -514,7 +514,8 @@ header::before {
 }
 
 .about__lead strong {
-    font-weight: 600;
+    /* Zen角ゴシックは 600 を読み込んでいないため、実在するウェイトを指定 */
+    font-weight: 700;
     color: var(--accent);
 }
 
@@ -605,6 +606,11 @@ header::before {
     /* 花菱風のあしらい */
     content: "❖ ";
     color: var(--accent);
+}
+
+/* オドメーター（数字が毎秒更新されても幅が揺れないよう等幅数字に） */
+.footer__odo {
+    font-variant-numeric: tabular-nums;
 }
 
 /* ---------- Responsive ---------- */
