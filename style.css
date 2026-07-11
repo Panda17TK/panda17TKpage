@@ -602,12 +602,6 @@ header::before {
     border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.footer__hint::before {
-    /* 花菱風のあしらい */
-    content: "❖ ";
-    color: var(--accent);
-}
-
 /* オドメーター（数字が毎秒更新されても幅が揺れないよう等幅数字に） */
 .footer__odo {
     font-variant-numeric: tabular-nums;
