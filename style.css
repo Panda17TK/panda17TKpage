@@ -75,6 +75,36 @@ body::after {
     background: radial-gradient(120% 120% at 50% 35%, transparent 45%, rgba(5, 6, 10, 0.55) 100%);
 }
 
+/* 画面の四隅を囲む黒いL字コーナー枠（レトロ画面の額縁風）。
+   1要素の背景に8本の黒バー（各隅=横+縦）を敷いて4隅のLを描く。
+   ナビ(z:5)より上・クリック透過。--arm/--th で長さ・太さを調整（vw可変で
+   スマホは細く短く、PCは太く長く）。全ページ共通（ブログにも自動適用）。 */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
+    --arm: clamp(1.6rem, 4.5vw, 3.4rem);   /* Lの腕の長さ */
+    --th: clamp(0.35rem, 1.1vw, 0.7rem);   /* 腕の太さ */
+    background-image:
+        linear-gradient(#000, #000), linear-gradient(#000, #000),   /* 左上：横・縦 */
+        linear-gradient(#000, #000), linear-gradient(#000, #000),   /* 右上 */
+        linear-gradient(#000, #000), linear-gradient(#000, #000),   /* 左下 */
+        linear-gradient(#000, #000), linear-gradient(#000, #000);   /* 右下 */
+    background-repeat: no-repeat;
+    background-size:
+        var(--arm) var(--th), var(--th) var(--arm),
+        var(--arm) var(--th), var(--th) var(--arm),
+        var(--arm) var(--th), var(--th) var(--arm),
+        var(--arm) var(--th), var(--th) var(--arm);
+    background-position:
+        0 0, 0 0,
+        100% 0, 100% 0,
+        0 100%, 0 100%,
+        100% 100%, 100% 100%;
+}
+
 main,
 .footer {
     position: relative;
