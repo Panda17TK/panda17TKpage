@@ -1,0 +1,176 @@
+/* =============================================================
+   ブログ生成スクリプト
+   - blog/posts/*.md（先頭に --- title/date/description --- の
+     フロントマター）を読み、blog/<slug>.html と blog/index.html を生成
+   - 記事の追加手順: md を置いて `npm run make:blog` → コミット
+   - テンプレートは index.html と同じ骨格（背景キャンバス/ナビ/フッター）
+     を持ち、既存の style.css と js/ をそのまま共有する
+   ============================================================= */
+"use strict";
+
+const fs = require("fs");
+const path = require("path");
+const { marked } = require("marked");
+
+const ROOT = path.join(__dirname, "..");
+const POSTS_DIR = path.join(ROOT, "blog", "posts");
+const OUT_DIR = path.join(ROOT, "blog");
+const SITE = "笹ノ葉製作所";
+const ORIGIN = "https://sasanoha-tk.github.io";
+
+function esc(s) {
+    return String(s)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+// 先頭の --- key: value --- ブロックを取り出す（YAMLサブセット）
+function parseFrontMatter(src) {
+    const m = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/.exec(src);
+    if (!m) { return { meta: {}, body: src }; }
+    const meta = {};
+    for (const line of m[1].split(/\r?\n/)) {
+        const i = line.indexOf(":");
+        if (i > 0) { meta[line.slice(0, i).trim()] = line.slice(i + 1).trim(); }
+    }
+    return { meta, body: src.slice(m[0].length) };
+}
+
+// 全ページ共通の骨格。rel はサイトルートへの相対パス（ブログ配下は "../"）
+function pageShell({ title, description, canonicalPath, bodyHtml }) {
+    const rel = "../";
+    return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="${esc(description)}">
+    <meta name="theme-color" content="#05060a">
+    <title>${esc(title)} | ${SITE}</title>
+    <link rel="icon" type="image/svg+xml" href="${rel}favicon.svg">
+    <link rel="icon" type="image/png" sizes="64x64" href="${rel}favicon.png">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="${esc(title)} | ${SITE}">
+    <meta property="og:description" content="${esc(description)}">
+    <meta property="og:url" content="${ORIGIN}${canonicalPath}">
+    <meta property="og:image" content="${ORIGIN}/og-image.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
+    <link rel="stylesheet" href="${rel}style.css">
+</head>
+<body>
+
+    <canvas id="bg" aria-hidden="true"></canvas>
+
+    <a class="skip-link" href="#content">本文へ移動</a>
+
+    <header>
+        <nav class="nav" aria-label="メインナビゲーション">
+            <a class="nav__brand" href="${rel}">${SITE}</a>
+            <button class="nav__toggle" aria-label="メニューを開閉" aria-expanded="false" aria-controls="nav-links">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav__links" id="nav-links">
+                <li><a href="${rel}#top">ホーム</a></li>
+                <li><a href="${rel}#works">作品</a></li>
+                <li><a href="${rel}#contact">連絡先</a></li>
+                <li><a href="./" aria-current="page">ブログ</a></li>
+                <li><a href="https://github.com/sasanoha-tk" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main id="content">
+        <section class="section section--blog">
+            <div class="section__inner section__inner--narrow">
+${bodyHtml}
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <span>&copy; <span id="year">2025</span> ${SITE}</span>
+        <span class="footer__odo" id="odo" hidden>総走行距離 <span id="odometer">0.0</span> km</span>
+    </footer>
+
+    <script defer src="${rel}js/config.js"></script>
+    <script defer src="${rel}js/shaders.js"></script>
+    <script defer src="${rel}js/ui.js"></script>
+    <script defer src="${rel}js/scene.js"></script>
+    <script defer src="${rel}js/app.js"></script>
+</body>
+</html>
+`;
+}
+
+function buildPost(post) {
+    const body = `                <article class="post">
+                    <h1 class="post__title">${esc(post.title)}</h1>
+                    <p class="post__meta"><time datetime="${esc(post.date)}">${esc(post.date)}</time></p>
+                    <div class="post__body">
+${post.html}
+                    </div>
+                    <p class="post__back"><a href="./">← ブログ一覧へ</a></p>
+                </article>`;
+    return pageShell({
+        title: post.title,
+        description: post.description || `${SITE}のブログ記事`,
+        canonicalPath: `/blog/${post.slug}.html`,
+        bodyHtml: body
+    });
+}
+
+function buildIndex(posts) {
+    const items = posts.map((p) => `                    <li class="post-list__item">
+                        <a class="post-list__link" href="${esc(p.slug)}.html">
+                            <time class="post-list__date" datetime="${esc(p.date)}">${esc(p.date)}</time>
+                            <span class="post-list__title">${esc(p.title)}</span>
+                            ${p.description ? `<span class="post-list__desc">${esc(p.description)}</span>` : ""}
+                        </a>
+                    </li>`).join("\n");
+    const body = `                <h1 class="section__title">ブログ</h1>
+                <p class="section__lead">開発の記録や雑記。</p>
+                <ul class="post-list">
+${items}
+                </ul>`;
+    return pageShell({
+        title: "ブログ",
+        description: `${SITE}のブログ。開発の記録や雑記。`,
+        canonicalPath: "/blog/",
+        bodyHtml: body
+    });
+}
+
+function main() {
+    if (!fs.existsSync(POSTS_DIR)) {
+        console.error(`make-blog: ${POSTS_DIR} がありません`);
+        process.exit(1);
+    }
+    const files = fs.readdirSync(POSTS_DIR).filter((f) => f.endsWith(".md")).sort();
+    const posts = [];
+    for (const file of files) {
+        const src = fs.readFileSync(path.join(POSTS_DIR, file), "utf8");
+        const { meta, body } = parseFrontMatter(src);
+        if (!meta.title || !/^\d{4}-\d{2}-\d{2}$/.test(meta.date || "")) {
+            console.error(`make-blog: ${file} のフロントマターに title / date(YYYY-MM-DD) が必要です`);
+            process.exit(1);
+        }
+        posts.push({
+            slug: file.replace(/\.md$/, ""),
+            title: meta.title,
+            date: meta.date,
+            description: meta.description || "",
+            html: marked.parse(body)
+        });
+    }
+    posts.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.slug < b.slug ? 1 : -1));
+
+    for (const post of posts) {
+        fs.writeFileSync(path.join(OUT_DIR, `${post.slug}.html`), buildPost(post), "utf8");
+    }
+    fs.writeFileSync(path.join(OUT_DIR, "index.html"), buildIndex(posts), "utf8");
+    console.log(`make-blog: ${posts.length}記事 + index を生成しました`);
+}
+
+main();

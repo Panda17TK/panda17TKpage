@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="笹ノ葉製作所のブログ。開発の記録や雑記。">
+    <meta name="theme-color" content="#05060a">
+    <title>ブログ | 笹ノ葉製作所</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="icon" type="image/png" sizes="64x64" href="../favicon.png">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="ブログ | 笹ノ葉製作所">
+    <meta property="og:description" content="笹ノ葉製作所のブログ。開発の記録や雑記。">
+    <meta property="og:url" content="https://sasanoha-tk.github.io/blog/">
+    <meta property="og:image" content="https://sasanoha-tk.github.io/og-image.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+    <canvas id="bg" aria-hidden="true"></canvas>
+
+    <a class="skip-link" href="#content">本文へ移動</a>
+
+    <header>
+        <nav class="nav" aria-label="メインナビゲーション">
+            <a class="nav__brand" href="../">笹ノ葉製作所</a>
+            <button class="nav__toggle" aria-label="メニューを開閉" aria-expanded="false" aria-controls="nav-links">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav__links" id="nav-links">
+                <li><a href="../#top">ホーム</a></li>
+                <li><a href="../#works">作品</a></li>
+                <li><a href="../#contact">連絡先</a></li>
+                <li><a href="./" aria-current="page">ブログ</a></li>
+                <li><a href="https://github.com/sasanoha-tk" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main id="content">
+        <section class="section section--blog">
+            <div class="section__inner section__inner--narrow">
+                <h1 class="section__title">ブログ</h1>
+                <p class="section__lead">開発の記録や雑記。</p>
+                <ul class="post-list">
+                    <li class="post-list__item">
+                        <a class="post-list__link" href="2026-07-12-blog-hajimemashita.html">
+                            <time class="post-list__date" datetime="2026-07-12">2026-07-12</time>
+                            <span class="post-list__title">ブログはじめました</span>
+                            <span class="post-list__desc">笹ノ葉製作所のブログを開設しました。記事の追加はMarkdownを1枚置くだけ。</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <span>&copy; <span id="year">2025</span> 笹ノ葉製作所</span>
+        <span class="footer__odo" id="odo" hidden>総走行距離 <span id="odometer">0.0</span> km</span>
+    </footer>
+
+    <script defer src="../js/config.js"></script>
+    <script defer src="../js/shaders.js"></script>
+    <script defer src="../js/ui.js"></script>
+    <script defer src="../js/scene.js"></script>
+    <script defer src="../js/app.js"></script>
+</body>
+</html>
