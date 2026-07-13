@@ -60,6 +60,22 @@ values to paste into `NH.OVERRIDES`.
 
 ## Develop & verify
 
+### VSCode（推奨セットアップ）
+
+リポジトリを VSCode で開くと `.vscode/extensions.json` の推奨拡張
+（Live Server / ESLint / Markdown All in One）の導入を促される。
+
+- **プレビュー**: ステータスバー右下の「Go Live」→ `http://127.0.0.1:5500/`。
+  ファイル保存で自動リロードされる
+- **雑記を書きながらプレビュー**: タスク「blog: 監視ビルド」
+  （ターミナル → タスクの実行）を起動しておくと、`blog/posts/*.md` の
+  保存で HTML が自動再生成され、Live Server が拾ってリロードする
+  （CLI なら `npm run watch:blog`）
+- **記事の雛形**: タスク「blog: 新しい記事の雛形」で slug / タイトル /
+  タグを入力するだけ
+
+### CLI
+
 ```
 npm ci                 # eslint + headless-gl (pinned via package-lock.json)
 npm run check          # node --check on js/ + scripts/

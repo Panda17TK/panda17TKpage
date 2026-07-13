@@ -1,0 +1,8 @@
+{
+    // このリポジトリを開いたとき VSCode が推奨として提示する拡張
+    "recommendations": [
+        "ritwickdey.liveserver",        // Live Server: 保存で自動リロードするローカルサーバー
+        "dbaeumer.vscode-eslint",       // ESLint: js/ の lint をエディタ内に表示
+        "yzhang.markdown-all-in-one"    // Markdown 支援: 雑記 (blog/posts/*.md) の執筆用
+    ]
+}

@@ -1,0 +1,24 @@
+{
+    // ---- Live Server ----
+    "liveServer.settings.port": 5500,
+    "liveServer.settings.root": "/",
+    // 生成物や依存の変更ではリロードしない（make:blog の生成HTMLは対象のまま）
+    "liveServer.settings.ignoreFiles": [
+        ".vscode/**",
+        "node_modules/**",
+        ".git/**",
+        "blog/posts/**"
+    ],
+    "liveServer.settings.donotShowInfoMsg": true,
+
+    // ---- ESLint ----
+    "eslint.validate": ["javascript"],
+
+    // ---- エディタ ----
+    "files.eol": "\n",
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "[markdown]": {
+        "editor.wordWrap": "on"
+    }
+}

@@ -1,0 +1,36 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "blog: 監視ビルド (md保存で自動生成)",
+            "type": "npm",
+            "script": "watch:blog",
+            "isBackground": true,
+            "problemMatcher": [],
+            "presentation": { "reveal": "silent" }
+        },
+        {
+            "label": "blog: 一回だけ生成 (make:blog)",
+            "type": "npm",
+            "script": "make:blog",
+            "problemMatcher": []
+        },
+        {
+            "label": "blog: 新しい記事の雛形",
+            "type": "shell",
+            "command": "npm run new:post -- ${input:slug} \"${input:title}\" --tags \"${input:tags}\"",
+            "problemMatcher": []
+        },
+        {
+            "label": "check: 構文 + lint + HTML検証",
+            "type": "shell",
+            "command": "npm run check && npm run lint && npm run test:html",
+            "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        { "id": "slug", "type": "promptString", "description": "slug（半角英数小文字とハイフン。URLになる）" },
+        { "id": "title", "type": "promptString", "description": "記事タイトル" },
+        { "id": "tags", "type": "promptString", "description": "タグ（カンマ区切り・空でも可）", "default": "" }
+    ]
+}
