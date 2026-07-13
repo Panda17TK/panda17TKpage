@@ -37,7 +37,7 @@
     <canvas id="bg" aria-hidden="true"></canvas>
 
     <!-- キーボード操作者向け：本文へ一気に飛ぶ -->
-    <a class="skip-link" href="#about">本文へ移動</a>
+    <a class="skip-link" href="#content">本文へ移動</a>
 
     <header>
         <nav class="nav" aria-label="メインナビゲーション">
@@ -50,7 +50,6 @@
             <ul class="nav__links" id="nav-links">
                 <li><a href="#top">ホーム</a></li>
                 <li><a href="#works">作品</a></li>
-                <li><a href="#about">私について</a></li>
                 <li><a href="#contact">連絡先</a></li>
                 <li><a href="blog/">雑記</a></li>
                 <li><a href="https://github.com/sasanoha-tk" target="_blank" rel="noopener noreferrer">GitHub</a></li>
@@ -58,7 +57,7 @@
         </nav>
     </header>
 
-    <main>
+    <main id="content">
         <!-- ---------- Hero ---------- -->
         <section class="hero" id="top">
             <h1 class="hero__title">笹ノ葉製作所</h1>
@@ -77,12 +76,17 @@
         <section class="section" id="works" aria-labelledby="works-heading">
             <div class="section__inner section__inner--narrow">
                 <h2 class="section__title" id="works-heading">つくったもの</h2>
-                <p class="section__lead">選りすぐりをいくつか。そのほかはすべて GitHub にあります。</p>
+                <p class="section__lead">これまでにつくった主なものです。そのほかはすべて GitHub にあります。</p>
 
                 <ul class="works">
                     <li class="card">
                         <a class="card__link" href="https://github.com/sasanoha-tk/TailKVM" target="_blank" rel="noopener noreferrer">
-                            <span class="card__tag">Rust</span>
+                            <span class="card__tags">
+                                <span class="card__tag">Rust</span>
+                                <span class="card__tag">Tauri</span>
+                                <span class="card__tag">Tailscale</span>
+                                <span class="card__tag">Windows</span>
+                            </span>
                             <h3 class="card__title">TailKVM</h3>
                             <p class="card__desc">Tailscale 越しに使う Windows 向けソフトウェア KVM。ひと組のマウス・キーボード・クリップボードを複数の PC で共有し、画面の端を越えてなめらかに行き来できます。</p>
                             <span class="card__cta" aria-hidden="true">GitHub で見る →</span>
@@ -93,21 +97,6 @@
                 <a class="section__more" href="https://github.com/sasanoha-tk?tab=repositories" target="_blank" rel="noopener noreferrer">
                     すべてのリポジトリを見る →
                 </a>
-            </div>
-        </section>
-
-        <!-- ---------- About ---------- -->
-        <section class="section" id="about" aria-label="私について">
-            <div class="section__inner section__inner--narrow">
-                <ul class="chips" aria-label="道具と関心事">
-                    <li>Rust</li>
-                    <li>Python</li>
-                    <li>JavaScript</li>
-                    <li>WebGL</li>
-                    <li>ネットワーク</li>
-                    <li>遠隔操作</li>
-                    <li>自動化</li>
-                </ul>
             </div>
         </section>
 

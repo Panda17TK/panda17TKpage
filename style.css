@@ -440,6 +440,12 @@ header::before {
     color: inherit;
 }
 
+.card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
 .card__tag {
     align-self: flex-start;
     font-size: 0.7rem;
@@ -499,27 +505,6 @@ header::before {
 .section__more:focus-visible {
     color: var(--accent);
     border-bottom-color: var(--accent);
-}
-
-/* ---------- About ---------- */
-.chips {
-    list-style: none;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-    margin: 1.8rem 0 0;
-    padding: 0;
-}
-
-.chips li {
-    font-size: 0.8rem;
-    letter-spacing: 0.04em;
-    color: rgba(243, 244, 248, 0.82);
-    padding: 0.4rem 0.85rem;
-    /* 千社札・短冊風の矩形チップ */
-    border-radius: 2px;
-    border: 1px solid var(--glass-border);
-    background: rgba(255, 255, 255, 0.04);
 }
 
 /* ---------- Contact ---------- */
@@ -647,6 +632,42 @@ header::before {
     *::after {
         animation-duration: 0.001ms !important;
         animation-iteration-count: 1 !important;
+    }
+}
+
+/* ---------- ページ遷移 ---------- */
+/* View Transitions API（対応ブラウザのみ有効・非対応は通常遷移のまま）。
+   ページ間の移動をふわっとしたクロスフェードにする */
+@view-transition {
+    navigation: auto;
+}
+
+@keyframes vt-leave {
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes vt-enter {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+}
+
+::view-transition-old(root) {
+    animation: vt-leave 0.2s ease both;
+}
+
+::view-transition-new(root) {
+    animation: vt-enter 0.3s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation: none;
     }
 }
 
