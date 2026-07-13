@@ -1,5 +1,5 @@
 /* =============================================================
-   ブログ生成スクリプト
+   雑記生成スクリプト
    - blog/posts/*.md（先頭に --- title/date/description --- の
      フロントマター）を読み、blog/<slug>.html と blog/index.html を生成
    - 記事の追加手順: md を置いて `npm run make:blog` → コミット
@@ -36,7 +36,7 @@ function parseFrontMatter(src) {
     return { meta, body: src.slice(m[0].length) };
 }
 
-// 全ページ共通の骨格。rel はサイトルートへの相対パス（ブログ配下は "../"）
+// 全ページ共通の骨格。rel はサイトルートへの相対パス（雑記配下は "../"）
 function pageShell({ title, description, canonicalPath, bodyHtml }) {
     const rel = "../";
     return `<!DOCTYPE html>
@@ -75,7 +75,7 @@ function pageShell({ title, description, canonicalPath, bodyHtml }) {
                 <li><a href="${rel}#top">ホーム</a></li>
                 <li><a href="${rel}#works">作品</a></li>
                 <li><a href="${rel}#contact">連絡先</a></li>
-                <li><a href="./" aria-current="page">ブログ</a></li>
+                <li><a href="./" aria-current="page">雑記</a></li>
                 <li><a href="https://github.com/sasanoha-tk" target="_blank" rel="noopener noreferrer">GitHub</a></li>
             </ul>
         </nav>
@@ -111,11 +111,11 @@ function buildPost(post) {
                     <div class="post__body">
 ${post.html}
                     </div>
-                    <p class="post__back"><a href="./">← ブログ一覧へ</a></p>
+                    <p class="post__back"><a href="./">← 雑記一覧へ</a></p>
                 </article>`;
     return pageShell({
         title: post.title,
-        description: post.description || `${SITE}のブログ記事`,
+        description: post.description || `${SITE}の雑記記事`,
         canonicalPath: `/blog/${post.slug}.html`,
         bodyHtml: body
     });
@@ -129,14 +129,14 @@ function buildIndex(posts) {
                             ${p.description ? `<span class="post-list__desc">${esc(p.description)}</span>` : ""}
                         </a>
                     </li>`).join("\n");
-    const body = `                <h1 class="section__title">ブログ</h1>
-                <p class="section__lead">開発の記録や雑記。</p>
+    const body = `                <h1 class="section__title">雑記</h1>
+                <p class="section__lead">開発の記録や日々の覚え書き。</p>
                 <ul class="post-list">
 ${items}
                 </ul>`;
     return pageShell({
-        title: "ブログ",
-        description: `${SITE}のブログ。開発の記録や雑記。`,
+        title: "雑記",
+        description: `${SITE}の雑記。開発の記録や日々の覚え書き。`,
         canonicalPath: "/blog/",
         bodyHtml: body
     });
