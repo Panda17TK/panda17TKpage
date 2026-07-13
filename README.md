@@ -29,7 +29,9 @@ scripts/
   make-og.js        # render the scene to og-image.png (1200x630, social preview)
   make-favicon.js   # render favicon.png (64x64 night-road motif)
   make-blog.js      # blog/posts/*.md -> blog/*.html + blog/index.html
-.github/workflows/ci.yml  # npm ci + check + lint + uniform/html checks + headless render
+  new-post.js       # blog post scaffold (npm run new:post -- <slug> "タイトル")
+.github/workflows/ci.yml    # npm ci + check + lint + uniform/html checks + headless render
+.github/workflows/blog.yml  # auto-generate blog HTML when blog/posts/*.md changes
 ```
 
 Scripts are plain (non-module), `defer`-loaded in order, sharing `window.NH`.
@@ -72,29 +74,54 @@ CI (`.github/workflows/ci.yml`) runs these on every push to `main` / PR —
 catching shader-compile regressions (the “blank background” bug), uniform
 mismatches, and broken links before they ship.
 
-## Blog — adding a post
+## Blog（雑記）— 記事の追加・編集フロー
 
-1. Write `blog/posts/YYYY-MM-DD-slug.md`:
+記事のソースは `blog/posts/YYYY-MM-DD-slug.md` の Markdown 1枚。
+HTML への変換は **GitHub Actions（`.github/workflows/blog.yml`）が自動で行う**ので、
+基本は md を push するだけでよい。
 
-   ```markdown
-   ---
-   title: 記事タイトル
-   date: 2026-07-12
-   description: 一覧に出る一行説明（任意）
-   ---
+### フロントマター
 
-   本文は Markdown で。
-   ```
+```markdown
+---
+title: 記事タイトル
+date: 2026-07-12
+description: 一覧に出る一行説明（任意）
+tags: 開発, お知らせ        # 任意。一覧のタグ絞り込みに使われる
+draft: true                 # 任意。true の間は非公開（一覧にも出ない）
+---
 
-2. Generate and push:
+本文は Markdown で。
+```
 
-   ```
-   npm run make:blog
-   git add -A && git commit -m "blog: 記事タイトル" && git push
-   ```
+### フロー A: ローカルで書く（推奨）
 
-Generated pages share the same shell as `index.html` (night-highway canvas,
-nav, footer), so no extra styling work is needed per post.
+```
+npm run new:post -- webgl-tips "WebGLの小ネタ" --tags "開発,WebGL"
+# → blog/posts/2026-07-14-webgl-tips.md が雛形付きで生成される
+
+# 本文を書いたら（プレビューしたい場合のみ）
+npm run make:blog && npm run serve   # http://localhost:8000/blog/
+
+git add -A && git commit -m "blog: WebGLの小ネタ" && git push
+```
+
+`make:blog` を忘れて push しても、Actions が差分を検知して
+生成 HTML を自動コミットするので壊れない。
+
+### フロー B: GitHub 上で完結（スマホ・出先から）
+
+1. GitHub の Web エディタで `blog/posts/` に md を追加、または既存 md を編集
+2. main にコミット → Actions が HTML を生成してコミット → Pages に反映
+
+### 編集・非公開・削除
+
+- **編集**: md を直して push（どちらのフローでも可）
+- **非公開**: フロントマターに `draft: true` を足して push（生成 HTML も自動削除される）
+- **削除**: md を消して push（対応する HTML はジェネレータが掃除する）
+
+生成ページは `index.html` と同じ骨格（夜の高速道路キャンバス・ナビ・
+フッター）を共有するので、記事ごとのスタイル調整は不要。
 
 ## Regenerating image assets
 
