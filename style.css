@@ -705,6 +705,69 @@ header::before {
     color: var(--muted);
 }
 
+/* タグチップ（一覧・記事ページ共通） */
+.tag-chip {
+    display: inline-block;
+    font-size: 0.72rem;
+    padding: 0.1rem 0.55rem;
+    margin-right: 0.35rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 999px;
+    color: var(--muted);
+    background: rgba(8, 10, 18, 0.45);
+}
+
+.post-list__tags {
+    display: block;
+    margin-top: 0.5rem;
+}
+
+.post__tags {
+    margin-left: 0.6rem;
+}
+
+/* タグ絞り込みバー */
+.tag-filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.4rem;
+}
+
+.tag-filter__btn,
+.tag-filter__reset {
+    font-family: inherit;
+    font-size: 0.82rem;
+    padding: 0.3rem 0.85rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 999px;
+    background: rgba(8, 10, 18, 0.45);
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.tag-filter__btn:hover,
+.tag-filter__btn:focus-visible,
+.tag-filter__reset:hover,
+.tag-filter__reset:focus-visible {
+    border-color: var(--accent);
+    color: #fff;
+}
+
+.tag-filter__btn[aria-pressed="true"] {
+    border-color: var(--accent);
+    color: #fff;
+    background: rgba(255, 109, 77, 0.18);
+    box-shadow: 0 0 0 1px rgba(255, 109, 77, 0.25);
+}
+
+.post-list__empty {
+    margin-top: 1.5rem;
+    color: var(--muted);
+}
+
 /* 記事本文 */
 .post__title {
     font-family: var(--display);
