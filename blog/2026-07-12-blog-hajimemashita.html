@@ -49,15 +49,17 @@
                     <div class="post__body">
 <p>夜の高速道路を走るこのサイトに、雑記を併設しました。</p>
 <h2>しくみ</h2>
-<p>記事は Markdown で書いて、リポジトリの <code>blog/posts/</code> に置くだけです。</p>
-<pre><code class="language-bash"># 記事を書く
-vim blog/posts/2026-07-12-blog-hajimemashita.md
+<p>記事は Markdown で書いて、リポジトリの <code>blog/posts/</code> に置くだけです。
+push すると GitHub Actions が HTML を自動生成して公開してくれます。</p>
+<pre><code class="language-bash"># 雛形をつくって記事を書く
+npm run new:post -- new-article &quot;新しい記事&quot; --tags &quot;開発&quot;
+vim blog/posts/2026-07-14-new-article.md
 
-# HTML を生成してプッシュ
-npm run make:blog
+# あとは push するだけ（HTML 生成は Actions におまかせ）
 git add -A &amp;&amp; git commit -m &quot;blog: 新しい記事&quot; &amp;&amp; git push
 </code></pre>
-<p>ファイルの先頭にタイトルと日付を書いておくと、一覧ページにも自動で並びます。</p>
+<p>ファイルの先頭にタイトルと日付、タグを書いておくと、一覧ページに
+自動で並び、タグで絞り込めるようになります。</p>
 <h2>これから書くこと</h2>
 <ul>
 <li>Rust / Python / JavaScript の小道具づくりの記録</li>
