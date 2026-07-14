@@ -4,6 +4,17 @@
    ============================================================= */
 window.NH = window.NH || {};
 
+// JS(scene.js のラップ計算) と GLSL(下記 FRAG_BODY 内の #define) が共有する定数。
+// buildFragment が #define として注入するため、両者が食い違うことはない。
+NH.CONSTS = {
+    NOISE_PERIOD: 128,        // 周期 value noise のセル周期（雲/路肩スクロールのラップ単位）
+    CITY_CELLS: 256,          // 都市シルエットのセルパターン周期（cityScroll のラップ単位）
+    TIME_WRAP: 100,           // u_time のラップ秒数（瞬き周波数は 2π/TIME_WRAP の整数倍）
+    BLINK_WINDOW_CYCLES: 27,  // 窓明かりの瞬き：TIME_WRAP あたりの周期数
+    BLINK_BEACON_CYCLES: 35,  // 航空障害灯の点滅：TIME_WRAP あたりの周期数
+    GROUND_NOISE_SCALE: 0.18  // 路肩ノイズの Z 係数（groundScroll のスケールと同期）
+};
+
 // 画面を覆う巨大三角形
 NH.VERT = "attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }";
 
@@ -17,15 +28,15 @@ float hash(vec2 p){
 }
 
 // 薄雲・路肩用の value noise と fbm。
-// セル番号を mod 128 で巡回させた周期ノイズ：スクロールを 128 の倍数で
-// ラップすれば模様が飛ばない（雲=u_cloudScroll / 路肩=u_groundScroll が前提）。
+// セル番号を mod NOISE_PERIOD で巡回させた周期ノイズ：スクロールを NOISE_PERIOD の
+// 倍数でラップすれば模様が飛ばない（雲=u_cloudScroll / 路肩=u_groundScroll が前提）。
 float vnoise(vec2 p){
     vec2 i = floor(p), f = fract(p);
     vec2 u = f * f * (3.0 - 2.0 * f);
-    float a = hash(mod(i, 128.0));
-    float b = hash(mod(i + vec2(1.0, 0.0), 128.0));
-    float c = hash(mod(i + vec2(0.0, 1.0), 128.0));
-    float d = hash(mod(i + vec2(1.0, 1.0), 128.0));
+    float a = hash(mod(i, NOISE_PERIOD));
+    float b = hash(mod(i + vec2(1.0, 0.0), NOISE_PERIOD));
+    float c = hash(mod(i + vec2(0.0, 1.0), NOISE_PERIOD));
+    float d = hash(mod(i + vec2(1.0, 1.0), NOISE_PERIOD));
     return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
 }
 float fbm(vec2 p){
@@ -126,7 +137,7 @@ void main(){
         // 路肩のまだら（前進でスクロールする微かな起伏）。単色のフラットさを解消。
         // u_scroll（wrapMeters 周期）ではなく専用の u_groundScroll（128 周期＝
         // 周期ノイズと同期）を使い、ラップ時に模様が組み変わらないようにする。
-        float gnz = vnoise(vec2(Xg * 0.35, Zg * 0.18 + u_groundScroll));
+        float gnz = vnoise(vec2(Xg * 0.35, Zg * GROUND_NZ_SCALE + u_groundScroll));
         vec3 grnd = u_ground * (0.78 + 0.5 * gnz) * exp(-Zg * u_fogDensity);
 
         col = mix(grnd, road, roadMask);
@@ -187,7 +198,7 @@ void main(){
             float baseY = horizonY - layer * 0.004;
             float gx = (sx + drift) * scale;
             float c = floor(gx);
-            float ch = mod(c, 256.0);     // ハッシュ用の有界セル番号（パターンは256セル周期）
+            float ch = mod(c, CITY_CELLS);   // ハッシュ用の有界セル番号（パターンは CITY_CELLS セル周期）
             float wx = fract(gx);
             float h = hash(vec2(ch * 1.7, 5.0 + layer * 11.0));
             float top = baseY + maxH * (0.2 + 0.8 * h);
@@ -202,8 +213,8 @@ void main(){
                     float inx = fract(wx * winCols);
                     float iny = fract((uv.y - baseY) / cellH);
                     if (wseed > (1.0 - u_windowDensity) && inx > 0.22 && inx < 0.78 && iny > 0.22 && iny < 0.78) {
-                        // 瞬き。周波数は 2π×27/100（u_time の100秒ラップと同期し位相が飛ばない）
-                        float tw = 0.45 + 0.55 * sin(u_time * 1.6964600 + wseed * 30.0);
+                        // 瞬き。周波数は 2π×BLINK_WINDOW_CYCLES/TIME_WRAP（u_time のラップと同期し位相が飛ばない）
+                        float tw = 0.45 + 0.55 * sin(u_time * BLINK_W_WINDOW + wseed * 30.0);
                         // 窓ごとに色味を散らす：電球(暖色)/蛍光灯(白)/寒色
                         float wtint = hash(vec2(ch * 7.0 + cwx, cwy * 2.3 + layer * 9.0));
                         vec3 wcol = (wtint < 0.55) ? u_windowCol
@@ -218,15 +229,12 @@ void main(){
                 float sxc = (c + 0.5) / scale - drift;                  // ビル中心の横位置（アスペクト空間）
                 vec2 bpos = vec2(sxc, top + 0.006);
                 float bd = distance(vec2(sx, uv.y), bpos);
-                // 点滅周波数は 2π×35/100（u_time の100秒ラップと同期）
-                float blink = 0.3 + 0.7 * pow(0.5 + 0.5 * sin(u_time * 2.1991149 + h * 12.0), 2.0);
+                // 点滅周波数は 2π×BLINK_BEACON_CYCLES/TIME_WRAP（u_time のラップと同期）
+                float blink = 0.3 + 0.7 * pow(0.5 + 0.5 * sin(u_time * BLINK_W_BEACON + h * 12.0), 2.0);
                 col += u_beaconCol * exp(-(bd * bd) / (u_beaconSize * u_beaconSize)) * u_beaconBright * blink;
             }
         }
     }
-
-    // 地平線の暖色かすみ（真の地平線 dir.y≈0 に沿う）
-    col += u_hazeCol * exp(-(dir.y * dir.y) * u_hazeSharp) * u_hazeIntensity;
 
     // ===== 塀（左右の壁）＋ 中央分離帯のガードレール（垂直面 x=baseX と交差）=====
     if (u_wall > 0.5 && abs(dir.x) > 1e-4) {
@@ -268,10 +276,15 @@ void main(){
             float rDot = smoothstep(0.07, 0.0, abs(fract((zhit + u_scroll) / 6.0) - 0.5))   // 6m ごと
                        * smoothstep(0.12, 0.0, abs(yn - 0.6));                  // 高さ 0.6*hgt 付近
             c += u_reflectorCol * rDot * u_reflectorBright;
-            wallShade = c * fog;
+            // 黒へ潰さず地平線の空色へ溶かす：遠方の分離帯が「黒い縦線」に見えるのを防ぐ
+            wallShade = mix(u_skyHorizon, c, fog);
         }
         if (wallHit) { col = wallShade; onRoad = false; onWall = true; }
     }
+
+    // 地平線の暖色かすみ（真の地平線 dir.y≈0 に沿う）。
+    // 塀・分離帯の後に足すことで、遠方の壁も大気に溶ける
+    col += u_hazeCol * exp(-(dir.y * dir.y) * u_hazeSharp) * u_hazeIntensity;
 
     // ===== 対向車（セダンの正面シルエット。反対車線。中央分離帯で下部が隠れる）=====
     for (int k = 0; k < 4; k++) {
@@ -321,6 +334,7 @@ void main(){
         else if (lp.y < 0.82 && abs(lp.x) < 0.86) body *= 1.05;              // ボンネット面を僅かに起こす
         vec2 hl = vec2(abs(lp.x) - u_carTrack, lp.y - u_carHeadH);           // ヘッドライトのレンズ
         body = mix(body, vec3(1.0, 0.97, 0.88), smoothstep(0.14, 0.0, length(hl)) * 0.9);
+        body = mix(u_skyHorizon, body, exp(-cz * u_fogDensity));             // 遠方は大気に溶かす（黒点化防止）
         col = mix(col, body, m * occ * nearFade);
     }
 
@@ -331,6 +345,9 @@ void main(){
         float Zrel = (kStart + float(i)) * u_lampSpacing - u_scroll;
         if (Zrel < 0.5) continue;
         float lf = 1.0 - smoothstep(u_lampFade, 1.0, float(i) / float(u_lampCount)); // 最遠をフェード
+        // 大気減衰：遠い灯のグロー/コアが消失点の1点に堆積して
+        // 「中央の白い球・縦の光条」になるのを防ぐ（点列の見た目は近〜中距離が担う）
+        float fogL = exp(-Zrel * u_fogDensity);
         float curv = curveAt(Zrel);
         for (int s = 0; s < 2; s++) {
             float sd = (s == 0) ? -1.0 : 1.0;
@@ -384,10 +401,10 @@ void main(){
             col = mix(col, u_poleCol * 1.4, housing * 0.85 * lf);
 
             // グロー（残光）と頭部の白熱コアは light に加算（トーンマップ後に重ねる）
-            light += u_lampCol * glow * clamp(u_glowBright * pscale, 0.08, u_glowBright) * lf;
+            light += u_lampCol * glow * clamp(u_glowBright * pscale, 0.08, u_glowBright) * lf * fogL;
             float coreR = u_glowSize * 0.7 * gscale + 0.001;
             float core = exp(-dot(rel2, rel2) / (coreR * coreR));
-            light += mix(u_lampCol, vec3(1.0), 0.6) * core * u_lampCore * lf;
+            light += mix(u_lampCol, vec3(1.0), 0.6) * core * u_lampCore * lf * fogL;
 
             // 路面の反射：灯具の真下（車道）に円状の明かり。路面は基本暗いまま
             if (onRoad) {
@@ -396,14 +413,14 @@ void main(){
                     vec2 Pc = vec2(pc.x * aspect, pc.y);
                     float poolR = u_poolSize * gscale + 0.006;
                     float d = distance(Pa, Pc);
-                    light += u_lampCol * exp(-(d * d) / (poolR * poolR)) * u_poolIntensity * clamp(pscale, 0.1, 1.6) * lf;
+                    light += u_lampCol * exp(-(d * d) / (poolR * poolR)) * u_poolIntensity * clamp(pscale, 0.1, 1.6) * lf * fogL;
                 }
                 // 濡れ反射：灯を地平線で折り返した縦長のグレア。遠い灯ほど弱く（消失点での溜まりを防ぐ）
                 if (u_wetness > 0.0) {
                     vec2 rr = Pa - vec2(Ha.x, 2.0 * horizonY - Ha.y);
                     float rw = u_glowSize * gscale * 1.2 + 0.004;
                     float streak = exp(-(rr.x * rr.x) / (rw * rw) - (rr.y * rr.y) / (rw * rw * 18.0));
-                    light += u_lampCol * streak * u_glowBright * 0.30 * u_wetness * lf * clamp(pscale, 0.04, 1.2);
+                    light += u_lampCol * streak * u_glowBright * 0.30 * u_wetness * lf * fogL * clamp(pscale, 0.04, 1.2);
                 }
             }
         }
@@ -417,6 +434,17 @@ void main(){
         float nearFade = smoothstep(2.0, 7.0, cz);        // 至近フェード（ボディと同じ）
         if (nearFade < 0.01) continue;
         float cxBase = car.x + curveAt(cz) - u_camX;
+        // 中央分離帯による遮蔽（ボディと同じ判定をライト高で）。
+        // これが無いと車体は隠れているのにライトだけが「浮いた白い球」として見える
+        float occ = 1.0;
+        if (u_wall > 0.5 && cxBase > 1e-3) {
+            float tm = -u_camX / cxBase;
+            if (tm > 0.0 && tm < 1.0) {
+                float yc = u_camHeight + tm * (u_carHeadH - u_camHeight);
+                occ = smoothstep(u_medianHeight - 0.04, u_medianHeight + 0.04, yc);
+            }
+        }
+        if (occ < 0.004) continue;
         for (int hl = 0; hl < 2; hl++) {
             float off = (hl == 0) ? -u_carTrack : u_carTrack;
             vec3 hp = project(vec3(cxBase + off, u_carHeadH - u_camHeight, cz), cp, sp, tanX, tanY);
@@ -427,7 +455,7 @@ void main(){
             float r = u_carHeadSize * ps + 0.0025;   // 近いほど大きく
             float d = distance(Pp, Hp);
             float fade = exp(-cz * u_fogDensity);     // ヘッドライトは点光源：減衰は大気フェードのみ
-            light += u_carHeadCol * exp(-(d * d) / (r * r)) * u_carHeadBright * fade * nearFade;
+            light += u_carHeadCol * exp(-(d * d) / (r * r)) * u_carHeadBright * fade * nearFade * occ;
         }
         // ヘッドライトが照らす路面の淡いプール（車の手前側の車道に落ちる）
         if (onRoad) {
@@ -437,7 +465,7 @@ void main(){
                 vec2 Prc = vec2(pr.x * aspect, pr.y);
                 float prR = u_carHeadSize * 7.0 * pps + 0.012;
                 float dd = distance(vec2(uv.x * aspect, uv.y), Prc);
-                light += u_carHeadCol * exp(-(dd * dd) / (prR * prR)) * u_carHeadBright * 0.22 * exp(-cz * u_fogDensity) * nearFade;
+                light += u_carHeadCol * exp(-(dd * dd) / (prR * prR)) * u_carHeadBright * 0.22 * exp(-cz * u_fogDensity) * nearFade * occ;
             }
         }
     }
@@ -473,6 +501,14 @@ NH.buildFragment = function (opts) {
     if (opts.derivatives) head += "#extension GL_OES_standard_derivatives : enable\n";
     head += "#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n";
     head += opts.derivatives ? "#define AAW(x) (fwidth(x))\n" : "#define AAW(x) (0.0)\n";
+
+    // NH.CONSTS を GLSL 定数として注入（JS 側のラップ計算との単一ソース）
+    var C = NH.CONSTS;
+    head += "#define NOISE_PERIOD " + C.NOISE_PERIOD.toFixed(1) + "\n";
+    head += "#define CITY_CELLS " + C.CITY_CELLS.toFixed(1) + "\n";
+    head += "#define GROUND_NZ_SCALE " + C.GROUND_NOISE_SCALE.toFixed(4) + "\n";
+    head += "#define BLINK_W_WINDOW " + (2 * Math.PI * C.BLINK_WINDOW_CYCLES / C.TIME_WRAP).toFixed(7) + "\n";
+    head += "#define BLINK_W_BEACON " + (2 * Math.PI * C.BLINK_BEACON_CYCLES / C.TIME_WRAP).toFixed(7) + "\n";
 
     // エンジン uniform ＋ PARAMS 由来 uniform
     var decls = "uniform vec2 u_res;\nuniform float u_scroll;\nuniform float u_sway;\nuniform float u_time;\nuniform float u_cityPhase;\nuniform float u_cityScroll;\nuniform float u_cloudScroll;\nuniform float u_groundScroll;\nuniform vec2 u_cars[4];\nuniform vec3 u_carCol[4];\n";

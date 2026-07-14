@@ -21,7 +21,7 @@ NH.createScene = function (canvas, config) {
     // 位相アキュムレータ：sin に渡す位相そのものを 2π でラップし、
     // 時間の有界化（旧 animTime % 1e4 / u_time % 100）で起きていた位相ジャンプを根絶する
     var swayPhase = 0, cityPhaseV = 0, blinkTime = 0;
-    var GROUND_NOISE_SCALE = 0.18;                        // shaders.js の路肩ノイズ係数と同期
+    var C = NH.CONSTS;                                    // GLSL 側と共有の周期定数（shaders.js が #define 注入）
     var fpsAcc = 0, fpsN = 0;                             // 実測FPSによる品質自動ダウン用
     var flashT = -1, flashHasCar = false;                 // パッシング（クリックのハイビーム）
     var cars = [], carTimer = 6 + Math.random() * 24;     // 対向車（最大4台）＋次の出現までの秒数
@@ -137,6 +137,9 @@ NH.createScene = function (canvas, config) {
     function resize() {
         var cw = canvas.clientWidth || window.innerWidth;
         var ch = canvas.clientHeight || window.innerHeight;
+        // レイアウト前・非表示時はサイズ0 → 0/0=NaN で canvas.width が壊れるため見送る
+        // （表示されたら ResizeObserver / resize イベントが改めて呼ぶ）
+        if (cw < 1 || ch < 1) return;
         var rows = Math.max(40, config.pixelRows | 0);
         var w = Math.max(1, Math.round(rows * (cw / ch)));
         // 低解像度バッファ＋CSSの image-rendering:pixelated でドット絵化＆軽量化
@@ -156,14 +159,14 @@ NH.createScene = function (canvas, config) {
         gl.uniform1f(U.u_sway, Math.sin(swayPhase));
         // 都市は道路の揺れと切り離し、cityFlowRate 倍のゆっくりした位相で流す
         gl.uniform1f(U.u_cityPhase, Math.sin(cityPhaseV));
-        // 前進に伴う遠景都市の平行移動。両層のセルパターンが256セル周期で継ぎ目なく
-        // 繰り返すよう 256/cityCols でラップ（近層は par×scale 積が整数になる係数を採用）
-        gl.uniform1f(U.u_cityScroll, cityScroll % (256.0 / Math.max(1, config.cityCols)));
-        // 薄雲：drift 乗算後の値を 128（周期ノイズの周期）でラップ → ラップ時も模様が連続
-        gl.uniform1f(U.u_cloudScroll, (cloudScroll * config.cloudDrift) % 128.0);
-        // 路肩ノイズ：係数乗算後の値を 128 でラップ（shaders.js の 0.18 と同期）
-        gl.uniform1f(U.u_groundScroll, (scrollDist * GROUND_NOISE_SCALE) % 128.0);
-        gl.uniform1f(U.u_time, blinkTime);   // 窓の瞬き用（100秒でラップ。瞬き周波数は 2π/100 の整数倍）
+        // 前進に伴う遠景都市の平行移動。両層のセルパターンが CITY_CELLS セル周期で継ぎ目なく
+        // 繰り返すよう CITY_CELLS/cityCols でラップ（近層は par×scale 積が整数になる係数を採用）
+        gl.uniform1f(U.u_cityScroll, cityScroll % (C.CITY_CELLS / Math.max(1, config.cityCols)));
+        // 薄雲：drift 乗算後の値を NOISE_PERIOD（周期ノイズの周期）でラップ → ラップ時も模様が連続
+        gl.uniform1f(U.u_cloudScroll, (cloudScroll * config.cloudDrift) % C.NOISE_PERIOD);
+        // 路肩ノイズ：係数乗算後の値を NOISE_PERIOD でラップ（係数は GLSL 側 #define と共有）
+        gl.uniform1f(U.u_groundScroll, (scrollDist * C.GROUND_NOISE_SCALE) % C.NOISE_PERIOD);
+        gl.uniform1f(U.u_time, blinkTime);   // 窓の瞬き用（TIME_WRAP 秒でラップ。瞬き周波数は 2π/TIME_WRAP の整数倍）
         // パッシング：クリック起因のハイビーム2連発と、対向車の応答2連発
         if (U.u_egoBright != null) {
             var eb = 1.0, cb = 1.0;
@@ -260,7 +263,7 @@ NH.createScene = function (canvas, config) {
             cloudScroll += dt * config.cloudSpeed;
             swayPhase = (swayPhase + dt * config.swaySpeed) % TAU;
             cityPhaseV = (cityPhaseV + dt * config.swaySpeed * config.cityFlowRate) % TAU;
-            blinkTime = (blinkTime + dt) % 100.0;
+            blinkTime = (blinkTime + dt) % C.TIME_WRAP;
             if (flashT >= 0 && (flashT += dt) > 1.6) flashT = -1;
             updateCars(dt);
             fpsAcc += dt; fpsN++;
