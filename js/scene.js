@@ -224,14 +224,29 @@ NH.createScene = function (canvas, config) {
         flashHasCar = cars.length > 0;
     }
 
-    // 実測FPSが低いままなら描画解像度を段階的に下げる（デバイス推定の誤判定への保険）
+    // 実測FPSが低いままなら描画解像度を段階的に下げる（デバイス推定の誤判定への保険）。
+    // タブ切替やGC等の一時的なスパイクで恒久劣化しないよう2窓連続の低FPSでのみ下げ、
+    // 余裕が戻ったら（>55fps相当）元の解像度を上限に段階回復する
+    var tuneBadWindows = 0;
+    var tuneBaseRows = 0;
     function autoTune() {
         if (fpsN < 120) return;
+        if (!tuneBaseRows) tuneBaseRows = config.pixelRows;
         var avg = fpsAcc / fpsN;
         fpsAcc = 0; fpsN = 0;
-        if (avg > 1 / 40 && config.pixelRows > 190) {
-            config.pixelRows = Math.max(180, Math.round(config.pixelRows * 0.75));
-            resize();
+        if (avg > 1 / 40) {
+            tuneBadWindows++;
+            if (tuneBadWindows >= 2 && config.pixelRows > 190) {
+                config.pixelRows = Math.max(180, Math.round(config.pixelRows * 0.75));
+                resize();
+                tuneBadWindows = 0;
+            }
+        } else {
+            tuneBadWindows = 0;
+            if (avg < 1 / 55 && config.pixelRows < tuneBaseRows) {
+                config.pixelRows = Math.min(tuneBaseRows, Math.round(config.pixelRows * 1.15));
+                resize();
+            }
         }
     }
 
@@ -307,7 +322,6 @@ NH.createScene = function (canvas, config) {
         start: start,
         stop: stop,
         dispose: dispose,
-        flash: flash,                                       // パッシング（クリックのハイビーム）
-        distance: function () { return scrollDist; }        // 累計走行距離(m)：オドメーター用
+        flash: flash                                        // パッシング（クリックのハイビーム）
     };
 };

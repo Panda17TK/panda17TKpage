@@ -47,25 +47,6 @@
         cfg.moonShadowX = (phase < 0.5 ? -1 : 1) * 2.2 * illum;   // 満ちる間は左側から明るく
     }
 
-    // オドメーター：走行距離を localStorage に累積し、フッターに km 表示する
-    function initOdometer(scene) {
-        var wrap = document.getElementById("odo");
-        var el = document.getElementById("odometer");
-        if (!wrap || !el) return;
-        var base = 0;
-        try { base = parseFloat(localStorage.getItem("nh-odometer-m")) || 0; } catch (e) { /* 参照不可なら 0 から */ }
-        function total() { return base + scene.distance(); }
-        function show() { el.textContent = (total() / 1000).toFixed(1); }
-        function persist() {
-            try { localStorage.setItem("nh-odometer-m", String(total())); } catch (e) { /* 保存不可は無視 */ }
-        }
-        show();
-        wrap.hidden = false;
-        setInterval(show, 1000);
-        setInterval(persist, 10000);
-        window.addEventListener("pagehide", persist);
-    }
-
     var canvas = document.getElementById("bg");
     if (canvas && window.NH && NH.createScene) {
         tuneForDevice(NH.config);
@@ -75,7 +56,6 @@
             scene.applyConfig();
             scene.resize();
             scene.start();
-            initOdometer(scene);
             // パッシング：リンク等の操作以外の場所をクリックしたらハイビーム
             document.addEventListener("click", function (e) {
                 if (e.target.closest && e.target.closest("a, button, input, select, textarea, label")) return;

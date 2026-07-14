@@ -143,7 +143,10 @@ void main(){
             shade -= 0.20 * smoothstep(0.34, 0.0, distance(luv, vec2(-0.26, 0.22)));  // クレーター/海
             shade -= 0.15 * smoothstep(0.30, 0.0, distance(luv, vec2(0.30, -0.12)));
             shade -= 0.10 * smoothstep(0.22, 0.0, distance(luv, vec2(0.12, 0.46)));
-            shade -= 0.07 * fbm(luv * 3.0 + 11.0);                          // 微細なまだら
+            // 微細なまだら。fbm は u_cloudOctaves 連動で低品質ティアだと粗くなるため、
+            // 月面だけは固定2オクターブにして品質を独立させる
+            vec2 mq = luv * 3.0 + 11.0;
+            shade -= 0.07 * (0.5 * vnoise(mq) + 0.25 * vnoise(mq * 2.0));
             // 月相：同径の影円をずらして欠けを表現（0=新月、|2.2|=満月。app.js が実日付から設定）
             float sdist = distance(luv, vec2(u_moonShadowX, 0.0));
             shade *= mix(1.0, 0.12, 1.0 - smoothstep(0.92, 1.12, sdist));

@@ -63,8 +63,14 @@ NH.initUI = function () {
             }
         });
         // デスクトップ幅へリサイズしたらトラップ状態を解除
+        // （getComputedStyle を伴うため rAF で1フレーム1回に間引く）
+        var resizeRaf = 0;
         window.addEventListener("resize", function () {
-            if (!isMobileNav() && links.classList.contains("is-open")) close(false);
+            if (resizeRaf) return;
+            resizeRaf = requestAnimationFrame(function () {
+                resizeRaf = 0;
+                if (!isMobileNav() && links.classList.contains("is-open")) close(false);
+            });
         });
     }
 

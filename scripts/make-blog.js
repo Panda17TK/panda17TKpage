@@ -113,7 +113,6 @@ ${bodyHtml}
 
     <footer class="footer">
         <span>&copy; <span id="year">2025</span> ${SITE}</span>
-        <span class="footer__odo" id="odo" hidden>総走行距離 <span id="odometer">0.0</span> km</span>
     </footer>
 
     <script defer src="${rel}js/config.js"></script>
