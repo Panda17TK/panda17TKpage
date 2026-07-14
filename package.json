@@ -14,7 +14,7 @@
     "watch:blog": "node scripts/watch-blog.js",
     "make:og": "node scripts/make-og.js",
     "make:favicon": "node scripts/make-favicon.js",
-    "serve": "python3 -m http.server 8000"
+    "serve": "npx --yes http-server -p 8000 -c-1"
   },
   "devDependencies": {
     "eslint": "8.57.1",

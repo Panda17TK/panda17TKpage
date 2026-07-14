@@ -30,6 +30,7 @@ for (let i = 0; i < args.length; i++) {
 const [slug, title] = positional;
 if (!slug || !title) { fail("slug とタイトルを指定してください"); }
 if (!/^[a-z0-9][a-z0-9-]*$/.test(slug)) { fail(`slug は半角英数小文字とハイフンのみ: "${slug}"`); }
+if (slug === "index") { fail('slug "index" は一覧ページと衝突するため使えません'); }
 
 // toISOString() は UTC になり日本時間と日付がずれるため、ローカル日付で組む
 const now = new Date();

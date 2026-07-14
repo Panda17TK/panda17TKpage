@@ -84,7 +84,12 @@
             // ?dev のときだけ調整パネルを動的ロード（通常表示では一切読み込まない）
             if (/[?&]dev\b/.test(location.search)) {
                 var s = document.createElement("script");
-                s.src = "js/devpanel.js";
+                // ドキュメント相対だと /blog/ 配下で 404 になるため、
+                // 読み込み済みの app.js の URL から兄弟ファイルとして解決する
+                var appScript = document.querySelector('script[src$="app.js"]');
+                s.src = appScript
+                    ? appScript.src.replace(/app\.js$/, "devpanel.js")
+                    : "js/devpanel.js";
                 s.onload = function () {
                     if (NH.createDevPanel) NH.createDevPanel(NH.config, scene, NH.PARAMS);
                 };

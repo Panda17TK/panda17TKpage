@@ -2,7 +2,8 @@
 
 :root {
     --fg: #f8f4ee;
-    --muted: rgba(248, 244, 238, 0.62);
+    /* 小さめの補助テキストにも使うため、暗背景 #05060a で AA(4.5:1) を確保できる濃さに */
+    --muted: rgba(248, 244, 238, 0.75);
     /* 和の配色：朱色（しゅいろ）×金色（こんじき）。夜のネオンに映える提灯の色味 */
     --accent: #ff6d4d;
     --accent-2: #ffd76a;
@@ -240,20 +241,6 @@ header::before {
     border-radius: 2px;
     box-shadow: 0 0 6px var(--neon);
     transition: transform 0.25s ease, opacity 0.25s ease;
-}
-
-/* スクリーンリーダ/SEO 用の視覚非表示（見た目には出さない） */
-.visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    border: 0;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    clip-path: inset(50%);
-    white-space: nowrap;
 }
 
 /* ---------- Hero ---------- */
@@ -632,6 +619,7 @@ header::before {
     *::after {
         animation-duration: 0.001ms !important;
         animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
     }
 }
 

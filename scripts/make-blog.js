@@ -49,7 +49,8 @@ function tagChips(tags) {
 }
 
 // 全ページ共通の骨格。rel はサイトルートへの相対パス（雑記配下は "../"）
-function pageShell({ title, description, canonicalPath, bodyHtml, extraScripts = "" }) {
+// ogType: 一覧は website / 記事は article。headExtra は記事メタ等の追加行
+function pageShell({ title, description, canonicalPath, bodyHtml, extraScripts = "", ogType = "website", headExtra = "" }) {
     const rel = "../";
     return `<!DOCTYPE html>
 <html lang="ja">
@@ -61,12 +62,21 @@ function pageShell({ title, description, canonicalPath, bodyHtml, extraScripts =
     <title>${esc(title)} | ${SITE}</title>
     <link rel="icon" type="image/svg+xml" href="${rel}favicon.svg">
     <link rel="icon" type="image/png" sizes="64x64" href="${rel}favicon.png">
-    <meta property="og:type" content="article">
+    <link rel="canonical" href="${ORIGIN}${canonicalPath}">
+    <link rel="alternate" type="application/atom+xml" title="${SITE} 雑記" href="${ORIGIN}/blog/feed.xml">
+    <meta property="og:type" content="${ogType}">
+    <meta property="og:site_name" content="${SITE}">
     <meta property="og:title" content="${esc(title)} | ${SITE}">
     <meta property="og:description" content="${esc(description)}">
     <meta property="og:url" content="${ORIGIN}${canonicalPath}">
     <meta property="og:image" content="${ORIGIN}/og-image.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="${esc(title)} | ${SITE}">
+    <meta name="twitter:description" content="${esc(description)}">
+    <meta name="twitter:image" content="${ORIGIN}/og-image.png">
+${headExtra}    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
     <link rel="stylesheet" href="${rel}style.css">
@@ -117,6 +127,22 @@ ${extraScripts}</body>
 }
 
 function buildPost(post) {
+    // 記事固有のメタ: article:* と検索エンジン向け JSON-LD（BlogPosting）
+    const jsonLd = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        headline: post.title,
+        datePublished: post.date,
+        description: post.description || `${SITE}の雑記記事`,
+        url: `${ORIGIN}/blog/${post.slug}.html`,
+        author: { "@type": "Person", name: SITE },
+        keywords: post.tags.join(", ")
+    }).replace(/</g, "\\u003c"); // "</script>" 混入対策
+    const headExtra = [
+        `    <meta property="article:published_time" content="${esc(post.date)}">`,
+        ...post.tags.map((t) => `    <meta property="article:tag" content="${esc(t)}">`),
+        `    <script type="application/ld+json">${jsonLd}</script>`
+    ].join("\n") + "\n";
     const body = `                <article class="post">
                     <h1 class="post__title">${esc(post.title)}</h1>
                     <p class="post__meta"><time datetime="${esc(post.date)}">${esc(post.date)}</time>${post.tags.length ? ` <span class="post__tags">${tagChips(post.tags)}</span>` : ""}</p>
@@ -129,8 +155,53 @@ ${post.html}
         title: post.title,
         description: post.description || `${SITE}の雑記記事`,
         canonicalPath: `/blog/${post.slug}.html`,
-        bodyHtml: body
+        bodyHtml: body,
+        ogType: "article",
+        headExtra
     });
+}
+
+// Atom フィード（RSSリーダー購読用）。posts は新しい順で渡される前提
+function buildFeed(posts) {
+    const updated = posts.length ? `${posts[0].date}T00:00:00Z` : "1970-01-01T00:00:00Z";
+    const entries = posts.map((p) => `    <entry>
+        <title>${esc(p.title)}</title>
+        <link href="${ORIGIN}/blog/${esc(p.slug)}.html"/>
+        <id>${ORIGIN}/blog/${esc(p.slug)}.html</id>
+        <updated>${esc(p.date)}T00:00:00Z</updated>
+        <summary>${esc(p.description || p.title)}</summary>
+${p.tags.map((t) => `        <category term="${esc(t)}"/>`).join("\n")}
+    </entry>`).join("\n");
+    return `<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title>${SITE} 雑記</title>
+    <link href="${ORIGIN}/blog/"/>
+    <link rel="self" href="${ORIGIN}/blog/feed.xml"/>
+    <id>${ORIGIN}/blog/</id>
+    <updated>${updated}</updated>
+    <author><name>${SITE}</name></author>
+${entries}
+</feed>
+`;
+}
+
+// sitemap.xml（トップ・一覧・各記事）。lastmod は記事の date を使う
+function buildSitemap(posts) {
+    const latest = posts.length ? posts[0].date : null;
+    const urls = [
+        { loc: `${ORIGIN}/`, lastmod: latest },
+        { loc: `${ORIGIN}/blog/`, lastmod: latest },
+        ...posts.map((p) => ({ loc: `${ORIGIN}/blog/${p.slug}.html`, lastmod: p.date }))
+    ];
+    const body = urls.map((u) => `    <url>
+        <loc>${esc(u.loc)}</loc>${u.lastmod ? `
+        <lastmod>${esc(u.lastmod)}</lastmod>` : ""}
+    </url>`).join("\n");
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${body}
+</urlset>
+`;
 }
 
 function buildIndex(posts) {
@@ -180,6 +251,17 @@ function main() {
             console.error(`make-blog: ${file} のフロントマターに title / date(YYYY-MM-DD) が必要です`);
             process.exit(1);
         }
+        // 形式だけでなく実在する日付か（2026-02-30 等を弾く）
+        const parsed = new Date(`${meta.date}T00:00:00Z`);
+        if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== meta.date) {
+            console.error(`make-blog: ${file} の date "${meta.date}" は実在しない日付です`);
+            process.exit(1);
+        }
+        // slug "index" は一覧ページ blog/index.html を上書きしてしまうため予約語
+        if (file.replace(/\.md$/, "") === "index") {
+            console.error(`make-blog: ${file} — slug "index" は使えません（一覧ページと衝突）`);
+            process.exit(1);
+        }
         if (/^(true|yes)$/i.test(meta.draft || "")) {
             console.log(`make-blog: ${file} は draft のため非公開（スキップ）`);
             continue;
@@ -199,6 +281,8 @@ function main() {
         fs.writeFileSync(path.join(OUT_DIR, `${post.slug}.html`), buildPost(post), "utf8");
     }
     fs.writeFileSync(path.join(OUT_DIR, "index.html"), buildIndex(posts), "utf8");
+    fs.writeFileSync(path.join(OUT_DIR, "feed.xml"), buildFeed(posts), "utf8");
+    fs.writeFileSync(path.join(ROOT, "sitemap.xml"), buildSitemap(posts), "utf8");
 
     // draft 化や md 削除で不要になった生成 HTML を掃除する
     const keep = new Set(["index.html", ...posts.map((p) => `${p.slug}.html`)]);
@@ -208,7 +292,7 @@ function main() {
             console.log(`make-blog: 不要な生成物 ${f} を削除しました`);
         }
     }
-    console.log(`make-blog: ${posts.length}記事 + index を生成しました`);
+    console.log(`make-blog: ${posts.length}記事 + index / feed.xml / sitemap.xml を生成しました`);
 }
 
 main();

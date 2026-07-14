@@ -39,10 +39,10 @@ jobs:
       # ワークフローを再トリガーしないため無限ループにはならない
       - name: Commit generated HTML
         run: |
-          if [ -n "$(git status --porcelain blog)" ]; then
+          if [ -n "$(git status --porcelain blog sitemap.xml)" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add blog
+            git add blog sitemap.xml
             git commit -m "blog: HTML を自動生成 (make:blog)"
             git push
           else
