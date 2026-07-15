@@ -239,56 +239,6 @@ header::before {
         0 4px 30px rgba(0, 0, 0, 0.6);
 }
 
-.hero__cta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.9rem;
-    justify-content: center;
-    margin-top: 2.2rem;
-}
-
-.btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.72rem 1.5rem;
-    /* 角丸を抑えて、印判・木札のような佇まいに */
-    border-radius: 4px;
-    border: 1px solid var(--glass-border);
-    background: rgba(8, 10, 18, 0.45);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    color: var(--fg);
-    font-size: 0.92rem;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    text-decoration: none;
-    cursor: pointer;
-    transition: transform 0.2s ease, border-color 0.2s ease,
-        box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
-}
-
-.btn:hover,
-.btn:focus-visible {
-    transform: translateY(-2px);
-    border-color: var(--accent);
-    box-shadow: 0 0 0 1px rgba(255, 109, 77, 0.25), 0 10px 30px rgba(0, 0, 0, 0.45);
-}
-
-.btn--primary {
-    /* 朱肉のような深い朱のグラデーション。白抜き文字で判子らしく */
-    border-color: rgba(255, 109, 77, 0.55);
-    color: #fff6ee;
-    background: linear-gradient(135deg, #c93a26, var(--accent));
-    box-shadow: 0 0 24px rgba(255, 109, 77, 0.35);
-}
-
-.btn--primary:hover,
-.btn--primary:focus-visible {
-    color: #ffffff;
-    box-shadow: 0 0 34px rgba(255, 109, 77, 0.55), 0 10px 30px rgba(0, 0, 0, 0.45);
-}
-
 /* スクロール誘導 */
 .hero__scroll {
     position: absolute;
@@ -801,9 +751,6 @@ header::before {
     :root {
         --nav-link-size: 0.98rem;   /* タップしやすく少し大きめ */
     }
-
-    .hero__cta { width: 100%; }
-    .btn { flex: 1 1 auto; justify-content: center; }
 }
 
 @media (prefers-reduced-motion: reduce) {
