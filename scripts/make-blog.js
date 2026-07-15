@@ -21,6 +21,15 @@ const OUT_DIR = path.join(ROOT, "blog");
 const SITE = "笹ノ葉製作所";
 const ORIGIN = "https://sasanoha-tk.github.io";
 
+// giscus（GitHub Discussions ベースのリアクション/コメント）。
+// 記事ページにのみ埋め込む。ID は `gh api` で取得した固定値
+const GISCUS = {
+    repo: "sasanoha-tk/sasanoha-tk.github.io",
+    repoId: "R_kgDOJVR21w",
+    category: "Announcements",
+    categoryId: "DIC_kwDOJVR2184DBQMt"
+};
+
 function esc(s) {
     return String(s)
         .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -148,6 +157,24 @@ function buildPost(post) {
                     <div class="post__body">
 ${post.html}
                     </div>
+                    <section class="post__reactions" aria-label="リアクションとコメント">
+                        <script src="https://giscus.app/client.js"
+                                data-repo="${GISCUS.repo}"
+                                data-repo-id="${GISCUS.repoId}"
+                                data-category="${GISCUS.category}"
+                                data-category-id="${GISCUS.categoryId}"
+                                data-mapping="pathname"
+                                data-strict="0"
+                                data-reactions-enabled="1"
+                                data-emit-metadata="0"
+                                data-input-position="bottom"
+                                data-theme="transparent_dark"
+                                data-lang="ja"
+                                data-loading="lazy"
+                                crossorigin="anonymous"
+                                async>
+                        </script>
+                    </section>
                     <p class="post__back"><a href="./">← 雑記一覧へ</a></p>
                 </article>`;
     return pageShell({

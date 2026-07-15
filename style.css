@@ -1064,6 +1064,13 @@ header::before {
     border-top: 1px solid var(--glass-border);
 }
 
+/* giscus（リアクション/コメント）の埋め込み枠 */
+.post__reactions {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--glass-border);
+}
+
 .post__back {
     margin-top: 3rem;
 }
