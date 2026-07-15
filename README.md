@@ -130,10 +130,23 @@ git add -A && git commit -m "blog: WebGLの小ネタ" && git push
 1. GitHub の Web エディタで `blog/posts/` に md を追加、または既存 md を編集
 2. main にコミット → Actions が HTML を生成してコミット → Pages に反映
 
+### フロー C: 管理画面（/admin.html）
+
+`https://sasanoha-tk.github.io/admin.html` から既存記事の
+**公開/非公開の切替とタグ編集**がブラウザだけでできる。
+
+- 認証は GitHub の Fine-grained PAT（Repository access をこのリポジトリのみ、
+  Permissions を Contents: Read and write のみに絞る）。トークンは入力した
+  ブラウザの localStorage にのみ保存され、リポジトリには一切含まれない
+- 保存すると GitHub Contents API 経由で main へ直接コミット →
+  blog.yml が HTML を再生成して反映（1〜2分）
+- ページには `noindex` を付与済み。新規作成・本文編集はフロー A/B で
+
 ### 編集・非公開・削除
 
 - **編集**: md を直して push（どちらのフローでも可）
-- **非公開**: フロントマターに `draft: true` を足して push（生成 HTML も自動削除される）
+- **非公開**: フロントマターに `draft: true` を足して push（生成 HTML も自動削除される）。
+  管理画面（フロー C）ならワンクリック
 - **削除**: md を消して push（対応する HTML はジェネレータが掃除する）
 
 生成ページは `index.html` と同じ骨格（夜の高速道路キャンバス・ナビ・

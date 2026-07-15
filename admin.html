@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="雑記の管理画面">
+    <meta name="theme-color" content="#05060a">
+    <meta name="robots" content="noindex, nofollow">
+    <title>雑記の管理 | 笹ノ葉製作所</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+    <canvas id="bg" aria-hidden="true"></canvas>
+
+    <a class="skip-link" href="#content">本文へ移動</a>
+
+    <header>
+        <nav class="nav" aria-label="メインナビゲーション">
+            <a class="nav__brand" href="/">笹ノ葉製作所</a>
+            <button class="nav__toggle" aria-label="メニューを開閉" aria-expanded="false" aria-controls="nav-links">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav__links" id="nav-links">
+                <li><a href="/#top">ホーム</a></li>
+                <li><a href="/blog/">雑記</a></li>
+                <li><a href="https://github.com/sasanoha-tk" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main id="content">
+        <section class="section section--blog">
+            <div class="section__inner section__inner--narrow">
+                <h1 class="section__title">雑記の管理</h1>
+
+                <!-- 認証：Fine-grained PAT をこのブラウザにだけ保存 -->
+                <div id="auth">
+                    <p class="section__lead">
+                        GitHub の Fine-grained personal access token を入力してください。
+                        トークンは<strong>このブラウザの localStorage にのみ</strong>保存され、
+                        サイトのコードやリポジトリには含まれません。
+                    </p>
+                    <ol class="admin-help">
+                        <li>GitHub → Settings → Developer settings → Fine-grained tokens で発行</li>
+                        <li>Repository access: <code>sasanoha-tk.github.io</code> のみ</li>
+                        <li>Permissions: <strong>Contents = Read and write</strong> だけを付与</li>
+                    </ol>
+                    <form id="token-form" class="admin-form">
+                        <input id="token-input" class="admin-input" type="password"
+                               placeholder="github_pat_..." autocomplete="off" aria-label="アクセストークン">
+                        <button type="submit" class="admin-btn admin-btn--save">保存して開始</button>
+                    </form>
+                </div>
+
+                <!-- 記事一覧 -->
+                <div id="app" hidden>
+                    <div class="admin-toolbar">
+                        <button id="reload" type="button" class="admin-btn">再読み込み</button>
+                        <button id="logout" type="button" class="admin-btn">トークンを消去</button>
+                    </div>
+                    <div id="posts"></div>
+                </div>
+
+                <p id="status" class="admin-status" role="status" aria-live="polite"></p>
+                <p class="admin-note">
+                    保存すると main へ直接コミットされ、GitHub Actions が HTML を再生成します（反映まで1〜2分）。
+                    記事の新規作成・本文の編集は
+                    <a href="https://github.com/sasanoha-tk/sasanoha-tk.github.io/tree/main/blog/posts"
+                       target="_blank" rel="noopener noreferrer">GitHub 上の blog/posts/</a> から。
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <span>&copy; <span id="year">2025</span> 笹ノ葉製作所</span>
+    </footer>
+
+    <script defer src="/js/config.js"></script>
+    <script defer src="/js/shaders.js"></script>
+    <script defer src="/js/ui.js"></script>
+    <script defer src="/js/scene.js"></script>
+    <script defer src="/js/app.js"></script>
+    <script defer src="/js/admin.js"></script>
+</body>
+</html>
