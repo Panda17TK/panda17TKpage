@@ -4,15 +4,7 @@
     <link href="https://sasanoha-tk.github.io/blog/"/>
     <link rel="self" href="https://sasanoha-tk.github.io/blog/feed.xml"/>
     <id>https://sasanoha-tk.github.io/blog/</id>
-    <updated>2026-07-12T00:00:00Z</updated>
+    <updated>1970-01-01T00:00:00Z</updated>
     <author><name>笹ノ葉製作所</name></author>
-    <entry>
-        <title>雑記はじめました</title>
-        <link href="https://sasanoha-tk.github.io/blog/2026-07-12-blog-hajimemashita.html"/>
-        <id>https://sasanoha-tk.github.io/blog/2026-07-12-blog-hajimemashita.html</id>
-        <updated>2026-07-12T00:00:00Z</updated>
-        <summary>笹ノ葉製作所の雑記を開設しました。記事の追加はMarkdownを1枚置くだけ。</summary>
-        <category term="お知らせ"/>
-        <category term="サイト"/>
-    </entry>
+
 </feed>
