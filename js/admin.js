@@ -83,6 +83,100 @@
         el.className = "admin-status" + (isError ? " admin-status--error" : "");
     }
 
+    // ---- Markdown エディタ支援（ツールバー / プレビュー / リスト自動継続）----
+    // スマホで打ちにくい記号（# ` ** など）をタップで挿入できるようにする
+    function fireInput(ta) { ta.dispatchEvent(new Event("input")); }
+
+    function surroundSel(ta, before, after, placeholder) {
+        var s = ta.selectionStart, e = ta.selectionEnd;
+        var sel = ta.value.slice(s, e) || placeholder;
+        ta.setRangeText(before + sel + after, s, e, "end");
+        // 選択が無かった場合はプレースホルダを選択状態にして書き換えやすく
+        if (s === e) ta.setSelectionRange(s + before.length, s + before.length + placeholder.length);
+        ta.focus();
+        fireInput(ta);
+    }
+
+    function prefixLine(ta, prefix) {
+        var s = ta.selectionStart;
+        var ls = ta.value.lastIndexOf("\n", s - 1) + 1;
+        ta.setRangeText(prefix, ls, ls, "end");
+        ta.setSelectionRange(s + prefix.length, s + prefix.length);
+        ta.focus();
+        fireInput(ta);
+    }
+
+    // リスト行で Enter → 次の行頭記号を自動挿入。空項目で Enter → リスト終了。
+    // 日本語 IME の変換確定 Enter では発動しない（isComposing ガード）
+    function autoList(ta, e) {
+        if (e.key !== "Enter" || e.isComposing || e.shiftKey) return;
+        var s = ta.selectionStart;
+        if (s !== ta.selectionEnd) return;
+        var ls = ta.value.lastIndexOf("\n", s - 1) + 1;
+        var m = /^(\s*)([-*]|\d+\.)\s(.*)$/.exec(ta.value.slice(ls, s));
+        if (!m) return;
+        e.preventDefault();
+        if (!m[3]) {
+            ta.setRangeText("\n", ls, s, "end");      // 空項目 → 行頭記号を消して改行
+        } else {
+            var marker = /^\d+\.$/.test(m[2]) ? (parseInt(m[2], 10) + 1) + "." : m[2];
+            ta.setRangeText("\n" + m[1] + marker + " ", s, s, "end");
+        }
+        fireInput(ta);
+    }
+
+    var TOOLBAR = [
+        { label: "見出し", title: "見出し (##)", run: function (ta) { prefixLine(ta, "## "); } },
+        { label: "太字",   title: "太字 (**)",  run: function (ta) { surroundSel(ta, "**", "**", "強調"); } },
+        { label: "リスト", title: "箇条書き",   run: function (ta) { prefixLine(ta, "- "); } },
+        { label: "1.",     title: "番号リスト", run: function (ta) { prefixLine(ta, "1. "); } },
+        { label: "リンク", title: "リンク",     run: function (ta) { surroundSel(ta, "[", "](https://)", "リンク文字"); } },
+        { label: "code",   title: "インラインコード", run: function (ta) { surroundSel(ta, "`", "`", "code"); } },
+        { label: "```",    title: "コードブロック", run: function (ta) { surroundSel(ta, "\n```\n", "\n```\n", "コード"); } },
+        { label: "引用",   title: "引用 (>)",   run: function (ta) { prefixLine(ta, "> "); } }
+    ];
+
+    // textarea をツールバー＋プレビュー付きエディタに拡張する
+    function enhanceEditor(ta) {
+        var bar = document.createElement("div");
+        bar.className = "admin-mdbar";
+        TOOLBAR.forEach(function (t) {
+            var b = document.createElement("button");
+            b.type = "button";
+            b.className = "admin-mdbar__btn";
+            b.textContent = t.label;
+            b.title = t.title;
+            b.setAttribute("aria-label", t.title);
+            b.addEventListener("click", function () { t.run(ta); });
+            bar.appendChild(b);
+        });
+
+        var prev = document.createElement("div");
+        prev.className = "post__body admin-preview";
+        prev.hidden = true;
+
+        var pv = document.createElement("button");
+        pv.type = "button";
+        pv.className = "admin-mdbar__btn admin-mdbar__btn--preview";
+        pv.textContent = "プレビュー";
+        pv.setAttribute("aria-label", "プレビュー切替");
+        pv.addEventListener("click", function () {
+            var show = prev.hidden;
+            if (show) {
+                // 自分が書いた Markdown を自分のブラウザで描画するだけ（ビルドと同じ marked）
+                prev.innerHTML = window.marked ? window.marked.parse(ta.value) : "";
+            }
+            prev.hidden = !show;
+            ta.hidden = show;
+            pv.textContent = show ? "編集へ戻る" : "プレビュー";
+        });
+        bar.appendChild(pv);
+
+        ta.addEventListener("keydown", function (e) { autoList(ta, e); });
+        ta.parentNode.insertBefore(bar, ta);
+        ta.parentNode.insertBefore(prev, ta.nextSibling);
+    }
+
     // ---- 一覧の読み込み ----
     function loadPosts() {
         status("読み込み中…");
@@ -153,29 +247,33 @@
             save.disabled = !p.dirty;
             save.addEventListener("click", function () { savePost(idx, save); });
 
-            // 本文編集（スマホからの追記用）。開いたときだけ textarea を出す
+            // 本文編集（スマホからの追記用）。開いたときだけエディタ一式を出す
             var editBtn = document.createElement("button");
             editBtn.type = "button";
             editBtn.className = "admin-btn";
             editBtn.textContent = "本文を編集";
+            var editor = document.createElement("div");
+            editor.className = "admin-editor";
+            editor.hidden = true;
             var body = document.createElement("textarea");
             body.className = "admin-textarea";
             body.rows = 12;
-            body.hidden = true;
             body.value = p.body;
             body.setAttribute("aria-label", "本文（Markdown）");
             body.addEventListener("input", function () {
                 p.body = body.value;
                 markDirty(idx, true);
             });
+            editor.appendChild(body);
+            enhanceEditor(body);
             editBtn.addEventListener("click", function () {
-                body.hidden = !body.hidden;
-                editBtn.textContent = body.hidden ? "本文を編集" : "本文を閉じる";
+                editor.hidden = !editor.hidden;
+                editBtn.textContent = editor.hidden ? "本文を編集" : "本文を閉じる";
             });
 
             controls.appendChild(tags); controls.appendChild(toggle);
             controls.appendChild(editBtn); controls.appendChild(save);
-            row.appendChild(head); row.appendChild(controls); row.appendChild(body);
+            row.appendChild(head); row.appendChild(controls); row.appendChild(editor);
             root.appendChild(row);
         });
     }
@@ -287,6 +385,7 @@
             e.preventDefault();
             createPost();
         });
+        enhanceEditor($("new-body"));
         showApp(!!token());
     }
 

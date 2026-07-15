@@ -675,6 +675,51 @@ header::before {
     margin-top: 0;
 }
 
+/* Markdown ツールバー（スマホの親指タップ前提でボタンを大きめに） */
+.admin-editor {
+    margin-top: 0.7rem;
+}
+
+.admin-mdbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.5rem;
+}
+
+.admin-mdbar__btn {
+    font-family: inherit;
+    font-size: 0.8rem;
+    min-height: 2.4rem;
+    padding: 0.3rem 0.7rem;
+    color: var(--muted);
+    background: rgba(8, 10, 18, 0.6);
+    border: 1px solid var(--glass-border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.admin-mdbar__btn:hover,
+.admin-mdbar__btn:focus-visible {
+    border-color: var(--accent);
+    color: #fff;
+}
+
+.admin-mdbar__btn--preview {
+    margin-left: auto;
+    border-color: rgba(255, 109, 77, 0.4);
+}
+
+.admin-preview {
+    margin-top: 0.6rem;
+    padding: 1rem 1.1rem;
+    border: 1px dashed var(--glass-border);
+    border-radius: 4px;
+    background: rgba(8, 10, 18, 0.45);
+    min-height: 6rem;
+}
+
 .admin-check {
     display: flex;
     align-items: center;
