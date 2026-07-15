@@ -69,8 +69,12 @@
             "X-GitHub-Api-Version": "2022-11-28"
         };
         return fetch(API + path, opts).then(function (res) {
-            if (res.status === 401 || res.status === 403) {
-                throw new Error("認証エラー（" + res.status + "）。トークンの権限・有効期限を確認してください");
+            if (res.status === 401) {
+                throw new Error("認証エラー（401）。トークンが無効か期限切れです。発行し直してください");
+            }
+            if (res.status === 403) {
+                throw new Error("権限エラー（403）。トークンの Permissions で「Contents: Read and write」を付与し、" +
+                    "Repository access に sasanoha-tk.github.io を含めてください");
             }
             if (!res.ok) throw new Error("GitHub API エラー: " + res.status + " " + path);
             return res.json();
