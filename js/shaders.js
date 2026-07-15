@@ -12,6 +12,8 @@ NH.CONSTS = {
     TIME_WRAP: 100,           // u_time のラップ秒数（瞬き周波数は 2π/TIME_WRAP の整数倍）
     BLINK_WINDOW_CYCLES: 27,  // 窓明かりの瞬き：TIME_WRAP あたりの周期数
     BLINK_BEACON_CYCLES: 35,  // 航空障害灯の点滅：TIME_WRAP あたりの周期数
+    STAR_TWINKLE_CYCLES: 41,  // 星の瞬き：TIME_WRAP あたりの周期数
+    TAIL_DRIFT_CYCLES: 2,     // 前走車の相対往復：TIME_WRAP あたりの周期数
     GROUND_NOISE_SCALE: 0.18  // 路肩ノイズの Z 係数（groundScroll のスケールと同期）
 };
 
@@ -91,6 +93,16 @@ void main(){
 
         // 道路の色（破線は縦方向も AA、塗り割合は dashDuty）
         vec3 road = u_asphalt;
+        // アスファルトのむら（補修痕・シミ）。u_groundScroll 基準なのでラップしても連続
+        // （u_groundScroll のラップ幅 NOISE_PERIOD ×2 ≡ 0 mod NOISE_PERIOD）
+        float anz = vnoise(vec2(Xr * 1.1, (Zr * GROUND_NZ_SCALE + u_groundScroll) * 2.0));
+        road *= 1.0 + u_asphaltNoise * (anz - 0.5);
+        // 轍（タイヤ痕）：各車線の中心±0.28車線幅あたりを僅かに暗く
+        float laneW = 2.0 * u_laneEdge / float(u_laneCount);
+        float lpos = fract((lane + u_laneEdge) / laneW) - 0.5;
+        float rut = exp(-pow((abs(lpos) - 0.28) / 0.09, 2.0))
+                  * (1.0 - smoothstep(u_laneEdge - 0.02, u_laneEdge, laneAbs));
+        road *= 1.0 - u_trackDark * rut;
         float zc = (Zr + u_scroll) / u_dashLength;
         // 破線：派生拡張が無い環境でも縦方向のちらつきを抑えるため最小AA幅を確保
         float dw = max(AAW(zc), 0.02);
@@ -145,6 +157,24 @@ void main(){
         // ===== 夜空 =====
         float t = clamp(dir.y / u_skyCurve, 0.0, 1.0);
         col = mix(u_skyHorizon, u_skyTop, t);
+
+        // ===== 星空（格子1セルに最大1星。等級・瞬き位相をハッシュで散らす）=====
+        // 月・雲・都市は後から描かれるので自然に星を隠す
+        if (u_stars > 0.5) {
+            vec2 sg = vec2((uv.x - 0.5) * aspect, dir.y) * 90.0;
+            vec2 scell = floor(sg);
+            float pick = hash(scell + 41.7);
+            if (pick > 1.0 - 0.14 * u_starDensity) {
+                vec2 spos = vec2(hash(scell + 3.1), hash(scell + 5.7)) * 0.7 + 0.15;
+                float sd2 = length(fract(sg) - spos);
+                float mag = 0.35 + 0.65 * hash(scell + 9.3);                        // 等級のばらつき
+                float twk = 0.55 + 0.45 * sin(u_time * BLINK_W_STAR + pick * 87.0); // 瞬き
+                float star = smoothstep(0.16, 0.0, sd2) * mag * twk;
+                star *= smoothstep(0.03, 0.20, dir.y);                              // 地平線際は大気で減光
+                col += vec3(0.75, 0.82, 1.0) * star * u_starBright;
+            }
+        }
+
         if (u_moon > 0.5) {
             vec2 mp = vec2((uv.x - 0.5) * aspect, uv.y) - vec2(u_moonX * aspect, u_moonY);
             float md = length(mp);
@@ -178,7 +208,14 @@ void main(){
             float dens = smoothstep(u_cloudCover, 1.0, fbm(cuv + 4.0));
             // 地平線のすぐ上から立ち上がり、天頂に向けて薄れる帯
             float band = smoothstep(0.0, 0.16, dir.y) * (1.0 - smoothstep(0.32, 0.85, dir.y));
-            col = mix(col, u_cloudCol, dens * u_cloudOpacity * band);
+            // 月の近くの雲は銀色に照る（シルバーライニング）。濃い部分ほど照り返しが強い
+            vec3 ccol = u_cloudCol;
+            if (u_moon > 0.5) {
+                float mnear = smoothstep(0.55, 0.08, distance(vec2(sxc, uv.y), vec2(u_moonX * aspect, u_moonY)));
+                ccol += u_moonCol * mnear * u_cloudMoonlit * (0.25 + 0.75 * dens)
+                      * clamp(abs(u_moonShadowX) / 2.2, 0.15, 1.0);   // 月相ぶん減光
+            }
+            col = mix(col, ccol, dens * u_cloudOpacity * band);
         }
 
         // ===== 遠くの都市のシルエット＋瞬く窓明かり（2層で奥行き）=====
@@ -470,6 +507,28 @@ void main(){
         }
     }
 
+    // ===== 前走車のテールランプ（自分と同方向・ほぼ同速。赤い光の対）=====
+    if (u_aheadCars > 0.5) {
+        for (int k = 0; k < 2; k++) {
+            float fk = float(k);
+            // 相対速度はごく小さい：ゆっくり近づいたり離れたり（u_time のラップと同期した往復）
+            float za = 42.0 + 58.0 * fk + 20.0 * sin(u_time * TAIL_DRIFT_W + fk * 2.6);
+            float lx = ((k == 0) ? -0.25 : -0.75) * u_laneEdge * u_roadHalfWidth;   // 自分側の2車線中心
+            float xa = lx + curveAt(za) - u_camX;
+            float fadeA = exp(-za * u_fogDensity);
+            for (int tl = 0; tl < 2; tl++) {
+                float off = (tl == 0) ? -u_carTrack : u_carTrack;
+                vec3 tp2 = project(vec3(xa + off, u_carHeadH - u_camHeight, za), cp, sp, tanX, tanY);
+                if (tp2.z <= 0.05) continue;
+                float ps2 = clamp(1.0 / tp2.z, 0.05, 3.0);
+                vec2 Tp2 = vec2(tp2.x * aspect, tp2.y);
+                float r2 = u_carHeadSize * 0.75 * ps2 + 0.002;
+                float d2 = distance(vec2(uv.x * aspect, uv.y), Tp2);
+                light += vec3(1.0, 0.10, 0.06) * exp(-(d2 * d2) / (r2 * r2)) * u_aheadBright * fadeA;
+            }
+        }
+    }
+
     // 塀は不透明な手前の面なので、灯のライト（対向車含む）の滲みを抑える
     if (onWall) light *= u_wallLight;
 
@@ -482,6 +541,9 @@ void main(){
     // 道路照明などのライトをトーンマップ後に重ねる：コアは純白(=眩しさ)まで届き、暖色の裾も残る
     col += light;
     col = min(col, vec3(1.0));
+    // ビネット：画面端を僅かに落として視線を中央（消失点）へ誘導
+    float vd = distance(uv, vec2(0.5, 0.45));
+    col *= 1.0 - u_vignette * smoothstep(0.38, 0.85, vd);
     // オーダードディザ（interleaved gradient noise）で量子化バンディングを緩和
     float ign = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
     col += (ign - 0.5) / u_paletteSteps;
@@ -509,6 +571,8 @@ NH.buildFragment = function (opts) {
     head += "#define GROUND_NZ_SCALE " + C.GROUND_NOISE_SCALE.toFixed(4) + "\n";
     head += "#define BLINK_W_WINDOW " + (2 * Math.PI * C.BLINK_WINDOW_CYCLES / C.TIME_WRAP).toFixed(7) + "\n";
     head += "#define BLINK_W_BEACON " + (2 * Math.PI * C.BLINK_BEACON_CYCLES / C.TIME_WRAP).toFixed(7) + "\n";
+    head += "#define BLINK_W_STAR " + (2 * Math.PI * C.STAR_TWINKLE_CYCLES / C.TIME_WRAP).toFixed(7) + "\n";
+    head += "#define TAIL_DRIFT_W " + (2 * Math.PI * C.TAIL_DRIFT_CYCLES / C.TIME_WRAP).toFixed(7) + "\n";
 
     // エンジン uniform ＋ PARAMS 由来 uniform
     var decls = "uniform vec2 u_res;\nuniform float u_scroll;\nuniform float u_sway;\nuniform float u_time;\nuniform float u_cityPhase;\nuniform float u_cityScroll;\nuniform float u_cloudScroll;\nuniform float u_groundScroll;\nuniform vec2 u_cars[4];\nuniform vec3 u_carCol[4];\n";

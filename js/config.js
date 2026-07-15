@@ -122,6 +122,17 @@ NH.PARAMS = [
     { key: "cloudSpeed",    def: 0.5,   ui: { min: 0, max: 3, step: 0.1 } },                                                 // 雲の流れ速度（JS で u_cloudScroll を生成）
     { key: "cloudOctaves",  def: 4,     uniform: "u_cloudOctaves",  type: "int",   ui: { min: 1, max: 4, step: 1 } },       // fbm のオクターブ数（モバイルで下げて軽量化）
 
+    // --- 星空 / 前走車 / 質感 ---
+    { key: "stars",        def: true,  uniform: "u_stars",        type: "bool",  ui: { bool: true } },
+    { key: "starDensity",  def: 0.5,   uniform: "u_starDensity",  type: "float", ui: { min: 0, max: 1, step: 0.05 } },  // 星の数
+    { key: "starBright",   def: 0.8,   uniform: "u_starBright",   type: "float", ui: { min: 0, max: 2, step: 0.05 } },
+    { key: "aheadCars",    def: true,  uniform: "u_aheadCars",    type: "bool",  ui: { bool: true } },                  // 前走車のテールランプ
+    { key: "aheadBright",  def: 1.6,   uniform: "u_aheadBright",  type: "float", ui: { min: 0, max: 4, step: 0.1 } },
+    { key: "asphaltNoise", def: 0.22,  uniform: "u_asphaltNoise", type: "float", ui: { min: 0, max: 0.8, step: 0.02 } }, // 路面のむら（補修痕・シミ）
+    { key: "trackDark",    def: 0.12,  uniform: "u_trackDark",    type: "float", ui: { min: 0, max: 0.4, step: 0.01 } }, // 轍（タイヤ痕）の暗さ
+    { key: "cloudMoonlit", def: 0.5,   uniform: "u_cloudMoonlit", type: "float", ui: { min: 0, max: 1, step: 0.05 } },  // 月周りの雲の照り
+    { key: "vignette",     def: 0.22,  uniform: "u_vignette",     type: "float", ui: { min: 0, max: 0.6, step: 0.02 } },
+
     // --- 色 ---
     { key: "skyTop",     def: [0.005, 0.005, 0.03], uniform: "u_skyTop",     type: "color", ui: { color: true } },
     { key: "skyHorizon", def: [0.05, 0.06, 0.12],   uniform: "u_skyHorizon", type: "color", ui: { color: true } },
