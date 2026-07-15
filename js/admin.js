@@ -153,8 +153,29 @@
             save.disabled = !p.dirty;
             save.addEventListener("click", function () { savePost(idx, save); });
 
-            controls.appendChild(tags); controls.appendChild(toggle); controls.appendChild(save);
-            row.appendChild(head); row.appendChild(controls);
+            // 本文編集（スマホからの追記用）。開いたときだけ textarea を出す
+            var editBtn = document.createElement("button");
+            editBtn.type = "button";
+            editBtn.className = "admin-btn";
+            editBtn.textContent = "本文を編集";
+            var body = document.createElement("textarea");
+            body.className = "admin-textarea";
+            body.rows = 12;
+            body.hidden = true;
+            body.value = p.body;
+            body.setAttribute("aria-label", "本文（Markdown）");
+            body.addEventListener("input", function () {
+                p.body = body.value;
+                markDirty(idx, true);
+            });
+            editBtn.addEventListener("click", function () {
+                body.hidden = !body.hidden;
+                editBtn.textContent = body.hidden ? "本文を編集" : "本文を閉じる";
+            });
+
+            controls.appendChild(tags); controls.appendChild(toggle);
+            controls.appendChild(editBtn); controls.appendChild(save);
+            row.appendChild(head); row.appendChild(controls); row.appendChild(body);
             root.appendChild(row);
         });
     }
@@ -190,6 +211,54 @@
         });
     }
 
+    // ---- 新規下書きの作成 ----
+    function localDate() {
+        var d = new Date();
+        return [d.getFullYear(),
+            String(d.getMonth() + 1).padStart(2, "0"),
+            String(d.getDate()).padStart(2, "0")].join("-");
+    }
+
+    function createPost() {
+        var title = $("new-title").value.trim();
+        var slug = $("new-slug").value.trim();
+        if (!title) { status("タイトルを入力してください", true); return; }
+        if (!slug) {
+            // 空欄なら自動 slug（note-<base36時刻>）。後でリネームしたければ GitHub 上で
+            slug = "note-" + Date.now().toString(36);
+        }
+        if (!/^[a-z0-9][a-z0-9-]*$/.test(slug)) { status("slug は半角英数小文字とハイフンのみです", true); return; }
+        if (slug === "index") { status('slug "index" は一覧ページと衝突するため使えません', true); return; }
+
+        var date = localDate();
+        var meta = { title: title, date: date, description: "", tags: $("new-tags").value.trim() };
+        if ($("new-draft").checked) meta.draft = "true";
+        var body = $("new-body").value;
+        if (body && !body.endsWith("\n")) body += "\n";
+        var path = DIR + "/" + date + "-" + slug + ".md";
+
+        var btn = document.querySelector("#new-form .admin-btn--save");
+        btn.disabled = true;
+        status("作成中…");
+        api("/repos/" + OWNER + "/" + REPO + "/contents/" + path, {
+            method: "PUT",
+            body: JSON.stringify({
+                message: "blog(admin): 下書き「" + title + "」を追加",
+                content: b64encode(serialize(meta, body))
+            })
+        }).then(function () {
+            btn.disabled = false;
+            $("new-form").reset();
+            $("new-draft").checked = true;
+            status("作成しました" + (meta.draft ? "（下書き・非公開）" : "。Actions が公開処理をします（1〜2分）"));
+            loadPosts();
+        }).catch(function (e) {
+            btn.disabled = false;
+            // 同名ファイルが既にあると sha 無しの PUT は 422 で失敗する
+            status(/422/.test(e.message) ? "同じ日付+slug のファイルが既にあります: " + path : e.message, true);
+        });
+    }
+
     // ---- トークンの出し入れ ----
     function showApp(hasToken) {
         $("auth").hidden = hasToken;
@@ -214,6 +283,10 @@
             showApp(false);
         });
         $("reload").addEventListener("click", loadPosts);
+        $("new-form").addEventListener("submit", function (e) {
+            e.preventDefault();
+            createPost();
+        });
         showApp(!!token());
     }
 

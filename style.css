@@ -629,6 +629,61 @@ header::before {
     margin-top: 0.7rem;
 }
 
+/* 新規下書きフォーム / 本文編集 */
+.admin-new {
+    margin-top: 1.4rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 4px;
+    background: rgba(8, 10, 18, 0.45);
+}
+
+.admin-new__summary {
+    padding: 0.8rem 1.1rem;
+    cursor: pointer;
+    color: #fff;
+    font-size: 0.95rem;
+}
+
+.admin-new__form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 0 1.1rem 1.1rem;
+}
+
+.admin-textarea {
+    width: 100%;
+    margin-top: 0.6rem;
+    font-family: inherit;
+    /* スマホでフォーカス時に画面がズームしないよう 16px 以上にする */
+    font-size: 16px;
+    line-height: 1.7;
+    padding: 0.7rem 0.8rem;
+    color: var(--fg);
+    background: rgba(8, 10, 18, 0.6);
+    border: 1px solid var(--glass-border);
+    border-radius: 4px;
+    resize: vertical;
+}
+
+.admin-textarea:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.admin-new__form .admin-textarea {
+    margin-top: 0;
+}
+
+.admin-check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.88rem;
+    color: var(--muted);
+    cursor: pointer;
+}
+
 .admin-status {
     margin-top: 1.2rem;
     font-size: 0.88rem;

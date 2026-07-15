@@ -64,13 +64,33 @@
                         <button id="reload" type="button" class="admin-btn">再読み込み</button>
                         <button id="logout" type="button" class="admin-btn">トークンを消去</button>
                     </div>
+
+                    <!-- 新規下書き -->
+                    <details class="admin-new">
+                        <summary class="admin-new__summary">＋ 新しい下書きを書く</summary>
+                        <form id="new-form" class="admin-new__form">
+                            <input id="new-title" class="admin-input" type="text" placeholder="タイトル" required aria-label="タイトル">
+                            <input id="new-slug" class="admin-input" type="text"
+                                   placeholder="slug（URL用・半角英数とハイフン。空欄なら自動）" aria-label="slug"
+                                   pattern="[a-z0-9][a-z0-9-]*" autocapitalize="off" autocorrect="off">
+                            <input id="new-tags" class="admin-input" type="text" placeholder="タグ（カンマ区切り・任意）" aria-label="タグ">
+                            <textarea id="new-body" class="admin-textarea" rows="10"
+                                      placeholder="本文（Markdown）" aria-label="本文"></textarea>
+                            <label class="admin-check">
+                                <input id="new-draft" type="checkbox" checked>
+                                下書きとして保存（公開しない）
+                            </label>
+                            <button type="submit" class="admin-btn admin-btn--save">作成</button>
+                        </form>
+                    </details>
+
                     <div id="posts"></div>
                 </div>
 
                 <p id="status" class="admin-status" role="status" aria-live="polite"></p>
                 <p class="admin-note">
                     保存すると main へ直接コミットされ、GitHub Actions が HTML を再生成します（反映まで1〜2分）。
-                    記事の新規作成・本文の編集は
+                    リポジトリを直接触りたいときは
                     <a href="https://github.com/sasanoha-tk/sasanoha-tk.github.io/tree/main/blog/posts"
                        target="_blank" rel="noopener noreferrer">GitHub 上の blog/posts/</a> から。
                 </p>
