@@ -14,6 +14,7 @@
 const fs = require("fs");
 const path = require("path");
 const { marked } = require("marked");
+const groupImages = require("../js/gallery-transform.js");
 
 const ROOT = path.join(__dirname, "..");
 const POSTS_DIR = path.join(ROOT, "blog", "posts");
@@ -298,7 +299,8 @@ function main() {
             date: meta.date,
             description: meta.description || "",
             tags: parseTags(meta.tags),
-            html: marked.parse(body)
+            // 連続した画像を自動でギャラリー（グリッド整列）にまとめる
+            html: groupImages(marked.parse(body))
         });
     }
     posts.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.slug < b.slug ? 1 : -1));

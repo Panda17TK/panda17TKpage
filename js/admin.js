@@ -250,8 +250,10 @@
         pv.addEventListener("click", function () {
             var show = prev.hidden;
             if (show) {
-                // 自分が書いた Markdown を自分のブラウザで描画するだけ（ビルドと同じ marked）
-                prev.innerHTML = window.marked ? window.marked.parse(ta.value) : "";
+                // 自分が書いた Markdown を自分のブラウザで描画するだけ（ビルドと同じ marked）。
+                // 連続画像のギャラリー化もビルドと同じ変換を通して見た目を一致させる
+                var html = window.marked ? window.marked.parse(ta.value) : "";
+                prev.innerHTML = (window.NH && NH.groupImages) ? NH.groupImages(html) : html;
             }
             prev.hidden = !show;
             ta.hidden = show;
