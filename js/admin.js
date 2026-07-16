@@ -129,6 +129,61 @@
         fireInput(ta);
     }
 
+    // ---- 画像の挿入（スマホ写真をブラウザ内で縮小 → リポジトリへアップロード）----
+    var IMG_MAX_DIM = 1600;   // 長辺の上限(px)
+    var IMG_QUALITY = 0.85;   // JPEG 品質
+
+    function processImageFile(file) {
+        return new Promise(function (resolve, reject) {
+            var url = URL.createObjectURL(file);
+            var img = new Image();
+            img.onload = function () {
+                URL.revokeObjectURL(url);
+                var scale = Math.min(1, IMG_MAX_DIM / Math.max(img.naturalWidth, img.naturalHeight));
+                var w = Math.max(1, Math.round(img.naturalWidth * scale));
+                var h = Math.max(1, Math.round(img.naturalHeight * scale));
+                var cv = document.createElement("canvas");
+                cv.width = w; cv.height = h;
+                cv.getContext("2d").drawImage(img, 0, 0, w, h);
+                cv.toBlob(function (blob) {
+                    if (!blob) { reject(new Error("画像の変換に失敗しました")); return; }
+                    blob.arrayBuffer().then(function (buf) {
+                        var bytes = new Uint8Array(buf), bin = "";
+                        for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+                        resolve(btoa(bin));
+                    });
+                }, "image/jpeg", IMG_QUALITY);
+            };
+            img.onerror = function () {
+                URL.revokeObjectURL(url);
+                reject(new Error("この画像は読み込めませんでした"));
+            };
+            img.src = url;
+        });
+    }
+
+    function insertImage(ta, file, sizeClass) {
+        status("画像を圧縮中…");
+        processImageFile(file).then(function (base64) {
+            var d = new Date();
+            var dir = "blog/images/" + d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+            var name = Date.now().toString(36) + ".jpg";
+            var path = dir + "/" + name;
+            status("画像をアップロード中…");
+            return api("/repos/" + OWNER + "/" + REPO + "/contents/" + path, {
+                method: "PUT",
+                body: JSON.stringify({ message: "blog(admin): 画像を追加 " + name, content: base64 })
+            }).then(function () {
+                // カーソル位置にサイズクラス付きで挿入（Markdown 内の生 HTML は marked が素通しする）
+                var tag = "\n<img src=\"/" + path + "\" alt=\"\" class=\"" + sizeClass + "\">\n";
+                ta.setRangeText(tag, ta.selectionStart, ta.selectionEnd, "end");
+                ta.focus();
+                fireInput(ta);
+                status("画像を挿入しました（alt=\"\" に説明を書くのがおすすめ）");
+            });
+        }).catch(function (e) { status(e.message, true); });
+    }
+
     var TOOLBAR = [
         { label: "見出し", title: "見出し (##)", run: function (ta) { prefixLine(ta, "## "); } },
         { label: "太字",   title: "太字 (**)",  run: function (ta) { surroundSel(ta, "**", "**", "強調"); } },
@@ -154,6 +209,34 @@
             b.addEventListener("click", function () { t.run(ta); });
             bar.appendChild(b);
         });
+
+        // 画像挿入（サイズ選択 → 写真を選ぶと縮小してアップロード後、カーソル位置に挿入）
+        var sizeSel = document.createElement("select");
+        sizeSel.className = "admin-mdbar__select";
+        sizeSel.setAttribute("aria-label", "挿入する画像のサイズ");
+        [["img-m", "中 66%"], ["img-s", "小 33%"], ["img-l", "大 100%"]].forEach(function (o) {
+            var op = document.createElement("option");
+            op.value = o[0]; op.textContent = o[1];
+            sizeSel.appendChild(op);
+        });
+        var fileIn = document.createElement("input");
+        fileIn.type = "file";
+        fileIn.accept = "image/*";
+        fileIn.hidden = true;
+        fileIn.addEventListener("change", function () {
+            if (fileIn.files && fileIn.files[0]) insertImage(ta, fileIn.files[0], sizeSel.value);
+            fileIn.value = "";
+        });
+        var imgBtn = document.createElement("button");
+        imgBtn.type = "button";
+        imgBtn.className = "admin-mdbar__btn";
+        imgBtn.textContent = "画像";
+        imgBtn.title = "写真を選んで挿入（自動で縮小・サイズは左の選択）";
+        imgBtn.setAttribute("aria-label", "画像を挿入");
+        imgBtn.addEventListener("click", function () { fileIn.click(); });
+        bar.appendChild(sizeSel);
+        bar.appendChild(imgBtn);
+        bar.appendChild(fileIn);
 
         var prev = document.createElement("div");
         prev.className = "post__body admin-preview";

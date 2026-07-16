@@ -656,6 +656,17 @@ header::before {
     color: #fff;
 }
 
+.admin-mdbar__select {
+    font-family: inherit;
+    font-size: 0.8rem;
+    min-height: 2.4rem;
+    padding: 0.3rem 0.4rem;
+    color: var(--muted);
+    background: rgba(8, 10, 18, 0.6);
+    border: 1px solid var(--glass-border);
+    border-radius: 4px;
+}
+
 .admin-mdbar__btn--preview {
     margin-left: auto;
     border-color: rgba(255, 109, 77, 0.4);
@@ -998,6 +1009,19 @@ header::before {
     border-left: 3px solid var(--accent);
     color: var(--muted);
 }
+
+/* 記事内画像のサイズ指定（管理画面の「画像」挿入が付与するクラス） */
+.post__body .img-s,
+.post__body .img-m,
+.post__body .img-l {
+    display: block;
+    margin: 1.6rem auto;
+    border-radius: 4px;
+}
+
+.post__body .img-s { width: 33%; }
+.post__body .img-m { width: 66%; }
+.post__body .img-l { width: 100%; }
 
 .post__body img {
     max-width: 100%;
