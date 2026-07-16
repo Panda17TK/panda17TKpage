@@ -15,6 +15,7 @@ const fs = require("fs");
 const path = require("path");
 const { marked } = require("marked");
 const groupImages = require("../js/gallery-transform.js");
+const fm = require("../js/frontmatter.js");
 
 const ROOT = path.join(__dirname, "..");
 const POSTS_DIR = path.join(ROOT, "blog", "posts");
@@ -35,23 +36,6 @@ function esc(s) {
     return String(s)
         .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;");
-}
-
-// 先頭の --- key: value --- ブロックを取り出す（YAMLサブセット）
-function parseFrontMatter(src) {
-    const m = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/.exec(src);
-    if (!m) { return { meta: {}, body: src }; }
-    const meta = {};
-    for (const line of m[1].split(/\r?\n/)) {
-        const i = line.indexOf(":");
-        if (i > 0) { meta[line.slice(0, i).trim()] = line.slice(i + 1).trim(); }
-    }
-    return { meta, body: src.slice(m[0].length) };
-}
-
-// "tags: a, b" → ["a", "b"]（重複・空要素は除去）
-function parseTags(s) {
-    return [...new Set(String(s || "").split(",").map((t) => t.trim()).filter(Boolean))];
 }
 
 function tagChips(tags) {
@@ -273,7 +257,7 @@ function main() {
     const posts = [];
     for (const file of files) {
         const src = fs.readFileSync(path.join(POSTS_DIR, file), "utf8");
-        const { meta, body } = parseFrontMatter(src);
+        const { meta, body } = fm.parse(src);
         if (!meta.title || !/^\d{4}-\d{2}-\d{2}$/.test(meta.date || "")) {
             console.error(`make-blog: ${file} のフロントマターに title / date(YYYY-MM-DD) が必要です`);
             process.exit(1);
@@ -289,7 +273,7 @@ function main() {
             console.error(`make-blog: ${file} — slug "index" は使えません（一覧ページと衝突）`);
             process.exit(1);
         }
-        if (/^(true|yes)$/i.test(meta.draft || "")) {
+        if (fm.isDraft(meta.draft)) {
             console.log(`make-blog: ${file} は draft のため非公開（スキップ）`);
             continue;
         }
@@ -298,7 +282,7 @@ function main() {
             title: meta.title,
             date: meta.date,
             description: meta.description || "",
-            tags: parseTags(meta.tags),
+            tags: fm.parseTags(meta.tags),
             // 連続した画像を自動でギャラリー（グリッド整列）にまとめる
             html: groupImages(marked.parse(body))
         });

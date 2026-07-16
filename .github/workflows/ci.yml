@@ -34,6 +34,9 @@ jobs:
       - name: Uniform sync check
         run: npm run test:uniforms
 
+      - name: Blog logic unit tests
+        run: npm run test:blog
+
       # 生成ロジックを実際に実行し、コミット済み生成物との乖離を検知する
       # （blog.yml の bot push は CI を再トリガーしないため、ここで実行時検証を担保）
       - name: Blog generation check

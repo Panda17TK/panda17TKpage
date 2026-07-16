@@ -1,85 +1,18 @@
 /* =============================================================
-   雑記の管理画面（/admin.html）
-   - GitHub Contents API で blog/posts/*.md のフロントマターを編集
-   - 認証は Fine-grained PAT（このブラウザの localStorage にのみ保存。
-     リポジトリには一切秘密情報を置かない）
+   雑記の管理画面（/admin.html）のアプリ層
+   - 一覧表示 / 公開・非公開 / タグ・本文編集 / 新規下書き / 画像挿入
+   - GitHub API は admin-github.js（NH.adminGh）、
+     エディタ支援は admin-editor.js（NH.adminEditor）、
+     フロントマターは frontmatter.js（NH.frontmatter）に分離
    - 保存すると main へコミット → blog.yml が自動で HTML を再生成
    ============================================================= */
 (function () {
     "use strict";
 
-    var OWNER = "sasanoha-tk";
-    var REPO = "sasanoha-tk.github.io";
-    var DIR = "blog/posts";
-    var API = "https://api.github.com";
-    var TOKEN_KEY = "nh-admin-token";
-
+    var gh = NH.adminGh;
+    var fm = NH.frontmatter;
     var $ = function (id) { return document.getElementById(id); };
     var posts = [];   // { path, sha, meta, body, dirty }
-
-    // ---- UTF-8 対応 base64（GitHub Contents API は base64 本文）----
-    function b64decode(b64) {
-        var bin = atob(b64.replace(/\n/g, ""));
-        var bytes = new Uint8Array(bin.length);
-        for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-        return new TextDecoder().decode(bytes);
-    }
-    function b64encode(str) {
-        var bytes = new TextEncoder().encode(str);
-        var bin = "";
-        for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-        return btoa(bin);
-    }
-
-    // ---- フロントマター（make-blog.js と同じ YAML サブセット）----
-    function parseFrontMatter(src) {
-        var m = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/.exec(src);
-        if (!m) return { meta: {}, body: src };
-        var meta = {};
-        m[1].split(/\r?\n/).forEach(function (line) {
-            var i = line.indexOf(":");
-            if (i > 0) meta[line.slice(0, i).trim()] = line.slice(i + 1).trim();
-        });
-        return { meta: meta, body: src.slice(m[0].length) };
-    }
-    function serialize(meta, body) {
-        var lines = ["---",
-            "title: " + (meta.title || ""),
-            "date: " + (meta.date || ""),
-            "description: " + (meta.description || ""),
-            "tags: " + (meta.tags || "")];
-        if (/^(true|yes)$/i.test(meta.draft || "")) lines.push("draft: true");
-        // 既知キー以外（将来の拡張フィールド）も失わず残す
-        Object.keys(meta).forEach(function (k) {
-            if (["title", "date", "description", "tags", "draft"].indexOf(k) < 0) {
-                lines.push(k + ": " + meta[k]);
-            }
-        });
-        lines.push("---", "");
-        return lines.join("\n") + body;
-    }
-
-    function token() { try { return localStorage.getItem(TOKEN_KEY) || ""; } catch (e) { return ""; } }
-
-    function api(path, opts) {
-        opts = opts || {};
-        opts.headers = {
-            "Authorization": "Bearer " + token(),
-            "Accept": "application/vnd.github+json",
-            "X-GitHub-Api-Version": "2022-11-28"
-        };
-        return fetch(API + path, opts).then(function (res) {
-            if (res.status === 401) {
-                throw new Error("認証エラー（401）。トークンが無効か期限切れです。発行し直してください");
-            }
-            if (res.status === 403) {
-                throw new Error("権限エラー（403）。トークンの Permissions で「Contents: Read and write」を付与し、" +
-                    "Repository access に sasanoha-tk.github.io を含めてください");
-            }
-            if (!res.ok) throw new Error("GitHub API エラー: " + res.status + " " + path);
-            return res.json();
-        });
-    }
 
     function status(msg, isError) {
         var el = $("status");
@@ -87,193 +20,27 @@
         el.className = "admin-status" + (isError ? " admin-status--error" : "");
     }
 
-    // ---- Markdown エディタ支援（ツールバー / プレビュー / リスト自動継続）----
-    // スマホで打ちにくい記号（# ` ** など）をタップで挿入できるようにする
-    function fireInput(ta) { ta.dispatchEvent(new Event("input")); }
-
-    function surroundSel(ta, before, after, placeholder) {
-        var s = ta.selectionStart, e = ta.selectionEnd;
-        var sel = ta.value.slice(s, e) || placeholder;
-        ta.setRangeText(before + sel + after, s, e, "end");
-        // 選択が無かった場合はプレースホルダを選択状態にして書き換えやすく
-        if (s === e) ta.setSelectionRange(s + before.length, s + before.length + placeholder.length);
-        ta.focus();
-        fireInput(ta);
+    // 画像アップロード（admin-editor.js から使われる）。保存先パスを返す
+    function uploadImage(base64, name) {
+        var d = new Date();
+        var dir = "blog/images/" + d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+        var path = dir + "/" + name;
+        return gh.api(gh.contents(path), {
+            method: "PUT",
+            body: JSON.stringify({ message: "blog(admin): 画像を追加 " + name, content: base64 })
+        }).then(function () { return path; });
     }
 
-    function prefixLine(ta, prefix) {
-        var s = ta.selectionStart;
-        var ls = ta.value.lastIndexOf("\n", s - 1) + 1;
-        ta.setRangeText(prefix, ls, ls, "end");
-        ta.setSelectionRange(s + prefix.length, s + prefix.length);
-        ta.focus();
-        fireInput(ta);
-    }
-
-    // リスト行で Enter → 次の行頭記号を自動挿入。空項目で Enter → リスト終了。
-    // 日本語 IME の変換確定 Enter では発動しない（isComposing ガード）
-    function autoList(ta, e) {
-        if (e.key !== "Enter" || e.isComposing || e.shiftKey) return;
-        var s = ta.selectionStart;
-        if (s !== ta.selectionEnd) return;
-        var ls = ta.value.lastIndexOf("\n", s - 1) + 1;
-        var m = /^(\s*)([-*]|\d+\.)\s(.*)$/.exec(ta.value.slice(ls, s));
-        if (!m) return;
-        e.preventDefault();
-        if (!m[3]) {
-            ta.setRangeText("\n", ls, s, "end");      // 空項目 → 行頭記号を消して改行
-        } else {
-            var marker = /^\d+\.$/.test(m[2]) ? (parseInt(m[2], 10) + 1) + "." : m[2];
-            ta.setRangeText("\n" + m[1] + marker + " ", s, s, "end");
-        }
-        fireInput(ta);
-    }
-
-    // ---- 画像の挿入（スマホ写真をブラウザ内で縮小 → リポジトリへアップロード）----
-    var IMG_MAX_DIM = 1600;   // 長辺の上限(px)
-    var IMG_QUALITY = 0.85;   // JPEG 品質
-
-    function processImageFile(file) {
-        return new Promise(function (resolve, reject) {
-            var url = URL.createObjectURL(file);
-            var img = new Image();
-            img.onload = function () {
-                URL.revokeObjectURL(url);
-                var scale = Math.min(1, IMG_MAX_DIM / Math.max(img.naturalWidth, img.naturalHeight));
-                var w = Math.max(1, Math.round(img.naturalWidth * scale));
-                var h = Math.max(1, Math.round(img.naturalHeight * scale));
-                var cv = document.createElement("canvas");
-                cv.width = w; cv.height = h;
-                cv.getContext("2d").drawImage(img, 0, 0, w, h);
-                cv.toBlob(function (blob) {
-                    if (!blob) { reject(new Error("画像の変換に失敗しました")); return; }
-                    blob.arrayBuffer().then(function (buf) {
-                        var bytes = new Uint8Array(buf), bin = "";
-                        for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-                        resolve(btoa(bin));
-                    });
-                }, "image/jpeg", IMG_QUALITY);
-            };
-            img.onerror = function () {
-                URL.revokeObjectURL(url);
-                reject(new Error("この画像は読み込めませんでした"));
-            };
-            img.src = url;
-        });
-    }
-
-    function insertImage(ta, file, sizeClass) {
-        status("画像を圧縮中…");
-        processImageFile(file).then(function (base64) {
-            var d = new Date();
-            var dir = "blog/images/" + d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
-            var name = Date.now().toString(36) + ".jpg";
-            var path = dir + "/" + name;
-            status("画像をアップロード中…");
-            return api("/repos/" + OWNER + "/" + REPO + "/contents/" + path, {
-                method: "PUT",
-                body: JSON.stringify({ message: "blog(admin): 画像を追加 " + name, content: base64 })
-            }).then(function () {
-                // カーソル位置にサイズクラス付きで挿入（Markdown 内の生 HTML は marked が素通しする）
-                var tag = "\n<img src=\"/" + path + "\" alt=\"\" class=\"" + sizeClass + "\">\n";
-                ta.setRangeText(tag, ta.selectionStart, ta.selectionEnd, "end");
-                ta.focus();
-                fireInput(ta);
-                status("画像を挿入しました（alt=\"\" に説明を書くのがおすすめ）");
-            });
-        }).catch(function (e) { status(e.message, true); });
-    }
-
-    var TOOLBAR = [
-        { label: "見出し", title: "見出し (##)", run: function (ta) { prefixLine(ta, "## "); } },
-        { label: "太字",   title: "太字 (**)",  run: function (ta) { surroundSel(ta, "**", "**", "強調"); } },
-        { label: "リスト", title: "箇条書き",   run: function (ta) { prefixLine(ta, "- "); } },
-        { label: "1.",     title: "番号リスト", run: function (ta) { prefixLine(ta, "1. "); } },
-        { label: "リンク", title: "リンク",     run: function (ta) { surroundSel(ta, "[", "](https://)", "リンク文字"); } },
-        { label: "code",   title: "インラインコード", run: function (ta) { surroundSel(ta, "`", "`", "code"); } },
-        { label: "```",    title: "コードブロック", run: function (ta) { surroundSel(ta, "\n```\n", "\n```\n", "コード"); } },
-        { label: "引用",   title: "引用 (>)",   run: function (ta) { prefixLine(ta, "> "); } }
-    ];
-
-    // textarea をツールバー＋プレビュー付きエディタに拡張する
-    function enhanceEditor(ta) {
-        var bar = document.createElement("div");
-        bar.className = "admin-mdbar";
-        TOOLBAR.forEach(function (t) {
-            var b = document.createElement("button");
-            b.type = "button";
-            b.className = "admin-mdbar__btn";
-            b.textContent = t.label;
-            b.title = t.title;
-            b.setAttribute("aria-label", t.title);
-            b.addEventListener("click", function () { t.run(ta); });
-            bar.appendChild(b);
-        });
-
-        // 画像挿入（サイズ選択 → 写真を選ぶと縮小してアップロード後、カーソル位置に挿入）
-        var sizeSel = document.createElement("select");
-        sizeSel.className = "admin-mdbar__select";
-        sizeSel.setAttribute("aria-label", "挿入する画像のサイズ");
-        [["img-m", "中 66%"], ["img-s", "小 33%"], ["img-l", "大 100%"]].forEach(function (o) {
-            var op = document.createElement("option");
-            op.value = o[0]; op.textContent = o[1];
-            sizeSel.appendChild(op);
-        });
-        var fileIn = document.createElement("input");
-        fileIn.type = "file";
-        fileIn.accept = "image/*";
-        fileIn.hidden = true;
-        fileIn.addEventListener("change", function () {
-            if (fileIn.files && fileIn.files[0]) insertImage(ta, fileIn.files[0], sizeSel.value);
-            fileIn.value = "";
-        });
-        var imgBtn = document.createElement("button");
-        imgBtn.type = "button";
-        imgBtn.className = "admin-mdbar__btn";
-        imgBtn.textContent = "画像";
-        imgBtn.title = "写真を選んで挿入（自動で縮小・サイズは左の選択）";
-        imgBtn.setAttribute("aria-label", "画像を挿入");
-        imgBtn.addEventListener("click", function () { fileIn.click(); });
-        bar.appendChild(sizeSel);
-        bar.appendChild(imgBtn);
-        bar.appendChild(fileIn);
-
-        var prev = document.createElement("div");
-        prev.className = "post__body admin-preview";
-        prev.hidden = true;
-
-        var pv = document.createElement("button");
-        pv.type = "button";
-        pv.className = "admin-mdbar__btn admin-mdbar__btn--preview";
-        pv.textContent = "プレビュー";
-        pv.setAttribute("aria-label", "プレビュー切替");
-        pv.addEventListener("click", function () {
-            var show = prev.hidden;
-            if (show) {
-                // 自分が書いた Markdown を自分のブラウザで描画するだけ（ビルドと同じ marked）。
-                // 連続画像のギャラリー化もビルドと同じ変換を通して見た目を一致させる
-                var html = window.marked ? window.marked.parse(ta.value) : "";
-                prev.innerHTML = (window.NH && NH.groupImages) ? NH.groupImages(html) : html;
-            }
-            prev.hidden = !show;
-            ta.hidden = show;
-            pv.textContent = show ? "編集へ戻る" : "プレビュー";
-        });
-        bar.appendChild(pv);
-
-        ta.addEventListener("keydown", function (e) { autoList(ta, e); });
-        ta.parentNode.insertBefore(bar, ta);
-        ta.parentNode.insertBefore(prev, ta.nextSibling);
-    }
+    function enhance(ta) { NH.adminEditor.enhance(ta, { status: status, uploadImage: uploadImage }); }
 
     // ---- 一覧の読み込み ----
     function loadPosts() {
         status("読み込み中…");
-        api("/repos/" + OWNER + "/" + REPO + "/contents/" + DIR).then(function (list) {
+        gh.api(gh.contents(gh.POSTS_DIR)).then(function (list) {
             var mds = list.filter(function (f) { return f.name.endsWith(".md"); });
             return Promise.all(mds.map(function (f) {
-                return api("/repos/" + OWNER + "/" + REPO + "/contents/" + f.path).then(function (file) {
-                    var parsed = parseFrontMatter(b64decode(file.content));
+                return gh.api(gh.contents(f.path)).then(function (file) {
+                    var parsed = fm.parse(gh.b64decode(file.content));
                     return { path: f.path, sha: file.sha, meta: parsed.meta, body: parsed.body, dirty: false };
                 });
             }));
@@ -284,87 +51,88 @@
         }).catch(function (e) { status(e.message, true); });
     }
 
-    function isDraft(p) { return /^(true|yes)$/i.test(p.meta.draft || ""); }
+    // 1記事ぶんの行（見出し・バッジ・タグ・公開切替・本文エディタ・保存）を組み立てる
+    function buildRow(p, idx) {
+        var row = document.createElement("div");
+        row.className = "admin-post";
+
+        var head = document.createElement("div");
+        head.className = "admin-post__head";
+        var title = document.createElement("span");
+        title.className = "admin-post__title";
+        title.textContent = p.meta.title || p.path;
+        var date = document.createElement("span");
+        date.className = "admin-post__date";
+        date.textContent = p.meta.date || "";
+        var badge = document.createElement("span");
+        badge.className = "admin-badge" + (fm.isDraft(p.meta.draft) ? " admin-badge--draft" : "");
+        badge.textContent = fm.isDraft(p.meta.draft) ? "非公開" : "公開中";
+        head.appendChild(title); head.appendChild(date); head.appendChild(badge);
+
+        var controls = document.createElement("div");
+        controls.className = "admin-post__controls";
+        var tags = document.createElement("input");
+        tags.type = "text";
+        tags.className = "admin-input admin-input--tags";
+        tags.value = p.meta.tags || "";
+        tags.placeholder = "タグ（カンマ区切り）";
+        tags.setAttribute("aria-label", "タグ");
+        tags.addEventListener("input", function () {
+            p.meta.tags = tags.value;
+            markDirty(idx, true);
+        });
+
+        var toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.className = "admin-btn";
+        toggle.textContent = fm.isDraft(p.meta.draft) ? "公開にする" : "非公開にする";
+        toggle.addEventListener("click", function () {
+            if (fm.isDraft(p.meta.draft)) delete p.meta.draft; else p.meta.draft = "true";
+            markDirty(idx, true);
+            renderPosts();   // バッジ/ラベルを更新（dirty 状態は posts に保持済み）
+        });
+
+        var save = document.createElement("button");
+        save.type = "button";
+        save.className = "admin-btn admin-btn--save";
+        save.textContent = "保存";
+        save.disabled = !p.dirty;
+        save.addEventListener("click", function () { savePost(idx, save); });
+
+        // 本文編集（スマホからの追記用）。開いたときだけエディタ一式を出す
+        var editBtn = document.createElement("button");
+        editBtn.type = "button";
+        editBtn.className = "admin-btn";
+        editBtn.textContent = "本文を編集";
+        var editor = document.createElement("div");
+        editor.className = "admin-editor";
+        editor.hidden = true;
+        var body = document.createElement("textarea");
+        body.className = "admin-textarea";
+        body.rows = 12;
+        body.value = p.body;
+        body.setAttribute("aria-label", "本文（Markdown）");
+        body.addEventListener("input", function () {
+            p.body = body.value;
+            markDirty(idx, true);
+        });
+        editor.appendChild(body);
+        enhance(body);
+        editBtn.addEventListener("click", function () {
+            editor.hidden = !editor.hidden;
+            editBtn.textContent = editor.hidden ? "本文を編集" : "本文を閉じる";
+        });
+
+        controls.appendChild(tags); controls.appendChild(toggle);
+        controls.appendChild(editBtn); controls.appendChild(save);
+        row.appendChild(head); row.appendChild(controls); row.appendChild(editor);
+        return row;
+    }
 
     function renderPosts() {
         var root = $("posts");
         root.replaceChildren();
-        posts.forEach(function (p, idx) {
-            var row = document.createElement("div");
-            row.className = "admin-post";
-
-            var head = document.createElement("div");
-            head.className = "admin-post__head";
-            var title = document.createElement("span");
-            title.className = "admin-post__title";
-            title.textContent = p.meta.title || p.path;
-            var date = document.createElement("span");
-            date.className = "admin-post__date";
-            date.textContent = p.meta.date || "";
-            var badge = document.createElement("span");
-            badge.className = "admin-badge" + (isDraft(p) ? " admin-badge--draft" : "");
-            badge.textContent = isDraft(p) ? "非公開" : "公開中";
-            head.appendChild(title); head.appendChild(date); head.appendChild(badge);
-
-            var controls = document.createElement("div");
-            controls.className = "admin-post__controls";
-            var tags = document.createElement("input");
-            tags.type = "text";
-            tags.className = "admin-input admin-input--tags";
-            tags.value = p.meta.tags || "";
-            tags.placeholder = "タグ（カンマ区切り）";
-            tags.setAttribute("aria-label", "タグ");
-            tags.addEventListener("input", function () {
-                p.meta.tags = tags.value;
-                markDirty(idx, true);
-            });
-
-            var toggle = document.createElement("button");
-            toggle.type = "button";
-            toggle.className = "admin-btn";
-            toggle.textContent = isDraft(p) ? "公開にする" : "非公開にする";
-            toggle.addEventListener("click", function () {
-                if (isDraft(p)) delete p.meta.draft; else p.meta.draft = "true";
-                markDirty(idx, true);
-                renderPosts();   // バッジ/ラベルを更新（dirty 状態は posts に保持済み）
-            });
-
-            var save = document.createElement("button");
-            save.type = "button";
-            save.className = "admin-btn admin-btn--save";
-            save.textContent = "保存";
-            save.disabled = !p.dirty;
-            save.addEventListener("click", function () { savePost(idx, save); });
-
-            // 本文編集（スマホからの追記用）。開いたときだけエディタ一式を出す
-            var editBtn = document.createElement("button");
-            editBtn.type = "button";
-            editBtn.className = "admin-btn";
-            editBtn.textContent = "本文を編集";
-            var editor = document.createElement("div");
-            editor.className = "admin-editor";
-            editor.hidden = true;
-            var body = document.createElement("textarea");
-            body.className = "admin-textarea";
-            body.rows = 12;
-            body.value = p.body;
-            body.setAttribute("aria-label", "本文（Markdown）");
-            body.addEventListener("input", function () {
-                p.body = body.value;
-                markDirty(idx, true);
-            });
-            editor.appendChild(body);
-            enhanceEditor(body);
-            editBtn.addEventListener("click", function () {
-                editor.hidden = !editor.hidden;
-                editBtn.textContent = editor.hidden ? "本文を編集" : "本文を閉じる";
-            });
-
-            controls.appendChild(tags); controls.appendChild(toggle);
-            controls.appendChild(editBtn); controls.appendChild(save);
-            row.appendChild(head); row.appendChild(controls); row.appendChild(editor);
-            root.appendChild(row);
-        });
+        posts.forEach(function (p, idx) { root.appendChild(buildRow(p, idx)); });
     }
 
     function markDirty(idx, dirty) {
@@ -377,12 +145,12 @@
         var p = posts[idx];
         btn.disabled = true;
         btn.textContent = "保存中…";
-        var label = isDraft(p) ? "非公開化/タグ更新" : "公開/タグ更新";
-        api("/repos/" + OWNER + "/" + REPO + "/contents/" + p.path, {
+        var label = fm.isDraft(p.meta.draft) ? "非公開化/タグ更新" : "公開/タグ更新";
+        gh.api(gh.contents(p.path), {
             method: "PUT",
             body: JSON.stringify({
                 message: "blog(admin): " + (p.meta.title || p.path) + " の" + label,
-                content: b64encode(serialize(p.meta, p.body)),
+                content: gh.b64encode(fm.serialize(p.meta, p.body)),
                 sha: p.sha
             })
         }).then(function (res) {
@@ -422,16 +190,16 @@
         if ($("new-draft").checked) meta.draft = "true";
         var body = $("new-body").value;
         if (body && !body.endsWith("\n")) body += "\n";
-        var path = DIR + "/" + date + "-" + slug + ".md";
+        var path = gh.POSTS_DIR + "/" + date + "-" + slug + ".md";
 
         var btn = document.querySelector("#new-form .admin-btn--save");
         btn.disabled = true;
         status("作成中…");
-        api("/repos/" + OWNER + "/" + REPO + "/contents/" + path, {
+        gh.api(gh.contents(path), {
             method: "PUT",
             body: JSON.stringify({
                 message: "blog(admin): 下書き「" + title + "」を追加",
-                content: b64encode(serialize(meta, body))
+                content: gh.b64encode(fm.serialize(meta, body))
             })
         }).then(function () {
             btn.disabled = false;
@@ -458,12 +226,12 @@
             e.preventDefault();
             var v = $("token-input").value.trim();
             if (!v) return;
-            try { localStorage.setItem(TOKEN_KEY, v); } catch (err) { status("localStorage が使えません", true); return; }
+            try { gh.setToken(v); } catch (err) { status("localStorage が使えません", true); return; }
             $("token-input").value = "";
             showApp(true);
         });
         $("logout").addEventListener("click", function () {
-            try { localStorage.removeItem(TOKEN_KEY); } catch (e) { /* noop */ }
+            gh.clearToken();
             posts = [];
             $("posts").replaceChildren();
             status("");
@@ -474,8 +242,8 @@
             e.preventDefault();
             createPost();
         });
-        enhanceEditor($("new-body"));
-        showApp(!!token());
+        enhance($("new-body"));
+        showApp(!!gh.token());
     }
 
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);

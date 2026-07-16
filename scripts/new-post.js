@@ -9,6 +9,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const fm = require("../js/frontmatter.js");
 
 const POSTS_DIR = path.join(__dirname, "..", "blog", "posts");
 
@@ -42,17 +43,9 @@ const date = [
 const file = path.join(POSTS_DIR, `${date}-${slug}.md`);
 if (fs.existsSync(file)) { fail(`${file} は既にあります`); }
 
-const lines = [
-    "---",
-    `title: ${title}`,
-    `date: ${date}`,
-    "description: ",
-    `tags: ${flags.tags}`,
-];
-if (flags.draft) { lines.push("draft: true"); }
-lines.push("---", "", "ここに本文を書く。", "");
-
-fs.writeFileSync(file, lines.join("\n"), "utf8");
+const meta = { title: title, date: date, description: "", tags: flags.tags };
+if (flags.draft) { meta.draft = "true"; }
+fs.writeFileSync(file, fm.serialize(meta, "ここに本文を書く。\n"), "utf8");
 console.log(`new-post: ${path.relative(process.cwd(), file)} を作成しました`);
 console.log("  1. 本文を書く（description / tags も埋める）");
 console.log("  2. コミットして push すれば GitHub Actions が自動でHTML生成・公開");
