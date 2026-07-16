@@ -248,6 +248,29 @@ ${items}
     });
 }
 
+// トップページのお知らせ欄（ヒーローのタイトル直下）を
+// タグ「お知らせ」の最新記事で更新する。posts は新しい順で渡される前提
+function updateIndexNews(posts) {
+    const file = path.join(ROOT, "index.html");
+    const src = fs.readFileSync(file, "utf8");
+    if (!/<!-- NEWS:START -->/.test(src)) {
+        console.warn("make-blog: index.html に NEWS マーカーが無いためお知らせ欄をスキップ");
+        return;
+    }
+    const news = posts.filter((p) => p.tags.includes("お知らせ")).slice(0, 2);
+    const cards = news.map((p) => `            <a class="news-card" href="/blog/${esc(p.slug)}.html">
+                <span class="news-card__label">お知らせ</span>
+                <time class="news-card__date" datetime="${esc(p.date)}">${esc(p.date)}</time>
+                <span class="news-card__title">${esc(p.title)}</span>
+            </a>`).join("\n");
+    const block = news.length ? `\n            <div class="hero__news">\n${cards}\n            </div>\n            ` : "\n            ";
+    const out = src.replace(/(<!-- NEWS:START -->)[\s\S]*?(<!-- NEWS:END -->)/, `$1${block}$2`);
+    if (out !== src) {
+        fs.writeFileSync(file, out, "utf8");
+        console.log(`make-blog: index.html のお知らせ欄を更新しました（${news.length}件）`);
+    }
+}
+
 function main() {
     if (!fs.existsSync(POSTS_DIR)) {
         console.error(`make-blog: ${POSTS_DIR} がありません`);
@@ -295,6 +318,7 @@ function main() {
     fs.writeFileSync(path.join(OUT_DIR, "index.html"), buildIndex(posts), "utf8");
     fs.writeFileSync(path.join(OUT_DIR, "feed.xml"), buildFeed(posts), "utf8");
     fs.writeFileSync(path.join(ROOT, "sitemap.xml"), buildSitemap(posts), "utf8");
+    updateIndexNews(posts);
 
     // draft 化や md 削除で不要になった生成 HTML を掃除する
     const keep = new Set(["index.html", ...posts.map((p) => `${p.slug}.html`)]);

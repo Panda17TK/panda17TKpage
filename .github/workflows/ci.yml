@@ -42,7 +42,7 @@ jobs:
       - name: Blog generation check
         run: |
           npm run make:blog
-          git diff --exit-code blog sitemap.xml
+          git diff --exit-code blog sitemap.xml index.html
 
       - name: HTML / link check
         run: npm run test:html

@@ -239,6 +239,68 @@ header::before {
         0 4px 30px rgba(0, 0, 0, 0.6);
 }
 
+/* ヒーロー直下のお知らせカード（make:blog がタグ「お知らせ」の最新記事で自動挿入） */
+.hero__news {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    margin-top: 2.6rem;
+    width: min(34rem, 92vw);
+}
+
+.news-card {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.7rem 1rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 4px;
+    background: rgba(8, 10, 18, 0.55);
+    text-decoration: none;
+    text-align: left;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.news-card:hover,
+.news-card:focus-visible {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(255, 109, 77, 0.25), 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.news-card__label {
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    padding: 0.1rem 0.55rem;
+    border: 1px solid rgba(255, 109, 77, 0.4);
+    border-radius: 999px;
+    background: rgba(255, 109, 77, 0.08);
+}
+
+.news-card__date {
+    flex-shrink: 0;
+    font-size: 0.78rem;
+    color: var(--muted);
+}
+
+.news-card__title {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.92rem;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 狭い画面ではタイトルを2行目に折り返す */
+@media (max-width: 480px) {
+    .news-card { flex-wrap: wrap; }
+    .news-card__title { flex-basis: 100%; white-space: normal; }
+}
+
 /* スクロール誘導 */
 .hero__scroll {
     position: absolute;
