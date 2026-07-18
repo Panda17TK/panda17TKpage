@@ -536,6 +536,12 @@ header::before {
     border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+/* 「今夜のドライブ」：日替わりの天気・月齢（app.js が注入。WebGL 不可時は出ない） */
+.footer__night {
+    opacity: 0.75;
+    text-align: right;
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 768px) {
     .nav__toggle {

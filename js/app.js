@@ -45,12 +45,37 @@
         var phase = ((days % SYNODIC) + SYNODIC) % SYNODIC / SYNODIC;
         var illum = 0.5 * (1 - Math.cos(2 * Math.PI * phase));
         cfg.moonShadowX = (phase < 0.5 ? -1 : 1) * 2.2 * illum;   // 満ちる間は左側から明るく
+
+        // フッターの「今夜のドライブ」表示用（月齢は新月からの経過日数＝floor が慣例）
+        return { moonAge: Math.floor(phase * SYNODIC) };
+    }
+
+    // 今夜の空模様を一言に（applyDailyWeather が決めた値の範囲に合わせた閾値）
+    function describeNight(cfg, moonAge) {
+        var sky = cfg.fogDensity > 0.0145 ? "靄の夜"
+                : cfg.wetness > 0.42 ? "雨上がりの夜"
+                : cfg.cloudOpacity > 0.33 ? "薄雲の夜"
+                : "澄んだ夜";
+        return sky + "・月齢" + moonAge;
+    }
+
+    // 日替わり演出（天気・月齢）が「毎日変わる」ことを伝える一行をフッターへ。
+    // 生成 HTML を変えずに全ページ（トップ/雑記/404）で出すため JS で注入する。
+    // パッシングのヒントは reduced-motion（静止画・flash 無効）では出さない
+    function showNightStatus(cfg, weather, canFlash) {
+        var footer = document.querySelector(".footer");
+        if (!footer || !weather) return;
+        var el = document.createElement("span");
+        el.className = "footer__night";
+        el.textContent = "今夜のドライブ: " + describeNight(cfg, weather.moonAge)
+                       + (canFlash ? "（クリックでパッシング）" : "");
+        footer.appendChild(el);
     }
 
     var canvas = document.getElementById("bg");
     if (canvas && window.NH && NH.createScene) {
         tuneForDevice(NH.config);
-        applyDailyWeather(NH.config);
+        var weather = applyDailyWeather(NH.config);
         var scene = NH.createScene(canvas, NH.config);
         if (scene) {
             scene.applyConfig();
@@ -61,6 +86,8 @@
                 if (e.target.closest && e.target.closest("a, button, input, select, textarea, label")) return;
                 scene.flash();
             });
+            var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            showNightStatus(NH.config, weather, !reduceMotion);
             // ?dev のときだけ調整パネルを動的ロード（通常表示では一切読み込まない）
             if (/[?&]dev\b/.test(location.search)) {
                 var s = document.createElement("script");
