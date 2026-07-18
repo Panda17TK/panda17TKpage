@@ -239,26 +239,43 @@ header::before {
         0 4px 30px rgba(0, 0, 0, 0.6);
 }
 
-/* 背景だけ眺めるボタン（ヒーローのタイトル直下。控えめなゴーストボタン） */
+/* 背景だけ眺めるボタン（ヒーローのタイトル直下）。
+   ナビのネオンサインと同じ文法：短冊型の小さな看板に朱色のネオン文字を灯し、
+   微かにちらつかせる。ホバーで金色（--accent-2）が差す */
 .hero__bgonly {
-    margin-top: 1.8rem;
-    padding: 0.55rem 1.3rem;
+    margin-top: 2rem;
+    padding: 0.6rem 1.5rem;
     font-family: var(--display);
-    font-size: 0.8rem;
-    letter-spacing: 0.16em;
-    color: var(--muted);
-    background: rgba(8, 10, 18, 0.45);
-    border: 1px solid var(--glass-border);
-    border-radius: 999px;
+    font-size: 0.82rem;
+    letter-spacing: 0.24em;
+    text-indent: 0.24em;   /* 末尾の字間で右に寄って見えるのを中央へ戻す */
+    color: var(--neon-fg);
+    text-shadow:
+        0 0 3px rgba(255, 255, 255, 0.5),
+        0 0 9px rgba(255, 109, 77, 0.55),
+        0 0 18px rgba(255, 109, 77, 0.35);
+    background: rgba(8, 10, 18, 0.55);
+    /* カードの短冊タグと同じ角・朱色の縁 */
+    border: 1px solid rgba(255, 109, 77, 0.4);
+    border-radius: 2px;
+    box-shadow:
+        0 0 12px rgba(255, 109, 77, 0.18),
+        inset 0 0 14px rgba(255, 109, 77, 0.08);
     cursor: pointer;
-    transition: color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    /* ナビリンクと同じ微かなネオンのちらつき（brightness のみ） */
+    animation: neonFlicker 7s infinite;
+    transition: color 0.25s ease, border-color 0.25s ease,
+                box-shadow 0.25s ease, text-shadow 0.25s ease;
 }
 
 .hero__bgonly:hover,
 .hero__bgonly:focus-visible {
     color: #fff;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 1px rgba(255, 109, 77, 0.25), 0 0 18px rgba(255, 109, 77, 0.25);
+    border-color: rgba(255, 215, 106, 0.75);
+    text-shadow: 0 0 4px #fff, 0 0 12px var(--neon), 0 0 26px var(--neon-2);
+    box-shadow:
+        0 0 22px rgba(255, 109, 77, 0.35),
+        inset 0 0 18px rgba(255, 109, 77, 0.14);
 }
 
 /* ---------- 背景のみ表示モード（body.bg-only）---------- */
@@ -288,30 +305,34 @@ body::after {
     transition: opacity 0.6s ease;
 }
 
-/* 戻るボタン：右上に小さく。普段は薄く、触れると浮かぶ */
+/* 戻るボタン：右上に小さく。入口ボタンと同じ短冊ネオンの意匠で、夜景の邪魔を
+   しないよう普段は薄く灯し、触れると明るくなる */
 .bgonly-exit {
     position: fixed;
     top: 1rem;
     right: 1rem;
     z-index: 10;
     padding: 0.5rem 1.05rem;
-    font-family: var(--body);
+    font-family: var(--display);
     font-size: 0.78rem;
-    letter-spacing: 0.1em;
-    color: var(--muted);
+    letter-spacing: 0.12em;
+    color: var(--neon-fg);
+    text-shadow: 0 0 8px rgba(255, 109, 77, 0.35);
     background: rgba(8, 10, 18, 0.55);
-    border: 1px solid var(--glass-border);
-    border-radius: 999px;
+    border: 1px solid rgba(255, 109, 77, 0.35);
+    border-radius: 2px;
     cursor: pointer;
-    opacity: 0.55;
-    transition: opacity 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+    opacity: 0.6;
+    transition: opacity 0.25s ease, color 0.25s ease,
+                border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .bgonly-exit:hover,
 .bgonly-exit:focus-visible {
     opacity: 1;
     color: #fff;
-    border-color: var(--accent);
+    border-color: rgba(255, 215, 106, 0.75);
+    box-shadow: 0 0 16px rgba(255, 109, 77, 0.3);
 }
 
 /* ヒーロー直下のお知らせカード（make:blog がタグ「お知らせ」の最新記事で自動挿入） */
