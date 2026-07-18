@@ -12,6 +12,7 @@ const fs = require("fs");
 const path = require("path");
 
 const POSTS_DIR = path.join(__dirname, "..", "blog", "posts");
+const WORKS_DIR = path.join(__dirname, "..", "works");
 const MAKE_BLOG = path.join(__dirname, "make-blog.js");
 const DEBOUNCE_MS = 500;
 
@@ -34,10 +35,15 @@ function build(reason) {
 
 build("起動時");
 
-fs.watch(POSTS_DIR, (eventType, filename) => {
-    if (!filename || !filename.endsWith(".md")) { return; }
-    clearTimeout(timer);
-    timer = setTimeout(() => build(`${filename} の変更`), DEBOUNCE_MS);
-});
+function watchDir(dir) {
+    if (!fs.existsSync(dir)) { return; }
+    fs.watch(dir, (eventType, filename) => {
+        if (!filename || !filename.endsWith(".md")) { return; }
+        clearTimeout(timer);
+        timer = setTimeout(() => build(`${filename} の変更`), DEBOUNCE_MS);
+    });
+    console.log(`watch-blog: ${dir} を監視中（Ctrl+C で終了）`);
+}
 
-console.log(`watch-blog: ${POSTS_DIR} を監視中（Ctrl+C で終了）`);
+watchDir(POSTS_DIR);
+watchDir(WORKS_DIR);   // 作品カード（works/*.md）も同じビルドで index.html に反映される
