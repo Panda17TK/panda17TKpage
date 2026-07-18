@@ -239,6 +239,81 @@ header::before {
         0 4px 30px rgba(0, 0, 0, 0.6);
 }
 
+/* 背景だけ眺めるボタン（ヒーローのタイトル直下。控えめなゴーストボタン） */
+.hero__bgonly {
+    margin-top: 1.8rem;
+    padding: 0.55rem 1.3rem;
+    font-family: var(--display);
+    font-size: 0.8rem;
+    letter-spacing: 0.16em;
+    color: var(--muted);
+    background: rgba(8, 10, 18, 0.45);
+    border: 1px solid var(--glass-border);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.hero__bgonly:hover,
+.hero__bgonly:focus-visible {
+    color: #fff;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(255, 109, 77, 0.25), 0 0 18px rgba(255, 109, 77, 0.25);
+}
+
+/* ---------- 背景のみ表示モード（body.bg-only）---------- */
+/* UI をフェードで隠し、夜景だけを残す。
+   非表示側は pointer-events:none（クリックは背景へ素通り＝パッシングも効く）＋
+   ui.js が inert を付けてフォーカス・支援技術からも外す */
+header,
+main,
+.footer {
+    transition: opacity 0.6s ease;
+}
+
+body.bg-only header,
+body.bg-only main,
+body.bg-only .footer,
+body.bg-only .skip-link {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* 文字の可読性用ビネットも外し、背景そのものを見せる */
+body.bg-only::after {
+    opacity: 0;
+}
+
+body::after {
+    transition: opacity 0.6s ease;
+}
+
+/* 戻るボタン：右上に小さく。普段は薄く、触れると浮かぶ */
+.bgonly-exit {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+    padding: 0.5rem 1.05rem;
+    font-family: var(--body);
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    background: rgba(8, 10, 18, 0.55);
+    border: 1px solid var(--glass-border);
+    border-radius: 999px;
+    cursor: pointer;
+    opacity: 0.55;
+    transition: opacity 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+.bgonly-exit:hover,
+.bgonly-exit:focus-visible {
+    opacity: 1;
+    color: #fff;
+    border-color: var(--accent);
+}
+
 /* ヒーロー直下のお知らせカード（make:blog がタグ「お知らせ」の最新記事で自動挿入） */
 .hero__news {
     display: flex;
@@ -373,19 +448,35 @@ header::before {
     font-weight: 300;
 }
 
-/* ---------- Works grid ---------- */
+/* ---------- Works（枠内の横スクロール）---------- */
 .works {
     list-style: none;
     margin: 2.6rem 0 0;
-    padding: 0;
-    display: grid;
-    /* auto-fill＋上限幅で、カードが1枚でも全幅に間延びせず左から詰む */
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 360px));
-    justify-content: start;
+    /* hover の浮き上がり(-4px)や影が overflow で切れないよう上下に余白を確保 */
+    padding: 0.5rem 0.2rem 1.1rem;
+    display: flex;
     gap: 1.2rem;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    /* Firefox のスクロールバー（WebKit 系は下の疑似要素で同じ見た目に） */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 109, 77, 0.45) rgba(255, 255, 255, 0.06);
 }
 
+.works:focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: 4px;
+}
+
+.works::-webkit-scrollbar { height: 6px; }
+.works::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.06); border-radius: 999px; }
+.works::-webkit-scrollbar-thumb { background: rgba(255, 109, 77, 0.45); border-radius: 999px; }
+
 .card {
+    /* 折り返さず一定幅で横に並べ、スクロール位置はカードの頭に吸着 */
+    flex: 0 0 min(100%, 330px);
+    scroll-snap-align: start;
     /* 角を立てて掛け軸・木箱のような静けさを出す */
     border-radius: 6px;
     background: var(--glass);

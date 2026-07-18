@@ -74,6 +74,37 @@ NH.initUI = function () {
         });
     }
 
+    // 背景のみ表示：UI をフェードで隠して夜景だけを眺める（トップページのみ）。
+    // 隠した要素は visibility:hidden になるためフォーカス不能＝inert 化は不要。
+    // クリックでのパッシング（app.js）はモード中もそのまま効く
+    var bgBtn = document.querySelector(".hero__bgonly");
+    var bgExit = document.querySelector(".bgonly-exit");
+    if (bgBtn && bgExit) {
+        // opacity:0 だけでは Tab で透明な UI に入れてしまうため inert で塞ぐ
+        var uiParts = [
+            document.querySelector("header"),
+            document.querySelector("main"),
+            document.querySelector(".footer"),
+            document.querySelector(".skip-link")
+        ].filter(Boolean);
+        var setBgOnly = function (on) {
+            document.body.classList.toggle("bg-only", on);
+            uiParts.forEach(function (el) {
+                if (on) { el.setAttribute("inert", ""); el.setAttribute("aria-hidden", "true"); }
+                else { el.removeAttribute("inert"); el.removeAttribute("aria-hidden"); }
+            });
+            bgExit.hidden = !on;
+            // フォーカスを見えているボタンへ移す（キーボード操作者が迷子にならないように）
+            if (on) bgExit.focus();
+            else bgBtn.focus();
+        };
+        bgBtn.addEventListener("click", function () { setBgOnly(true); });
+        bgExit.addEventListener("click", function () { setBgOnly(false); });
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && document.body.classList.contains("bg-only")) setBgOnly(false);
+        });
+    }
+
     var yearEl = document.getElementById("year");
     if (yearEl) yearEl.textContent = new Date().getFullYear();
 };
