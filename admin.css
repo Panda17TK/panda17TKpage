@@ -10,6 +10,17 @@
     color: var(--muted);
 }
 
+/* セクション見出し（雑記 / つくったもの） */
+.admin-h2 {
+    margin-top: 2.4rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--glass-border);
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 1.25rem;
+    color: #fff;
+}
+
 .admin-form,
 .admin-toolbar {
     display: flex;
@@ -32,6 +43,11 @@
 .admin-input:focus-visible {
     outline: none;
     border-color: var(--accent);
+}
+
+/* 表示順のような短い数値入力は幅を絞る */
+.admin-input--order {
+    flex: 0 1 8rem;
 }
 
 .admin-btn {
@@ -127,6 +143,12 @@
     flex-direction: column;
     gap: 0.6rem;
     padding: 0 1.1rem 1.1rem;
+}
+
+/* 縦積みフォームでは .admin-input の flex-basis(16rem) が「高さ」に効いて
+   入力欄が巨大化するためリセットする（幅は stretch で全幅になる） */
+.admin-new__form .admin-input {
+    flex: none;
 }
 
 .admin-textarea {

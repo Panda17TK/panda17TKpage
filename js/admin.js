@@ -137,7 +137,9 @@
 
     function markDirty(idx, dirty) {
         posts[idx].dirty = dirty;
-        var saves = document.querySelectorAll(".admin-btn--save");
+        // #posts 配下に限定する（ページ全体だと新規フォームの「作成」ボタンが
+        // 混ざって index がずれ、別の行の保存ボタンを切り替えてしまう）
+        var saves = document.querySelectorAll("#posts .admin-btn--save");
         if (saves[idx]) saves[idx].disabled = !dirty;
     }
 
@@ -215,10 +217,15 @@
     }
 
     // ---- トークンの出し入れ ----
+    function loadAll() {
+        loadPosts();
+        if (NH.adminWorks) NH.adminWorks.load();   // つくったもの（admin-works.js）
+    }
+
     function showApp(hasToken) {
         $("auth").hidden = hasToken;
         $("app").hidden = !hasToken;
-        if (hasToken) loadPosts();
+        if (hasToken) loadAll();
     }
 
     function init() {
@@ -234,10 +241,11 @@
             gh.clearToken();
             posts = [];
             $("posts").replaceChildren();
+            if (NH.adminWorks) NH.adminWorks.clear();
             status("");
             showApp(false);
         });
-        $("reload").addEventListener("click", loadPosts);
+        $("reload").addEventListener("click", loadAll);
         $("new-form").addEventListener("submit", function (e) {
             e.preventDefault();
             createPost();

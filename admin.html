@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="雑記の管理画面">
+    <meta name="description" content="サイトの管理画面">
     <meta name="theme-color" content="#05060a">
     <meta name="robots" content="noindex, nofollow">
-    <title>雑記の管理 | 笹ノ葉製作所</title>
+    <title>サイトの管理 | 笹ノ葉製作所</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -38,7 +38,7 @@
     <main id="content">
         <section class="section section--blog">
             <div class="section__inner section__inner--narrow">
-                <h1 class="section__title">雑記の管理</h1>
+                <h1 class="section__title">サイトの管理</h1>
 
                 <!-- 認証：Fine-grained PAT をこのブラウザにだけ保存 -->
                 <div id="auth">
@@ -66,6 +66,8 @@
                         <button id="logout" type="button" class="admin-btn">トークンを消去</button>
                     </div>
 
+                    <h2 class="admin-h2">雑記</h2>
+
                     <!-- 新規下書き -->
                     <details class="admin-new">
                         <summary class="admin-new__summary">＋ 新しい下書きを書く</summary>
@@ -86,6 +88,32 @@
                     </details>
 
                     <div id="posts"></div>
+
+                    <h2 class="admin-h2">つくったもの</h2>
+
+                    <!-- 新しい作品カード（works/*.md）。保存で index.html が再生成される -->
+                    <details class="admin-new">
+                        <summary class="admin-new__summary">＋ 新しい作品を追加</summary>
+                        <form id="new-work-form" class="admin-new__form">
+                            <input id="new-work-title" class="admin-input" type="text" placeholder="作品名" required aria-label="作品名">
+                            <input id="new-work-url" class="admin-input" type="url" placeholder="リンク先 URL（https://…）" required aria-label="リンク先 URL">
+                            <input id="new-work-tags" class="admin-input" type="text" placeholder="タグ（カンマ区切り・任意）" aria-label="タグ">
+                            <input id="new-work-order" class="admin-input" type="text" inputmode="numeric"
+                                   placeholder="表示順（小さいほど先頭・空欄なら末尾）" aria-label="表示順">
+                            <input id="new-work-slug" class="admin-input" type="text"
+                                   placeholder="ファイル名（半角英数とハイフン。空欄なら自動）" aria-label="ファイル名"
+                                   pattern="[a-z0-9][a-z0-9-]*" autocapitalize="off" autocorrect="off">
+                            <textarea id="new-work-desc" class="admin-textarea" rows="4"
+                                      placeholder="カードの説明文（1段落のプレーンテキスト）" aria-label="カードの説明文"></textarea>
+                            <label class="admin-check">
+                                <input id="new-work-draft" type="checkbox">
+                                非表示にしておく（あとで公開）
+                            </label>
+                            <button type="submit" class="admin-btn admin-btn--save">作成</button>
+                        </form>
+                    </details>
+
+                    <div id="works"></div>
                 </div>
 
                 <p id="status" class="admin-status" role="status" aria-live="polite"></p>
@@ -93,7 +121,9 @@
                     保存すると main へ直接コミットされ、GitHub Actions が HTML を再生成します（反映まで1〜2分）。
                     リポジトリを直接触りたいときは
                     <a href="https://github.com/sasanoha-tk/sasanoha-tk.github.io/tree/main/blog/posts"
-                       target="_blank" rel="noopener noreferrer">GitHub 上の blog/posts/</a> から。
+                       target="_blank" rel="noopener noreferrer">GitHub 上の blog/posts/</a>
+                    ・<a href="https://github.com/sasanoha-tk/sasanoha-tk.github.io/tree/main/works"
+                       target="_blank" rel="noopener noreferrer">works/</a> から。
                 </p>
             </div>
         </section>
@@ -114,6 +144,7 @@
     <script defer src="/js/frontmatter.js"></script>
     <script defer src="/js/admin-github.js"></script>
     <script defer src="/js/admin-editor.js"></script>
+    <script defer src="/js/admin-works.js"></script>
     <script defer src="/js/admin.js"></script>
 </body>
 </html>
