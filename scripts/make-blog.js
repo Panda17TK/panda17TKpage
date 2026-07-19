@@ -284,6 +284,11 @@ function loadWorks() {
             console.error(`make-blog: works/${file} のフロントマターに title / url が必要です`);
             process.exit(1);
         }
+        // href に注入されるため http(s) 以外のスキーム（javascript: 等）は弾く
+        if (!/^https?:\/\//.test(meta.url)) {
+            console.error(`make-blog: works/${file} の url は http(s):// で始まる必要があります: ${meta.url}`);
+            process.exit(1);
+        }
         if (fm.isDraft(meta.draft)) {
             console.log(`make-blog: works/${file} は draft のため非公開（スキップ）`);
             continue;

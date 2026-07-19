@@ -54,6 +54,20 @@ NH.adminGh = (function () {
     // リポジトリ内パス → Contents API のエンドポイント
     function contents(path) { return "/repos/" + OWNER + "/" + REPO + "/contents/" + path; }
 
+    // 画面下部のステータス行（#status）。雑記と作品の読み込みが並走するため、
+    // 発信元（source）ごとにメッセージを保持して結合表示し、
+    // 片方の成功メッセージがもう片方のエラーを上書きしないようにする
+    var statusParts = {};
+    function status(source, msg, isError) {
+        statusParts[source] = { msg: msg, error: !!isError };
+        var el = document.getElementById("status");
+        if (!el) return;
+        var live = Object.keys(statusParts).filter(function (k) { return statusParts[k].msg; });
+        el.textContent = live.map(function (k) { return statusParts[k].msg; }).join(" ／ ");
+        el.className = "admin-status" +
+            (live.some(function (k) { return statusParts[k].error; }) ? " admin-status--error" : "");
+    }
+
     return {
         POSTS_DIR: "blog/posts",
         token: token,
@@ -62,6 +76,7 @@ NH.adminGh = (function () {
         b64decode: b64decode,
         b64encode: b64encode,
         api: api,
-        contents: contents
+        contents: contents,
+        status: status
     };
 })();

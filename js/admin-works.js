@@ -16,11 +16,8 @@ NH.adminWorks = (function () {
     var $ = function (id) { return document.getElementById(id); };
     var works = [];   // { path, sha, meta, body, dirty }
 
-    function status(msg, isError) {
-        var el = $("status");
-        el.textContent = msg;
-        el.className = "admin-status" + (isError ? " admin-status--error" : "");
-    }
+    // 発信元 "works" として共有ステータス行へ（雑記側のメッセージと共存する）
+    function status(msg, isError) { gh.status("works", msg, isError); }
 
     function orderOf(w) {
         var n = parseFloat(w.meta.order);
@@ -53,7 +50,12 @@ NH.adminWorks = (function () {
     function clear() {
         works = [];
         $("works").replaceChildren();
+        status("");
     }
+
+    // カードのリンク先は http(s) のみ（javascript: 等の混入をここで弾く。
+    // ジェネレータ側 make-blog.js にも同じ検証がある）
+    function validUrl(u) { return /^https?:\/\//.test(u); }
 
     // 1作品ぶんの行（作品名・URL・タグ・表示順・説明文・表示切替・保存）
     function buildRow(w, idx) {
@@ -139,6 +141,7 @@ NH.adminWorks = (function () {
     function saveWork(idx, btn) {
         var w = works[idx];
         if (!w.meta.title || !w.meta.url) { status("作品名とリンク先 URL は必須です", true); return; }
+        if (!validUrl(w.meta.url)) { status("リンク先 URL は https:// で始めてください", true); return; }
         btn.disabled = true;
         btn.textContent = "保存中…";
         var body = w.body;
@@ -170,6 +173,7 @@ NH.adminWorks = (function () {
         var url = $("new-work-url").value.trim();
         var slug = $("new-work-slug").value.trim();
         if (!title || !url) { status("作品名とリンク先 URL を入力してください", true); return; }
+        if (!validUrl(url)) { status("リンク先 URL は https:// で始めてください", true); return; }
         if (!slug) slug = "work-" + Date.now().toString(36);   // 空欄なら自動
         if (!/^[a-z0-9][a-z0-9-]*$/.test(slug)) { status("ファイル名は半角英数小文字とハイフンのみです", true); return; }
 

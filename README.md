@@ -27,6 +27,7 @@ js/
   admin-github.js # 管理画面: GitHub Contents API 層（PAT は localStorage のみ）
   admin-editor.js # 管理画面: Markdown エディタ（ツールバー/プレビュー/画像挿入）
   admin.js        # 管理画面: アプリ層（一覧/保存/新規下書き）
+  admin-works.js  # 管理画面: つくったもの（works/*.md）の一覧/編集/新規追加
   vendor/marked.umd.js # プレビュー用 Markdown パーサ（ビルドと同じ marked, MIT）
 test/
   render-smoke.js   # headless-gl: compile shader, assert non-black + markings
@@ -42,11 +43,11 @@ works/
 scripts/
   make-og.js        # render the scene to og-image.png (1200x630, social preview)
   make-favicon.js   # render favicon.png (64x64 night-road motif)
-  make-blog.js      # md -> blog/*.html + index + feed.xml + sitemap.xml
+  make-blog.js      # md -> blog/*.html + index + feed.xml + sitemap.xml + 作品カード(index.html)
   new-post.js       # blog post scaffold (npm run new:post -- <slug> "タイトル")
   watch-blog.js     # blog/posts/ を監視して make:blog を自動再実行
 .github/workflows/ci.yml    # check + lint + unit/uniform/html + generation diff + render
-.github/workflows/blog.yml  # auto-generate blog HTML when blog/posts/*.md changes
+.github/workflows/blog.yml  # auto-generate HTML when blog/posts/ or works/ change
 ```
 
 Scripts are plain (non-module), `defer`-loaded in order, sharing `window.NH`.
@@ -147,15 +148,18 @@ git add -A && git commit -m "blog: WebGLの小ネタ" && git push
 
 ### フロー C: 管理画面（/admin.html）
 
-`https://sasanoha-tk.github.io/admin.html` から既存記事の
-**公開/非公開の切替とタグ編集**がブラウザだけでできる。
+`https://sasanoha-tk.github.io/admin.html` から、記事の
+**公開/非公開の切替・タグ編集・本文編集（画像挿入・プレビューつき）・
+新規下書きの作成**がブラウザだけでできる。作品カード（つくったもの）の
+編集・新規追加も同じ画面から（「つくったもの」の章を参照）。
 
 - 認証は GitHub の Fine-grained PAT（Repository access をこのリポジトリのみ、
   Permissions を Contents: Read and write のみに絞る）。トークンは入力した
   ブラウザの localStorage にのみ保存され、リポジトリには一切含まれない
 - 保存すると GitHub Contents API 経由で main へ直接コミット →
   blog.yml が HTML を再生成して反映（1〜2分）
-- ページには `noindex` を付与済み。新規作成・本文編集はフロー A/B で
+- ページには `noindex` を付与済み。記事や作品の削除だけは
+  フロー A/B（md を消して push）で
 
 ### 編集・非公開・削除
 
