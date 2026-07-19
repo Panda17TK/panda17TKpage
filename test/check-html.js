@@ -62,14 +62,14 @@ function checkFile(file) {
     }
 }
 
-// 対象を収集: ルートの HTML + blog/ の生成 HTML
+// 対象を収集: ルートの HTML + blog/ と gallery/ の生成 HTML
 var targets = [path.join(ROOT, "index.html"), path.join(ROOT, "404.html"), path.join(ROOT, "admin.html")];
-var blogDir = path.join(ROOT, "blog");
-if (fs.existsSync(blogDir)) {
-    for (var i = 0, files = fs.readdirSync(blogDir); i < files.length; i++) {
-        if (files[i].endsWith(".html")) targets.push(path.join(blogDir, files[i]));
-    }
-}
+[path.join(ROOT, "blog"), path.join(ROOT, "gallery")].forEach(function (dir) {
+    if (!fs.existsSync(dir)) return;
+    fs.readdirSync(dir).forEach(function (f) {
+        if (f.endsWith(".html")) targets.push(path.join(dir, f));
+    });
+});
 
 targets.forEach(checkFile);
 

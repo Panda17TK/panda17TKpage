@@ -20,6 +20,7 @@ const fm = require("../js/frontmatter.js");
 const ROOT = path.join(__dirname, "..");
 const POSTS_DIR = path.join(ROOT, "blog", "posts");
 const WORKS_DIR = path.join(ROOT, "works");
+const GALLERY_DIR = path.join(ROOT, "gallery", "pieces");
 const OUT_DIR = path.join(ROOT, "blog");
 const SITE = "笹ノ葉製作所";
 const ORIGIN = "https://sasanoha-tk.github.io";
@@ -43,10 +44,17 @@ function tagChips(tags) {
     return tags.map((t) => `<span class="tag-chip">${esc(t)}</span>`).join("");
 }
 
-// 全ページ共通の骨格。rel はサイトルートへの相対パス（雑記配下は "../"）
+// 全ページ共通の骨格。rel はサイトルートへの相対パス（雑記/ギャラリー配下は "../"）
 // ogType: 一覧は website / 記事は article。headExtra は記事メタ等の追加行
-function pageShell({ title, description, canonicalPath, bodyHtml, extraScripts = "", ogType = "website", headExtra = "" }) {
+// current: "blog" | "gallery" — ナビの現在地（aria-current の付与先）
+function pageShell({ title, description, canonicalPath, bodyHtml, extraScripts = "", ogType = "website", headExtra = "", current = "blog" }) {
     const rel = "../";
+    const navBlog = current === "blog"
+        ? `<a href="./" aria-current="page">雑記</a>`
+        : `<a href="${rel}blog/">雑記</a>`;
+    const navGallery = current === "gallery"
+        ? `<a href="./" aria-current="page">ギャラリー</a>`
+        : `<a href="${rel}gallery/">ギャラリー</a>`;
     return `<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -92,7 +100,8 @@ ${headExtra}    <link rel="preconnect" href="https://fonts.googleapis.com">
                 <li><a href="${rel}#top">ホーム</a></li>
                 <li><a href="${rel}#works">作品</a></li>
                 <li><a href="${rel}#contact">連絡先</a></li>
-                <li><a href="./" aria-current="page">雑記</a></li>
+                <li>${navBlog}</li>
+                <li>${navGallery}</li>
                 <li><a href="https://github.com/sasanoha-tk" target="_blank" rel="noopener noreferrer">GitHub</a></li>
             </ul>
         </nav>
@@ -197,12 +206,13 @@ ${entries}
 `;
 }
 
-// sitemap.xml（トップ・一覧・各記事）。lastmod は記事の date を使う
-function buildSitemap(posts) {
+// sitemap.xml（トップ・一覧・ギャラリー・各記事）。lastmod は記事/作品の date を使う
+function buildSitemap(posts, pieces) {
     const latest = posts.length ? posts[0].date : null;
     const urls = [
         { loc: `${ORIGIN}/`, lastmod: latest },
         { loc: `${ORIGIN}/blog/`, lastmod: latest },
+        ...(pieces ? [{ loc: `${ORIGIN}/gallery/`, lastmod: pieces.length ? pieces[0].date : null }] : []),
         ...posts.map((p) => ({ loc: `${ORIGIN}/blog/${p.slug}.html`, lastmod: p.date }))
     ];
     const body = urls.map((u) => `    <url>
@@ -341,6 +351,106 @@ ${cards}
     }
 }
 
+// ===== ギャラリー（動くドット絵の展示室） =====
+// gallery/pieces/*.md（title/date/file 必須、frames/fps/scale/draft 任意、
+// 本文=キャプション）から gallery/index.html を生成する。
+// frames>1 ならスプライトシート（横並び）を CSS steps() でコマ送り再生、
+// frames=1（省略時）は GIF/APNG/PNG をそのまま <img> で表示する。
+
+// PNG/GIF の実寸をヘッダから読む（スプライトのコマ幅計算・表示サイズに必要）
+function imageSize(file) {
+    const buf = fs.readFileSync(file);
+    if (buf.length > 24 && buf.readUInt32BE(0) === 0x89504e47) {           // PNG (APNG含む)
+        return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
+    }
+    if (buf.length > 10 && buf.toString("ascii", 0, 3) === "GIF") {        // GIF
+        return { w: buf.readUInt16LE(6), h: buf.readUInt16LE(8) };
+    }
+    return null;
+}
+
+function loadGallery() {
+    if (!fs.existsSync(GALLERY_DIR)) return null;
+    const pieces = [];
+    for (const file of fs.readdirSync(GALLERY_DIR).filter((f) => f.endsWith(".md")).sort()) {
+        const { meta, body } = fm.parse(fs.readFileSync(path.join(GALLERY_DIR, file), "utf8"));
+        if (!meta.title || !/^\d{4}-\d{2}-\d{2}$/.test(meta.date || "") || !meta.file) {
+            console.error(`make-blog: gallery/pieces/${file} に title / date(YYYY-MM-DD) / file が必要です`);
+            process.exit(1);
+        }
+        if (fm.isDraft(meta.draft)) {
+            console.log(`make-blog: gallery/pieces/${file} は draft のため非公開（スキップ）`);
+            continue;
+        }
+        // 画像は gallery/ からの相対パス（例 images/foo.png）。実在と寸法を検証
+        const imgPath = path.join(ROOT, "gallery", meta.file);
+        if (!fs.existsSync(imgPath)) {
+            console.error(`make-blog: gallery/pieces/${file} の画像 ${meta.file} がありません`);
+            process.exit(1);
+        }
+        const size = imageSize(imgPath);
+        if (!size) {
+            console.error(`make-blog: gallery/pieces/${file} の画像 ${meta.file} は PNG / GIF のみ対応です`);
+            process.exit(1);
+        }
+        const frames = Math.max(1, parseInt(meta.frames, 10) || 1);
+        if (size.w % frames !== 0) {
+            console.error(`make-blog: gallery/pieces/${file} — 画像幅 ${size.w}px がコマ数 ${frames} で割り切れません`);
+            process.exit(1);
+        }
+        pieces.push({
+            slug: file.replace(/\.md$/, ""),
+            title: meta.title,
+            date: meta.date,
+            file: meta.file,
+            frames,
+            fps: Math.max(1, parseFloat(meta.fps) || 8),
+            scale: Math.max(1, parseInt(meta.scale, 10) || 4),
+            w: size.w, h: size.h,
+            caption: body.trim().replace(/\s*\n\s*/g, " ")
+        });
+    }
+    pieces.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.slug < b.slug ? 1 : -1));
+    return pieces;
+}
+
+function buildGalleryIndex(pieces) {
+    const items = pieces.map((p) => {
+        const fw = (p.w / p.frames) * p.scale;   // 表示コマ幅（px）
+        const fh = p.h * p.scale;
+        // frames>1: スプライトシートを steps() でコマ送り／それ以外は <img> のまま
+        const art = p.frames > 1
+            ? `<div class="pix-anim" role="img" aria-label="${esc(p.title)}"
+                             style="--fw:${fw}px;--fh:${fh}px;--n:${p.frames};--dur:${(p.frames / p.fps).toFixed(3)}s;background-image:url('${esc(p.file)}')"></div>`
+            : `<img class="pix-img" src="${esc(p.file)}" alt="${esc(p.title)}" width="${fw}" height="${fh}">`;
+        return `                    <li class="gallery-piece">
+                        <figure>
+                            <div class="gallery-frame">
+${art}
+                            </div>
+                            <figcaption class="gallery-piece__meta">
+                                <span class="gallery-piece__title">${esc(p.title)}</span>
+                                <time class="gallery-piece__date" datetime="${esc(p.date)}">${esc(p.date)}</time>
+                                ${p.caption ? `<p class="gallery-piece__cap">${esc(p.caption)}</p>` : ""}
+                            </figcaption>
+                        </figure>
+                    </li>`;
+    }).join("\n");
+
+    const body = `                <h1 class="section__title">ギャラリー</h1>
+                <p class="section__lead">動くドット絵の展示室。</p>
+                <ul class="gallery-list">
+${items}
+                </ul>`;
+    return pageShell({
+        title: "ギャラリー",
+        description: `${SITE}のギャラリー。動くドット絵の展示室。`,
+        canonicalPath: "/gallery/",
+        bodyHtml: body,
+        current: "gallery"
+    });
+}
+
 function main() {
     if (!fs.existsSync(POSTS_DIR)) {
         console.error(`make-blog: ${POSTS_DIR} がありません`);
@@ -387,7 +497,9 @@ function main() {
     }
     fs.writeFileSync(path.join(OUT_DIR, "index.html"), buildIndex(posts), "utf8");
     fs.writeFileSync(path.join(OUT_DIR, "feed.xml"), buildFeed(posts), "utf8");
-    fs.writeFileSync(path.join(ROOT, "sitemap.xml"), buildSitemap(posts), "utf8");
+    const pieces = loadGallery();
+    if (pieces) fs.writeFileSync(path.join(ROOT, "gallery", "index.html"), buildGalleryIndex(pieces), "utf8");
+    fs.writeFileSync(path.join(ROOT, "sitemap.xml"), buildSitemap(posts, pieces), "utf8");
     updateIndexNews(posts);
     updateIndexWorks();
 
