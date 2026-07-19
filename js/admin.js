@@ -14,11 +14,8 @@
     var $ = function (id) { return document.getElementById(id); };
     var posts = [];   // { path, sha, meta, body, dirty }
 
-    function status(msg, isError) {
-        var el = $("status");
-        el.textContent = msg;
-        el.className = "admin-status" + (isError ? " admin-status--error" : "");
-    }
+    // 発信元 "blog" として共有ステータス行へ（works 側のメッセージと共存する）
+    function status(msg, isError) { gh.status("blog", msg, isError); }
 
     // 画像アップロード（admin-editor.js から使われる）。保存先パスを返す
     function uploadImage(base64, name) {
