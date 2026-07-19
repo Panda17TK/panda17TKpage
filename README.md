@@ -28,6 +28,7 @@ js/
   admin-editor.js # 管理画面: Markdown エディタ（ツールバー/プレビュー/画像挿入）
   admin.js        # 管理画面: アプリ層（一覧/保存/新規下書き）
   admin-works.js  # 管理画面: つくったもの（works/*.md）の一覧/編集/新規追加
+  admin-gallery.js # 管理画面: ギャラリー（画像アップロード込みの展示/編集）
   vendor/marked.umd.js # プレビュー用 Markdown パーサ（ビルドと同じ marked, MIT）
 test/
   render-smoke.js   # headless-gl: compile shader, assert non-black + markings
@@ -154,8 +155,9 @@ git add -A && git commit -m "blog: WebGLの小ネタ" && git push
 
 `https://sasanoha-tk.github.io/admin.html` から、記事の
 **公開/非公開の切替・タグ編集・本文編集（画像挿入・プレビューつき）・
-新規下書きの作成**がブラウザだけでできる。作品カード（つくったもの）の
-編集・新規追加も同じ画面から（「つくったもの」の章を参照）。
+新規下書きの作成**がブラウザだけでできる。作品カード（つくったもの）と
+ギャラリー（ドット絵の展示・画像アップロード込み）も同じ画面から
+（それぞれの章を参照）。
 
 - 認証は GitHub の Fine-grained PAT（Repository access をこのリポジトリのみ、
   Permissions を Contents: Read and write のみに絞る）。トークンは入力した
@@ -228,6 +230,11 @@ draft: true               # 任意。true の間は非公開
   `prefers-reduced-motion` では自動で静止する（おすすめ）
 
 画像幅はコマ数で割り切れる必要がある（ジェネレータが検証してエラーにする）。
+
+**管理画面（/admin.html）からも展示できる**: 「ギャラリー」欄で画像
+（PNG/GIF）を選んでタイトル・コマ数などを入力するだけ。アップロード前に
+幅÷コマ数の検証が走るので、壊れた作品が push されることはない。
+既存作品のタイトル/コマ数/fps/倍率/キャプション編集・公開切替も同じ欄で。
 
 ### ドット絵をつくる道具（メモ）
 
