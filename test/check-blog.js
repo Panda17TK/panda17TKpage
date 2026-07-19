@@ -39,6 +39,11 @@ ok("work roundtrip byte-identical", fm.serialize(wr.meta, wr.body, fm.WORK_KEYS)
 wr.meta.draft = "true";
 ok("work draft added", /\ndraft: true\n/.test(fm.serialize(wr.meta, wr.body, fm.WORK_KEYS)));
 
+// ギャラリー（gallery/pieces/*.md）スキーマ：GALLERY_KEYS でも同様
+var gmd = "---\ntitle: 夜のドライブ\ndate: 2026-07-19\nfile: images/night-drive.png\nframes: 6\nfps: 8\nscale: 4\n---\nキャプション。\n";
+var gr = fm.parse(gmd);
+ok("gallery roundtrip byte-identical", fm.serialize(gr.meta, gr.body, fm.GALLERY_KEYS) === gmd);
+
 console.log("gallery-transform:");
 var raw3 = "本文。\n\n<img src=\"/a.jpg\" class=\"img-m\">\n\n<img src=\"/b.jpg\" class=\"img-m\">\n\n<img src=\"/c.jpg\" class=\"img-m\">\n\n締め。";
 var h1 = groupImages(marked.parse(raw3));

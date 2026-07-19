@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="笹ノ葉製作所の雑記。開発の記録や日々の覚え書き。">
+    <meta name="description" content="笹ノ葉製作所のギャラリー。動くドット絵の展示室。">
     <meta name="theme-color" content="#05060a">
-    <title>雑記 | 笹ノ葉製作所</title>
+    <title>ギャラリー | 笹ノ葉製作所</title>
     <link rel="icon" type="image/svg+xml" href="../favicon.svg">
     <link rel="icon" type="image/png" sizes="64x64" href="../favicon.png">
-    <link rel="canonical" href="https://sasanoha-tk.github.io/blog/">
+    <link rel="canonical" href="https://sasanoha-tk.github.io/gallery/">
     <link rel="alternate" type="application/atom+xml" title="笹ノ葉製作所 雑記" href="https://sasanoha-tk.github.io/blog/feed.xml">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="笹ノ葉製作所">
-    <meta property="og:title" content="雑記 | 笹ノ葉製作所">
-    <meta property="og:description" content="笹ノ葉製作所の雑記。開発の記録や日々の覚え書き。">
-    <meta property="og:url" content="https://sasanoha-tk.github.io/blog/">
+    <meta property="og:title" content="ギャラリー | 笹ノ葉製作所">
+    <meta property="og:description" content="笹ノ葉製作所のギャラリー。動くドット絵の展示室。">
+    <meta property="og:url" content="https://sasanoha-tk.github.io/gallery/">
     <meta property="og:image" content="https://sasanoha-tk.github.io/og-image.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="雑記 | 笹ノ葉製作所">
-    <meta name="twitter:description" content="笹ノ葉製作所の雑記。開発の記録や日々の覚え書き。">
+    <meta name="twitter:title" content="ギャラリー | 笹ノ葉製作所">
+    <meta name="twitter:description" content="笹ノ葉製作所のギャラリー。動くドット絵の展示室。">
     <meta name="twitter:image" content="https://sasanoha-tk.github.io/og-image.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -43,8 +43,8 @@
                 <li><a href="../#top">ホーム</a></li>
                 <li><a href="../#works">作品</a></li>
                 <li><a href="../#contact">連絡先</a></li>
-                <li><a href="./" aria-current="page">雑記</a></li>
-                <li><a href="../gallery/">ギャラリー</a></li>
+                <li><a href="../blog/">雑記</a></li>
+                <li><a href="./" aria-current="page">ギャラリー</a></li>
                 <li><a href="https://github.com/sasanoha-tk" target="_blank" rel="noopener noreferrer">GitHub</a></li>
             </ul>
         </nav>
@@ -53,24 +53,23 @@
     <main id="content">
         <section class="section section--blog">
             <div class="section__inner section__inner--narrow">
-                <h1 class="section__title">雑記</h1>
-                <p class="section__lead">開発の記録や日々の覚え書き。</p>
-                <div class="tag-filter" role="group" aria-label="タグで絞り込み">
-                    <button class="tag-filter__btn" type="button" data-tag="お知らせ" aria-pressed="false">お知らせ</button>
-                    <button class="tag-filter__btn" type="button" data-tag="サイト" aria-pressed="false">サイト</button>
-                    <button class="tag-filter__reset" type="button" hidden>すべて表示</button>
-                </div>
-                <ul class="post-list">
-                    <li class="post-list__item" data-tags="お知らせ,サイト">
-                        <a class="post-list__link" href="2026-07-15-note-mrm4acq4.html">
-                            <time class="post-list__date" datetime="2026-07-15">2026-07-15</time>
-                            <span class="post-list__title">雑記をはじめました</span>
-                            
-                            <span class="post-list__tags"><span class="tag-chip">お知らせ</span><span class="tag-chip">サイト</span></span>
-                        </a>
+                <h1 class="section__title">ギャラリー</h1>
+                <p class="section__lead">動くドット絵の展示室。</p>
+                <ul class="gallery-list">
+                    <li class="gallery-piece">
+                        <figure>
+                            <div class="gallery-frame">
+<div class="pix-anim" role="img" aria-label="夜のドライブ（動作見本）"
+                             style="--fw:192px;--fh:192px;--n:6;--dur:0.750s;background-image:url('images/night-drive.png')"></div>
+                            </div>
+                            <figcaption class="gallery-piece__meta">
+                                <span class="gallery-piece__title">夜のドライブ（動作見本）</span>
+                                <time class="gallery-piece__date" datetime="2026-07-19">2026-07-19</time>
+                                <p class="gallery-piece__cap">ギャラリーの動作見本。横並び6コマのスプライトシート PNG を CSS の steps() でループ再生しています。自作のドット絵ができたら置き換えてください。</p>
+                            </figcaption>
+                        </figure>
                     </li>
                 </ul>
-                <p class="post-list__empty" hidden>該当する記事がありません。</p>
             </div>
         </section>
     </main>
@@ -84,6 +83,5 @@
     <script defer src="../js/ui.js"></script>
     <script defer src="../js/scene.js"></script>
     <script defer src="../js/app.js"></script>
-    <script defer src="../js/blog.js"></script>
 </body>
 </html>

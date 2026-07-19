@@ -30,6 +30,7 @@
             <ul class="nav__links" id="nav-links">
                 <li><a href="/#top">ホーム</a></li>
                 <li><a href="/blog/">雑記</a></li>
+                <li><a href="/gallery/">ギャラリー</a></li>
                 <li><a href="https://github.com/sasanoha-tk" target="_blank" rel="noopener noreferrer">GitHub</a></li>
             </ul>
         </nav>
@@ -114,6 +115,32 @@
                     </details>
 
                     <div id="works"></div>
+
+                    <h2 class="admin-h2">ギャラリー</h2>
+
+                    <!-- 新しいドット絵（gallery/pieces + images）。保存で gallery/index.html が再生成される -->
+                    <details class="admin-new">
+                        <summary class="admin-new__summary">＋ 新しいドット絵を展示</summary>
+                        <form id="new-piece-form" class="admin-new__form">
+                            <input id="new-piece-title" class="admin-input" type="text" placeholder="作品タイトル" required aria-label="作品タイトル">
+                            <input id="new-piece-image" class="admin-input" type="file" accept="image/png,image/gif" required aria-label="画像（PNG / GIF）">
+                            <input id="new-piece-frames" class="admin-input" type="text" inputmode="numeric"
+                                   placeholder="コマ数（横並びスプライトシートの場合のみ）" aria-label="コマ数">
+                            <input id="new-piece-fps" class="admin-input" type="text" inputmode="numeric"
+                                   placeholder="コマ送り速度 fps（既定 8）" aria-label="コマ送り速度">
+                            <input id="new-piece-scale" class="admin-input" type="text" inputmode="numeric"
+                                   placeholder="表示倍率（既定 4）" aria-label="表示倍率">
+                            <textarea id="new-piece-caption" class="admin-textarea" rows="3"
+                                      placeholder="キャプション（任意・1段落）" aria-label="キャプション"></textarea>
+                            <label class="admin-check">
+                                <input id="new-piece-draft" type="checkbox">
+                                非公開にしておく（あとで公開）
+                            </label>
+                            <button type="submit" class="admin-btn admin-btn--save">展示する</button>
+                        </form>
+                    </details>
+
+                    <div id="pieces"></div>
                 </div>
 
                 <p id="status" class="admin-status" role="status" aria-live="polite"></p>
@@ -145,6 +172,7 @@
     <script defer src="/js/admin-github.js"></script>
     <script defer src="/js/admin-editor.js"></script>
     <script defer src="/js/admin-works.js"></script>
+    <script defer src="/js/admin-gallery.js"></script>
     <script defer src="/js/admin.js"></script>
 </body>
 </html>
