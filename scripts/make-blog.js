@@ -19,6 +19,7 @@ const fm = require("../js/frontmatter.js");
 
 const ROOT = path.join(__dirname, "..");
 const POSTS_DIR = path.join(ROOT, "blog", "posts");
+const WORKS_DIR = path.join(ROOT, "works");
 const OUT_DIR = path.join(ROOT, "blog");
 const SITE = "笹ノ葉製作所";
 const ORIGIN = "https://sasanoha-tk.github.io";
@@ -271,6 +272,70 @@ function updateIndexNews(posts) {
     }
 }
 
+// トップページの「つくったもの」を works/*.md から生成する。
+// 記事と同じフロントマター形式（title / url / tags / order / draft）で、
+// 本文がカードの説明文になる（1段落のプレーンテキスト。改行は空白に畳まれる）
+function loadWorks() {
+    if (!fs.existsSync(WORKS_DIR)) return null;   // ディレクトリごと無ければ手書き HTML のまま
+    const works = [];
+    for (const file of fs.readdirSync(WORKS_DIR).filter((f) => f.endsWith(".md")).sort()) {
+        const { meta, body } = fm.parse(fs.readFileSync(path.join(WORKS_DIR, file), "utf8"));
+        if (!meta.title || !meta.url) {
+            console.error(`make-blog: works/${file} のフロントマターに title / url が必要です`);
+            process.exit(1);
+        }
+        if (fm.isDraft(meta.draft)) {
+            console.log(`make-blog: works/${file} は draft のため非公開（スキップ）`);
+            continue;
+        }
+        const order = parseFloat(meta.order);
+        works.push({
+            title: meta.title,
+            url: meta.url,
+            tags: fm.parseTags(meta.tags),
+            order: Number.isFinite(order) ? order : 999,   // order 未指定は末尾
+            desc: body.trim().replace(/\s*\n\s*/g, " ")
+        });
+    }
+    works.sort((a, b) => a.order - b.order || a.title.localeCompare(b.title, "ja"));
+    return works;
+}
+
+function updateIndexWorks() {
+    const works = loadWorks();
+    if (works === null) return;
+    const file = path.join(ROOT, "index.html");
+    const src = fs.readFileSync(file, "utf8");
+    if (!/<!-- WORKS:START -->/.test(src)) {
+        console.warn("make-blog: index.html に WORKS マーカーが無いため作品欄をスキップ");
+        return;
+    }
+    const cards = works.map((w) => {
+        const tags = w.tags.map((t) => `                                <span class="card__tag">${esc(t)}</span>`).join("\n");
+        const cta = /github\.com/.test(w.url) ? "GitHub で見る →" : "見に行く →";
+        return `                    <li class="card">
+                        <a class="card__link" href="${esc(w.url)}" target="_blank" rel="noopener noreferrer">
+                            <span class="card__tags">
+${tags}
+                            </span>
+                            <h3 class="card__title">${esc(w.title)}</h3>
+                            <p class="card__desc">${esc(w.desc)}</p>
+                            <span class="card__cta" aria-hidden="true">${cta}</span>
+                        </a>
+                    </li>`;
+    }).join("\n");
+    const block = works.length ? `
+                <ul class="works" tabindex="0" aria-label="作品一覧（横にスクロールできます）">
+${cards}
+                </ul>
+                ` : "\n                ";
+    const out = src.replace(/(<!-- WORKS:START -->)[\s\S]*?(<!-- WORKS:END -->)/, `$1${block}$2`);
+    if (out !== src) {
+        fs.writeFileSync(file, out, "utf8");
+        console.log(`make-blog: index.html の作品欄を更新しました（${works.length}件）`);
+    }
+}
+
 function main() {
     if (!fs.existsSync(POSTS_DIR)) {
         console.error(`make-blog: ${POSTS_DIR} がありません`);
@@ -319,6 +384,7 @@ function main() {
     fs.writeFileSync(path.join(OUT_DIR, "feed.xml"), buildFeed(posts), "utf8");
     fs.writeFileSync(path.join(ROOT, "sitemap.xml"), buildSitemap(posts), "utf8");
     updateIndexNews(posts);
+    updateIndexWorks();
 
     // draft 化や md 削除で不要になった生成 HTML を掃除する
     const keep = new Set(["index.html", ...posts.map((p) => `${p.slug}.html`)]);

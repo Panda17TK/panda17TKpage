@@ -32,6 +32,13 @@ ok("no frontmatter", fm.parse("プレーン本文").body === "プレーン本文
 ok("isDraft", fm.isDraft("true") && fm.isDraft("YES") && !fm.isDraft("") && !fm.isDraft("false"));
 ok("parseTags", JSON.stringify(fm.parseTags(" a, b ,a,, ")) === JSON.stringify(["a", "b"]));
 
+// 作品カード（works/*.md）スキーマ：WORK_KEYS の並びでラウンドトリップが崩れない
+var wmd = "---\ntitle: TailKVM\nurl: https://github.com/sasanoha-tk/TailKVM\ntags: Rust, Tauri\norder: 1\n---\n説明文。\n";
+var wr = fm.parse(wmd);
+ok("work roundtrip byte-identical", fm.serialize(wr.meta, wr.body, fm.WORK_KEYS) === wmd);
+wr.meta.draft = "true";
+ok("work draft added", /\ndraft: true\n/.test(fm.serialize(wr.meta, wr.body, fm.WORK_KEYS)));
+
 console.log("gallery-transform:");
 var raw3 = "本文。\n\n<img src=\"/a.jpg\" class=\"img-m\">\n\n<img src=\"/b.jpg\" class=\"img-m\">\n\n<img src=\"/c.jpg\" class=\"img-m\">\n\n締め。";
 var h1 = groupImages(marked.parse(raw3));
