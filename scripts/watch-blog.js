@@ -48,3 +48,4 @@ function watchDir(dir) {
 watchDir(POSTS_DIR);
 watchDir(WORKS_DIR);   // 作品カード（works/*.md）も同じビルドで index.html に反映される
 watchDir(path.join(__dirname, "..", "gallery", "pieces"));   // ギャラリー（動くドット絵）
+watchDir(path.join(__dirname, "..", "contacts"));            // 連絡先カード

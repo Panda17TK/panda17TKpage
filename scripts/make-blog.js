@@ -21,6 +21,7 @@ const ROOT = path.join(__dirname, "..");
 const POSTS_DIR = path.join(ROOT, "blog", "posts");
 const WORKS_DIR = path.join(ROOT, "works");
 const GALLERY_DIR = path.join(ROOT, "gallery", "pieces");
+const CONTACTS_DIR = path.join(ROOT, "contacts");
 const OUT_DIR = path.join(ROOT, "blog");
 const SITE = "笹ノ葉製作所";
 const ORIGIN = "https://sasanoha-tk.github.io";
@@ -351,6 +352,67 @@ ${cards}
     }
 }
 
+// トップページの「連絡はこちらへ」を contacts/*.md から生成する。
+// 1ファイル=1カード（title/url 必須、handle/order/draft 任意）。
+// url は https のほか mailto: も可（mailto は新規タブで開かない）
+function loadContacts() {
+    if (!fs.existsSync(CONTACTS_DIR)) return null;   // ディレクトリごと無ければ手書き HTML のまま
+    const contacts = [];
+    for (const file of fs.readdirSync(CONTACTS_DIR).filter((f) => f.endsWith(".md")).sort()) {
+        const { meta } = fm.parse(fs.readFileSync(path.join(CONTACTS_DIR, file), "utf8"));
+        if (!meta.title || !meta.url) {
+            console.error(`make-blog: contacts/${file} のフロントマターに title / url が必要です`);
+            process.exit(1);
+        }
+        if (!/^(https?:\/\/|mailto:)/.test(meta.url)) {
+            console.error(`make-blog: contacts/${file} の url は http(s):// か mailto: で始まる必要があります: ${meta.url}`);
+            process.exit(1);
+        }
+        if (fm.isDraft(meta.draft)) {
+            console.log(`make-blog: contacts/${file} は draft のため非公開（スキップ）`);
+            continue;
+        }
+        const order = parseFloat(meta.order);
+        contacts.push({
+            title: meta.title,
+            url: meta.url,
+            handle: meta.handle || "",
+            order: Number.isFinite(order) ? order : 999
+        });
+    }
+    contacts.sort((a, b) => a.order - b.order || a.title.localeCompare(b.title, "ja"));
+    return contacts;
+}
+
+function updateIndexContacts() {
+    const contacts = loadContacts();
+    if (contacts === null) return;
+    const file = path.join(ROOT, "index.html");
+    const src = fs.readFileSync(file, "utf8");
+    if (!/<!-- CONTACTS:START -->/.test(src)) {
+        console.warn("make-blog: index.html に CONTACTS マーカーが無いため連絡先欄をスキップ");
+        return;
+    }
+    const cards = contacts.map((c) => {
+        // mailto は同一タブで開く（_blank + noopener は外部 http(s) のみ）
+        const ext = /^https?:/.test(c.url) ? ` target="_blank" rel="noopener noreferrer"` : "";
+        const handleLine = c.handle ? `\n                        <span class="link-card__handle">${esc(c.handle)}</span>` : "";
+        return `                    <a class="link-card" href="${esc(c.url)}"${ext}>
+                        <span class="link-card__label">${esc(c.title)}</span>${handleLine}
+                    </a>`;
+    }).join("\n");
+    const block = contacts.length ? `
+                <div class="links">
+${cards}
+                </div>
+                ` : "\n                ";
+    const out = src.replace(/(<!-- CONTACTS:START -->)[\s\S]*?(<!-- CONTACTS:END -->)/, `$1${block}$2`);
+    if (out !== src) {
+        fs.writeFileSync(file, out, "utf8");
+        console.log(`make-blog: index.html の連絡先欄を更新しました（${contacts.length}件）`);
+    }
+}
+
 // ===== ギャラリー（動くドット絵の展示室） =====
 // gallery/pieces/*.md（title/date/file 必須、frames/fps/scale/draft 任意、
 // 本文=キャプション）から gallery/index.html を生成する。
@@ -502,6 +564,7 @@ function main() {
     fs.writeFileSync(path.join(ROOT, "sitemap.xml"), buildSitemap(posts, pieces), "utf8");
     updateIndexNews(posts);
     updateIndexWorks();
+    updateIndexContacts();
 
     // draft 化や md 削除で不要になった生成 HTML を掃除する
     const keep = new Set(["index.html", ...posts.map((p) => `${p.slug}.html`)]);
