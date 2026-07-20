@@ -1,5 +1,5 @@
 ---
-title: 夜の高速道路（このサイト）
+title: 夜の高速道路
 url: https://github.com/sasanoha-tk/sasanoha-tk.github.io
 tags: WebGL, GLSL, JavaScript
 order: 2
