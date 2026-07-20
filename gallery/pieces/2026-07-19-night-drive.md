@@ -1,5 +1,5 @@
 ---
-title: 夜のドライブ（動作見本）
+title: 高速道路
 date: 2026-07-19
 file: images/night-drive.png
 frames: 6
