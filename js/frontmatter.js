@@ -15,6 +15,7 @@
     var KNOWN = ["title", "date", "description", "tags", "draft"];
     var WORK_KEYS = ["title", "url", "tags", "order", "draft"];   // works/*.md（作品カード）
     var GALLERY_KEYS = ["title", "date", "file", "frames", "fps", "scale", "draft"];   // gallery/pieces/*.md
+    var CONTACT_KEYS = ["title", "url", "handle", "order", "draft"];   // contacts/*.md（連絡先カード）
 
     function parse(src) {
         var m = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/.exec(src);
@@ -52,7 +53,7 @@
             .filter(function (t) { return t && !seen[t] && (seen[t] = true); });
     }
 
-    var fm = { parse: parse, serialize: serialize, isDraft: isDraft, parseTags: parseTags, WORK_KEYS: WORK_KEYS, GALLERY_KEYS: GALLERY_KEYS };
+    var fm = { parse: parse, serialize: serialize, isDraft: isDraft, parseTags: parseTags, WORK_KEYS: WORK_KEYS, GALLERY_KEYS: GALLERY_KEYS, CONTACT_KEYS: CONTACT_KEYS };
     if (typeof module !== "undefined" && module.exports) module.exports = fm;
     else { root.NH = root.NH || {}; root.NH.frontmatter = fm; }
 })(typeof window !== "undefined" ? window : this);

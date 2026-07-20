@@ -216,8 +216,9 @@
     // ---- トークンの出し入れ ----
     function loadAll() {
         loadPosts();
-        if (NH.adminWorks) NH.adminWorks.load();       // つくったもの（admin-works.js）
-        if (NH.adminGallery) NH.adminGallery.load();   // ギャラリー（admin-gallery.js）
+        if (NH.adminWorks) NH.adminWorks.load();         // つくったもの（admin-works.js）
+        if (NH.adminGallery) NH.adminGallery.load();     // ギャラリー（admin-gallery.js）
+        if (NH.adminContacts) NH.adminContacts.load();   // 連絡先（admin-contacts.js）
     }
 
     function showApp(hasToken) {
@@ -241,6 +242,7 @@
             $("posts").replaceChildren();
             if (NH.adminWorks) NH.adminWorks.clear();
             if (NH.adminGallery) NH.adminGallery.clear();
+            if (NH.adminContacts) NH.adminContacts.clear();
             status("");
             showApp(false);
         });

@@ -9,6 +9,7 @@ on:
     paths:
       - "blog/posts/**"
       - "works/**"
+      - "contacts/**"
       - "gallery/pieces/**"
       - "gallery/images/**"
       - "scripts/make-blog.js"

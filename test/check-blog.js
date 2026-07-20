@@ -44,6 +44,11 @@ var gmd = "---\ntitle: 夜のドライブ\ndate: 2026-07-19\nfile: images/night-
 var gr = fm.parse(gmd);
 ok("gallery roundtrip byte-identical", fm.serialize(gr.meta, gr.body, fm.GALLERY_KEYS) === gmd);
 
+// 連絡先（contacts/*.md）スキーマ：CONTACT_KEYS でも同様
+var cmd = "---\ntitle: GitHub\nurl: https://github.com/sasanoha-tk\nhandle: @sasanoha-tk\norder: 1\n---\n";
+var cr = fm.parse(cmd);
+ok("contact roundtrip byte-identical", fm.serialize(cr.meta, cr.body, fm.CONTACT_KEYS) === cmd);
+
 console.log("gallery-transform:");
 var raw3 = "本文。\n\n<img src=\"/a.jpg\" class=\"img-m\">\n\n<img src=\"/b.jpg\" class=\"img-m\">\n\n<img src=\"/c.jpg\" class=\"img-m\">\n\n締め。";
 var h1 = groupImages(marked.parse(raw3));

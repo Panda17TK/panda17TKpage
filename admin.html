@@ -141,6 +141,32 @@
                     </details>
 
                     <div id="pieces"></div>
+
+                    <h2 class="admin-h2">連絡先</h2>
+
+                    <!-- 連絡先カード（contacts/*.md）。保存でトップページが再生成される -->
+                    <details class="admin-new">
+                        <summary class="admin-new__summary">＋ 新しい連絡先を追加</summary>
+                        <form id="new-contact-form" class="admin-new__form">
+                            <input id="new-contact-title" class="admin-input" type="text" placeholder="名前（GitHub / X / メール 等）" required aria-label="連絡先の名前">
+                            <input id="new-contact-url" class="admin-input" type="text" inputmode="url"
+                                   placeholder="リンク先（https://… か mailto:…）" required aria-label="リンク先"
+                                   autocapitalize="off" autocorrect="off">
+                            <input id="new-contact-handle" class="admin-input" type="text" placeholder="表示用ハンドル（@名前 等・任意）" aria-label="表示用ハンドル">
+                            <input id="new-contact-order" class="admin-input" type="text" inputmode="numeric"
+                                   placeholder="表示順（小さいほど先頭・空欄なら末尾）" aria-label="表示順">
+                            <input id="new-contact-slug" class="admin-input" type="text"
+                                   placeholder="ファイル名（半角英数とハイフン。空欄なら自動）" aria-label="ファイル名"
+                                   pattern="[a-z0-9][a-z0-9-]*" autocapitalize="off" autocorrect="off">
+                            <label class="admin-check">
+                                <input id="new-contact-draft" type="checkbox">
+                                非公開にしておく（あとで公開）
+                            </label>
+                            <button type="submit" class="admin-btn admin-btn--save">追加</button>
+                        </form>
+                    </details>
+
+                    <div id="contacts-list"></div>
                 </div>
 
                 <p id="status" class="admin-status" role="status" aria-live="polite"></p>
@@ -173,6 +199,7 @@
     <script defer src="/js/admin-editor.js"></script>
     <script defer src="/js/admin-works.js"></script>
     <script defer src="/js/admin-gallery.js"></script>
+    <script defer src="/js/admin-contacts.js"></script>
     <script defer src="/js/admin.js"></script>
 </body>
 </html>
