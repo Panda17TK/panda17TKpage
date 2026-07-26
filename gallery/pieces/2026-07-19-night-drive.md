@@ -5,5 +5,6 @@ file: images/night-drive.png
 frames: 6
 fps: 8
 scale: 4
+draft: true
 ---
 
