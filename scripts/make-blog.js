@@ -549,7 +549,7 @@ function main() {
             description: meta.description || "",
             tags: fm.parseTags(meta.tags),
             // 連続した画像を自動でギャラリー（グリッド整列）にまとめる
-            html: groupImages(marked.parse(body))
+            html: groupImages(marked.parse(body, { breaks: true }))
         });
     }
     posts.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.slug < b.slug ? 1 : -1));

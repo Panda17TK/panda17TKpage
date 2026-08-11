@@ -169,7 +169,7 @@ NH.adminEditor = (function () {
             if (show) {
                 // 自分が書いた Markdown を自分のブラウザで描画するだけ（ビルドと同じ marked）。
                 // 連続画像のギャラリー化もビルドと同じ変換を通して見た目を一致させる
-                var html = window.marked ? window.marked.parse(ta.value) : "";
+                var html = window.marked ? window.marked.parse(ta.value, { breaks: true }) : "";
                 prev.innerHTML = NH.groupImages ? NH.groupImages(html) : html;
             }
             prev.hidden = !show;
