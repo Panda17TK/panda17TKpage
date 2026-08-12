@@ -71,23 +71,66 @@
 <p>のんびり更新していきます。</p>
 
                     </div>
-                    <section class="post__reactions" aria-label="リアクションとコメント">
-                        <script src="https://giscus.app/client.js"
-                                data-repo="sasanoha-tk/sasanoha-tk.github.io"
-                                data-repo-id="R_kgDOJVR21w"
-                                data-category="Announcements"
-                                data-category-id="DIC_kwDOJVR2184DBQMt"
-                                data-mapping="pathname"
-                                data-strict="0"
-                                data-reactions-enabled="1"
-                                data-emit-metadata="0"
-                                data-input-position="bottom"
-                                data-theme="transparent_dark"
-                                data-lang="ja"
-                                data-loading="lazy"
-                                crossorigin="anonymous"
-                                async>
-                        </script>
+                    //                     <section
+                        class="post__comments comments"
+                        data-comments
+                        data-post-id="/blog/2026-07-15-note-mrm4acq4.html"
+                        aria-label="コメント"
+                    >
+                        <h2 class="comments__title">コメント</h2>
+
+                        <div
+                            class="comments__list"
+                            data-comments-list
+                            aria-live="polite"
+                        ></div>
+
+                        <form
+                            class="comments__form"
+                            data-comments-form
+                        >
+                            <label>
+                                <span>名前</span>
+                                <input
+                                    type="text"
+                                    name="author"
+                                    maxlength="40"
+                                    autocomplete="nickname"
+                                    placeholder="匿名"
+                                >
+                            </label>
+
+                            <label>
+                                <span>コメント</span>
+                                <textarea
+                                    name="body"
+                                    maxlength="3000"
+                                    required
+                                    rows="5"
+                                ></textarea>
+                            </label>
+
+                            <input
+                                class="comments__honeypot"
+                                type="text"
+                                name="website"
+                                tabindex="-1"
+                                autocomplete="off"
+                                aria-hidden="true"
+                            >
+
+                            <div data-turnstile></div>
+
+                            <button type="submit">
+                                コメントする
+                            </button>
+
+                            <p
+                                class="comments__message"
+                                data-comments-message
+                                aria-live="polite"
+                            ></p>
+                        </form>
                     </section>
                     <p class="post__back"><a href="./">← 雑記一覧へ</a></p>
                 </article>
@@ -104,5 +147,8 @@
     <script defer src="../js/ui.js"></script>
     <script defer src="../js/scene.js"></script>
     <script defer src="../js/app.js"></script>
+    <script defer src="../js/comments-config.js"></script>
+    <script defer src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"></script>
+    <script defer src="../js/comments.js"></script>
 </body>
 </html>
