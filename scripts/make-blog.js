@@ -144,66 +144,150 @@ function buildPost(post) {
                     <div class="post__body">
 ${post.html}
                     </div>
-                    //                     <section
+                    <section
                         class="post__comments comments"
                         data-comments
                         data-post-id="/blog/${esc(post.slug)}.html"
-                        aria-label="コメント"
+                        aria-labelledby="comments-title"
                     >
-                        <h2 class="comments__title">コメント</h2>
-
-                        <div
-                            class="comments__list"
-                            data-comments-list
-                            aria-live="polite"
-                        ></div>
-
-                        <form
-                            class="comments__form"
-                            data-comments-form
-                        >
-                            <label>
-                                <span>名前</span>
-                                <input
-                                    type="text"
-                                    name="author"
-                                    maxlength="40"
-                                    autocomplete="nickname"
-                                    placeholder="匿名"
+                        <header class="comments__heading">
+                            <div>
+                                <p class="comments__eyebrow">READER NOTES</p>
+                                <h2
+                                    class="comments__title"
+                                    id="comments-title"
                                 >
-                            </label>
+                                    コメント
+                                    <span
+                                        class="comments__count"
+                                        data-comments-count
+                                        aria-live="polite"
+                                    >…</span>
+                                </h2>
+                            </div>
 
-                            <label>
-                                <span>コメント</span>
-                                <textarea
-                                    name="body"
-                                    maxlength="3000"
-                                    required
-                                    rows="5"
-                                ></textarea>
-                            </label>
+                            <p class="comments__intro">
+                                記事を読んで残ったことを、ひとことでも。
+                            </p>
+                        </header>
 
-                            <input
-                                class="comments__honeypot"
-                                type="text"
-                                name="website"
-                                tabindex="-1"
-                                autocomplete="off"
-                                aria-hidden="true"
+                        <div class="comments__grid">
+                            <div
+                                class="comments__feed"
+                                aria-label="読者のコメント"
                             >
+                                <div class="comments__feed-bar">
+                                    <span>読者のコメント</span>
+                                    <span class="comments__signal">
+                                        <i aria-hidden="true"></i>
+                                        LIVE
+                                    </span>
+                                </div>
 
-                            <div data-turnstile></div>
+                                <div
+                                    class="comments__list"
+                                    data-comments-list
+                                    aria-live="polite"
+                                    aria-busy="true"
+                                ></div>
+                            </div>
 
-                            <button type="submit">
-                                コメントする
-                            </button>
+                            <aside
+                                class="comments__composer"
+                                aria-label="コメントを投稿"
+                            >
+                                <div class="comments__composer-head">
+                                    <span
+                                        class="comments__composer-mark"
+                                        aria-hidden="true"
+                                    >↳</span>
 
-                            <p
-                                class="comments__message"
-                                data-comments-message
-                                aria-live="polite"
-                            ></p>
-                        </form>
+                                    <div>
+                                        <p class="comments__composer-kicker">
+                                            LEAVE A NOTE
+                                        </p>
+                                        <h3>言葉を残す</h3>
+                                        <p>
+                                            名前は空欄でも投稿できます。
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <form
+                                    class="comments__form"
+                                    data-comments-form
+                                >
+                                    <label class="comments__field">
+                                        <span class="comments__label">
+                                            名前
+                                            <small>optional</small>
+                                        </span>
+
+                                        <input
+                                            type="text"
+                                            name="author"
+                                            maxlength="40"
+                                            autocomplete="nickname"
+                                            placeholder="匿名"
+                                        >
+                                    </label>
+
+                                    <label class="comments__field">
+                                        <span class="comments__field-head">
+                                            <span class="comments__label">
+                                                コメント
+                                            </span>
+
+                                            <output
+                                                class="comments__char-count"
+                                                data-comments-char-count
+                                            >0 / 3000</output>
+                                        </span>
+
+                                        <textarea
+                                            name="body"
+                                            maxlength="3000"
+                                            required
+                                            rows="7"
+                                            placeholder="ここに言葉を残す…"
+                                        ></textarea>
+                                    </label>
+
+                                    <input
+                                        class="comments__honeypot"
+                                        type="text"
+                                        name="website"
+                                        tabindex="-1"
+                                        autocomplete="off"
+                                        aria-hidden="true"
+                                    >
+
+                                    <div class="comments__turnstile">
+                                        <div data-turnstile></div>
+                                    </div>
+
+                                    <button
+                                        class="comments__submit"
+                                        type="submit"
+                                    >
+                                        <span
+                                            class="comments__submit-label"
+                                        >コメントする</span>
+
+                                        <span
+                                            class="comments__submit-spinner"
+                                            aria-hidden="true"
+                                        ></span>
+                                    </button>
+
+                                    <p
+                                        class="comments__message"
+                                        data-comments-message
+                                        aria-live="polite"
+                                    ></p>
+                                </form>
+                            </aside>
+                        </div>
                     </section>
                     <p class="post__back"><a href="./">← 雑記一覧へ</a></p>
                 </article>`;
