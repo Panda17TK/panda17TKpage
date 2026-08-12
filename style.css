@@ -1,31 +1,31 @@
-﻿/* 繝輔か繝ｳ繝医・ index.html 縺ｮ <link> 縺ｧ隱ｭ縺ｿ霎ｼ繧・・import 縺ｯ謠冗判繝悶Ο繝・く繝ｳ繧ｰ縺ｮ縺溘ａ蟒・ｭ｢・・*/
+/* フォントは index.html の <link> で読み込む（@import は描画ブロッキングのため廃止） */
 
 :root {
     --fg: #f8f4ee;
-    /* 蟆上＆繧√・陬懷勧繝・く繧ｹ繝医↓繧ゆｽｿ縺・◆繧√∵囓閭梧勹 #05060a 縺ｧ AA(4.5:1) 繧堤｢ｺ菫昴〒縺阪ｋ豼・＆縺ｫ */
+    /* 小さめの補助テキストにも使うため、暗背景 #05060a で AA(4.5:1) を確保できる濃さに */
     --muted: rgba(248, 244, 238, 0.75);
-    /* 蜥後・驟崎牡・壽愕濶ｲ・医＠繧・＞繧搾ｼ嘉鈴≡濶ｲ・医％繧薙§縺搾ｼ峨ょ､懊・繝阪が繝ｳ縺ｫ譏縺医ｋ謠千・縺ｮ濶ｲ蜻ｳ */
+    /* 和の配色：朱色（しゅいろ）×金色（こんじき）。夜のネオンに映える提灯の色味 */
     --accent: #ff6d4d;
     --accent-2: #ffd76a;
     --glass: rgba(255, 255, 255, 0.06);
     --glass-border: rgba(255, 255, 255, 0.14);
-    /* 繝峨ャ繝育ｵｵ閭梧勹縺ｫ蜷医ｏ縺帙※繝斐け繧ｻ繝ｫ繝輔か繝ｳ繝医〒邨ｱ荳・郁ｪｭ縺ｿ霎ｼ縺ｿ螟ｱ謨玲凾縺ｯ蠕捺擂邉ｻ縺ｸ・・*/
+    /* ドット絵背景に合わせてピクセルフォントで統一（読み込み失敗時は従来系へ） */
     --display: "DotGothic16", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
     --body: "DotGothic16", "Hiragino Kaku Gothic ProN", system-ui, sans-serif;
 
-    /* 繝ｬ繧､繧｢繧ｦ繝・*/
+    /* レイアウト */
     --maxw: 1080px;
     --section-pad: clamp(4.5rem, 10vw, 8rem);
-    --content-inset: clamp(1.2rem, 5vw, 3rem); /* 繧ｻ繧ｯ繧ｷ繝ｧ繝ｳ/繝輔ャ繧ｿ繝ｼ縺ｮ蟾ｦ蜿ｳ菴咏區・医リ繝薙→縺ｯ迢ｬ遶具ｼ・*/
+    --content-inset: clamp(1.2rem, 5vw, 3rem); /* セクション/フッターの左右余白（ナビとは独立） */
 
-    /* 繝翫ン・井ｸ企Κ繝舌・繝ｻ繝阪が繝ｳ・俄・縺薙％繧貞､峨∴繧後・菴咲ｽｮ繝ｻ繧ｵ繧､繧ｺ繝ｻ濶ｲ繧偵∪縺ｨ繧√※隱ｿ謨ｴ縺ｧ縺阪ｋ */
-    --nav-top: 1.2rem;          /* 荳顔ｫｯ縺九ｉ縺ｮ霍晞屬 */
-    --nav-inset: clamp(1rem, 4vw, 2.4rem); /* 蟾ｦ蜿ｳ遶ｯ縺九ｉ縺ｮ霍晞屬 */
-    --nav-gap: 1.4rem;          /* 鬆・岼髢・*/
+    /* ナビ（上部バー・ネオン）— ここを変えれば位置・サイズ・色をまとめて調整できる */
+    --nav-top: 1.2rem;          /* 上端からの距離 */
+    --nav-inset: clamp(1rem, 4vw, 2.4rem); /* 左右端からの距離 */
+    --nav-gap: 1.4rem;          /* 項目間 */
     --nav-link-size: 0.92rem;
-    --neon-fg: #fff4ec;         /* 繝ｪ繝ｳ繧ｯ譁・ｭ苓牡・亥柱邏吶・繧医≧縺ｪ貂ｩ逋ｽ濶ｲ・・*/
-    --neon: var(--accent);      /* 繝阪が繝ｳ縺ｮ荳ｻ濶ｲ */
-    --neon-2: var(--accent-2);  /* 繝帙ヰ繝ｼ譎ゅ・蟾ｮ縺苓牡 */
+    --neon-fg: #fff4ec;         /* リンク文字色（和紙のような温白色） */
+    --neon: var(--accent);      /* ネオンの主色 */
+    --neon-2: var(--accent-2);  /* ホバー時の差し色 */
 }
 
 * {
@@ -36,24 +36,24 @@
 
 html {
     scroll-behavior: smooth;
-    /* 蝗ｺ螳壹リ繝灘・縺ｮ繧ｪ繝輔そ繝・ヨ・医い繝ｳ繧ｫ繝ｼ遘ｻ蜍墓凾縺ｫ隕句・縺励′髫繧後↑縺・ｼ・*/
+    /* 固定ナビ分のオフセット（アンカー移動時に見出しが隠れない） */
     scroll-padding-top: 5rem;
 }
 
 body {
     min-height: 100vh;
-    /* 邵ｦ繧ｹ繧ｯ繝ｭ繝ｼ繝ｫ縺ｧ繧ｳ繝ｳ繝・Φ繝・ｒ閭梧勹縺ｮ荳翫↓豬√☆・域ｨｪ縺ｯ蝗ｺ螳夲ｼ・*/
+    /* 縦スクロールでコンテンツを背景の上に流す（横は固定） */
     overflow-x: hidden;
     color: var(--fg);
     font-family: var(--body);
     -webkit-font-smoothing: antialiased;
-    /* WebGL縺御ｽｿ縺医↑縺・腸蠅・〒繧ょ､懊・繧ｰ繝ｩ繝・・繧ｷ繝ｧ繝ｳ縺瑚ｦ九∴繧九ヵ繧ｩ繝ｼ繝ｫ繝舌ャ繧ｯ */
+    /* WebGLが使えない環境でも夜のグラデーションが見えるフォールバック */
     background:
         linear-gradient(180deg, #0a0420 0%, #2a0a3a 42%, #46123e 50%, #0c0a14 50%, #05060a 100%);
     background-attachment: fixed;
 }
 
-/* 閭梧勹繧ｭ繝｣繝ｳ繝舌せ・亥､懊・鬮倬滄％霍ｯ繧ｷ繧ｧ繝ｼ繝繝ｼ・・*/
+/* 背景キャンバス（夜の高速道路シェーダー） */
 #bg {
     position: fixed;
     inset: 0;
@@ -61,12 +61,12 @@ body {
     height: 100%;
     display: block;
     z-index: 0;
-    /* 繝峨ャ繝育ｵｵ諢溘ｒ菫昴▽縺溘ａ諡｡螟ｧ譎ゅｂ縺ｫ縺倥∪縺帙↑縺・*/
+    /* ドット絵感を保つため拡大時もにじませない */
     image-rendering: pixelated;
     image-rendering: crisp-edges;
 }
 
-/* 繧ｭ繝｣繝ｳ繝舌せ縺ｮ荳翫↓阮・＞繝薙ロ繝・ヨ繧帝㍾縺ｭ縺ｦ譁・ｭ励ｒ隱ｭ縺ｿ繧・☆縺・*/
+/* キャンバスの上に薄いビネットを重ねて文字を読みやすく */
 body::after {
     content: "";
     position: fixed;
@@ -82,14 +82,14 @@ main,
     z-index: 2;
 }
 
-/* main(z-index:2)縺ｨ蜷悟､縺縺ｨ DOM 蠕悟享縺｡縺ｧ hero 縺後リ繝薙ｒ隕・＞縲・
-   繝ｪ繝ｳ繧ｯ縺後け繝ｪ繝・け縺ｧ縺阪↑縺上↑繧九◆繧√”eader 縺ｯ荳谿ｵ荳翫↓鄂ｮ縺・*/
+/* main(z-index:2)と同値だと DOM 後勝ちで hero がナビを覆い、
+   リンクがクリックできなくなるため、header は一段上に置く */
 header {
     position: relative;
     z-index: 3;
 }
 
-/* 繝翫ン蜿ｯ隱ｭ諤ｧ・夂判髱｢荳企Κ縺ｫ縺縺題埋縺・囓蟷輔ｒ謨ｷ縺阪∵・繧九＞蝣ｴ髱｢縺ｧ繧よ枚蟄励′豐医∪縺ｪ縺・ｈ縺・↓縺吶ｋ */
+/* ナビ可読性：画面上部にだけ薄い暗幕を敷き、明るい場面でも文字が沈まないようにする */
 header::before {
     content: "";
     position: fixed;
@@ -100,7 +100,7 @@ header::before {
     background: linear-gradient(180deg, rgba(5, 6, 10, 0.6) 0%, rgba(5, 6, 10, 0.24) 55%, transparent 100%);
 }
 
-/* 繧ｭ繝ｼ繝懊・繝画桃菴懆・髄縺代せ繧ｭ繝・・繝ｪ繝ｳ繧ｯ・磯壼ｸｸ縺ｯ髫縺励√ヵ繧ｩ繝ｼ繧ｫ繧ｹ縺ｧ蜃ｺ迴ｾ・・*/
+/* キーボード操作者向けスキップリンク（通常は隠し、フォーカスで出現） */
 .skip-link {
     position: fixed;
     top: 0.6rem;
@@ -121,7 +121,7 @@ header::before {
     transform: translate(-50%, 0);
 }
 
-/* ---------- Navigation・井ｸ企Κ繝舌・繝ｻ繝阪が繝ｳ繧ｵ繧､繝ｳ鬚ｨ・・--------- */
+/* ---------- Navigation（上部バー・ネオンサイン風）---------- */
 .nav {
     position: fixed;
     top: var(--nav-top);
@@ -173,7 +173,7 @@ header::before {
         0 0 3px rgba(255, 255, 255, 0.5),
         0 0 9px rgba(255, 109, 77, 0.55),
         0 0 18px rgba(255, 109, 77, 0.35);
-    /* 轤ｹ貊・・ brightness 縺ｮ縺ｿ・井ｸ埼乗・蠎ｦ縺ｫ縺ｯ隗ｦ繧後↑縺・ｼ・*/
+    /* 点滅は brightness のみ（不透明度には触れない） */
     animation: neonFlicker 7s infinite;
     transition: color 0.25s ease, text-shadow 0.25s ease;
 }
@@ -188,7 +188,7 @@ header::before {
         0 0 44px var(--neon-2);
 }
 
-/* 繝阪が繝ｳ繧峨＠縺・ｾｮ縺九↑縺｡繧峨▽縺搾ｼ・pacity 縺ｧ縺ｯ縺ｪ縺・brightness 繧呈昭繧峨☆・・/
+/* ネオンらしい微かなちらつき（opacity ではなく brightness を揺らす）*/
 @keyframes neonFlicker {
     0%, 18%, 22%, 25%, 53%, 57%, 100% { filter: brightness(1); }
     20%, 24%, 55% { filter: brightness(0.72); }
@@ -239,30 +239,30 @@ header::before {
         0 4px 30px rgba(0, 0, 0, 0.6);
 }
 
-/* 譎ｯ濶ｲ繧堤惻繧√ｋ繝懊ち繝ｳ・医ヲ繝ｼ繝ｭ繝ｼ縺ｮ繧ｿ繧､繝医Ν逶ｴ荳具ｼ峨・
-   繝翫ン縺ｮ繝阪が繝ｳ繧ｵ繧､繝ｳ縺ｨ蜷後§譁・ｳ包ｼ夂洒蜀雁梛縺ｮ蟆上＆縺ｪ逵区攸縺ｫ譛ｱ濶ｲ縺ｮ繝阪が繝ｳ譁・ｭ励ｒ轣ｯ縺励・
-   蠕ｮ縺九↓縺｡繧峨▽縺九○繧九ゅ・繝舌・縺ｧ驥題牡・・-accent-2・峨′蟾ｮ縺・*/
+/* 景色を眺めるボタン（ヒーローのタイトル直下）。
+   ナビのネオンサインと同じ文法：短冊型の小さな看板に朱色のネオン文字を灯し、
+   微かにちらつかせる。ホバーで金色（--accent-2）が差す */
 .hero__bgonly {
     margin-top: 2rem;
     padding: 0.6rem 1.5rem;
     font-family: var(--display);
     font-size: 0.82rem;
     letter-spacing: 0.24em;
-    text-indent: 0.24em;   /* 譛ｫ蟆ｾ縺ｮ蟄鈴俣縺ｧ蜿ｳ縺ｫ蟇・▲縺ｦ隕九∴繧九・繧剃ｸｭ螟ｮ縺ｸ謌ｻ縺・*/
+    text-indent: 0.24em;   /* 末尾の字間で右に寄って見えるのを中央へ戻す */
     color: var(--neon-fg);
     text-shadow:
         0 0 3px rgba(255, 255, 255, 0.5),
         0 0 9px rgba(255, 109, 77, 0.55),
         0 0 18px rgba(255, 109, 77, 0.35);
     background: rgba(8, 10, 18, 0.55);
-    /* 繧ｫ繝ｼ繝峨・遏ｭ蜀翫ち繧ｰ縺ｨ蜷後§隗偵・譛ｱ濶ｲ縺ｮ邵・*/
+    /* カードの短冊タグと同じ角・朱色の縁 */
     border: 1px solid rgba(255, 109, 77, 0.4);
     border-radius: 2px;
     box-shadow:
         0 0 12px rgba(255, 109, 77, 0.18),
         inset 0 0 14px rgba(255, 109, 77, 0.08);
     cursor: pointer;
-    /* 繝翫ン繝ｪ繝ｳ繧ｯ縺ｨ蜷後§蠕ｮ縺九↑繝阪が繝ｳ縺ｮ縺｡繧峨▽縺搾ｼ・rightness 縺ｮ縺ｿ・・*/
+    /* ナビリンクと同じ微かなネオンのちらつき（brightness のみ） */
     animation: neonFlicker 7s infinite;
     transition: color 0.25s ease, border-color 0.25s ease,
                 box-shadow 0.25s ease, text-shadow 0.25s ease;
@@ -278,7 +278,7 @@ header::before {
         inset 0 0 18px rgba(255, 109, 77, 0.14);
 }
 
-/* ---------- 繧ｮ繝｣繝ｩ繝ｪ繝ｼ・亥虚縺上ラ繝・ヨ邨ｵ縺ｮ螻慕､ｺ螳､・・---------- */
+/* ---------- ギャラリー（動くドット絵の展示室） ---------- */
 .gallery-list {
     list-style: none;
     margin: 2.6rem 0 0;
@@ -297,7 +297,7 @@ header::before {
     padding: 1.1rem;
 }
 
-/* 菴懷刀縺ｮ鬘咲ｸ√ゆｸｭ螟ｮ蟇・○縺ｮ證励＞蜿ｰ邏吶↓繝峨ャ繝育ｵｵ繧堤ｽｮ縺・*/
+/* 作品の額縁。中央寄せの暗い台紙にドット絵を置く */
 .gallery-frame {
     display: flex;
     justify-content: center;
@@ -309,7 +309,7 @@ header::before {
     overflow: hidden;
 }
 
-/* 蜊倡判蜒擾ｼ・IF/APNG/PNG・会ｼ壽僑螟ｧ縺励※繧ゅ↓縺倥∪縺帙↑縺・*/
+/* 単画像（GIF/APNG/PNG）：拡大してもにじませない */
 .pix-img {
     image-rendering: pixelated;
     image-rendering: crisp-edges;
@@ -317,9 +317,9 @@ header::before {
     height: auto;
 }
 
-/* 繧ｹ繝励Λ繧､繝医す繝ｼ繝茨ｼ域ｨｪ荳ｦ縺ｳ繧ｳ繝橸ｼ峨ｒ steps() 縺ｧ繧ｳ繝樣√ｊ蜀咲函縲・
-   螟画焚縺ｯ繧ｸ繧ｧ繝阪Ξ繝ｼ繧ｿ縺御ｽ懷刀縺斐→縺ｫ蝓九ａ繧・
-   --fw: 陦ｨ遉ｺ繧ｳ繝槫ｹ・/ --fh: 陦ｨ遉ｺ鬮倥＆ / --n: 繧ｳ繝樊焚 / --dur: 1蜻ｨ縺ｮ遘呈焚 */
+/* スプライトシート（横並びコマ）を steps() でコマ送り再生。
+   変数はジェネレータが作品ごとに埋める:
+   --fw: 表示コマ幅 / --fh: 表示高さ / --n: コマ数 / --dur: 1周の秒数 */
 .pix-anim {
     width: var(--fw);
     height: var(--fh);
@@ -335,7 +335,7 @@ header::before {
     to { background-position-x: calc(var(--fw) * var(--n) * -1); }
 }
 
-/* 蜍輔″繧呈椛縺医◆縺・腸蠅・〒縺ｯ 1繧ｳ繝樒岼縺ｧ髱呎ｭ｢・・IF 縺ｯ豁｢繧√ｉ繧後↑縺・′繧ｹ繝励Λ繧､繝医・豁｢縺ｾ繧具ｼ・*/
+/* 動きを抑えたい環境では 1コマ目で静止（GIF は止められないがスプライトは止まる） */
 @media (prefers-reduced-motion: reduce) {
     .pix-anim { animation: none; }
 }
@@ -364,10 +364,10 @@ header::before {
     color: rgba(243, 244, 248, 0.75);
 }
 
-/* ---------- 閭梧勹縺ｮ縺ｿ陦ｨ遉ｺ繝｢繝ｼ繝会ｼ・ody.bg-only・・--------- */
-/* UI 繧偵ヵ繧ｧ繝ｼ繝峨〒髫縺励∝､懈勹縺縺代ｒ谿九☆縲・
-   髱櫁｡ｨ遉ｺ蛛ｴ縺ｯ pointer-events:none・医け繝ｪ繝・け縺ｯ閭梧勹縺ｸ邏騾壹ｊ・昴ヱ繝・す繝ｳ繧ｰ繧ょ柑縺擾ｼ会ｼ・
-   ui.js 縺・inert 繧剃ｻ倥￠縺ｦ繝輔か繝ｼ繧ｫ繧ｹ繝ｻ謾ｯ謠ｴ謚陦薙°繧峨ｂ螟悶☆ */
+/* ---------- 背景のみ表示モード（body.bg-only）---------- */
+/* UI をフェードで隠し、夜景だけを残す。
+   非表示側は pointer-events:none（クリックは背景へ素通り＝パッシングも効く）＋
+   ui.js が inert を付けてフォーカス・支援技術からも外す */
 header,
 main,
 .footer {
@@ -382,7 +382,7 @@ body.bg-only .skip-link {
     pointer-events: none;
 }
 
-/* 譁・ｭ励・蜿ｯ隱ｭ諤ｧ逕ｨ繝薙ロ繝・ヨ繧ょ､悶＠縲∬レ譎ｯ縺昴・繧ゅ・繧定ｦ九○繧・*/
+/* 文字の可読性用ビネットも外し、背景そのものを見せる */
 body.bg-only::after {
     opacity: 0;
 }
@@ -391,8 +391,8 @@ body::after {
     transition: opacity 0.6s ease;
 }
 
-/* 謌ｻ繧九・繧ｿ繝ｳ・壼承荳翫↓蟆上＆縺上ょ・蜿｣繝懊ち繝ｳ縺ｨ蜷後§遏ｭ蜀翫ロ繧ｪ繝ｳ縺ｮ諢丞権縺ｧ縲∝､懈勹縺ｮ驍ｪ鬲斐ｒ
-   縺励↑縺・ｈ縺・勸谿ｵ縺ｯ阮・￥轣ｯ縺励∬ｧｦ繧後ｋ縺ｨ譏弱ｋ縺上↑繧・*/
+/* 戻るボタン：右上に小さく。入口ボタンと同じ短冊ネオンの意匠で、夜景の邪魔を
+   しないよう普段は薄く灯し、触れると明るくなる */
 .bgonly-exit {
     position: fixed;
     top: 1rem;
@@ -421,7 +421,7 @@ body::after {
     box-shadow: 0 0 16px rgba(255, 109, 77, 0.3);
 }
 
-/* 繝偵・繝ｭ繝ｼ逶ｴ荳九・縺顔衍繧峨○繧ｫ繝ｼ繝会ｼ・ake:blog 縺後ち繧ｰ縲後♀遏･繧峨○縲阪・譛譁ｰ險倅ｺ九〒閾ｪ蜍墓諺蜈･・・*/
+/* ヒーロー直下のお知らせカード（make:blog がタグ「お知らせ」の最新記事で自動挿入） */
 .hero__news {
     display: flex;
     flex-direction: column;
@@ -477,13 +477,13 @@ body::after {
     text-overflow: ellipsis;
 }
 
-/* 迢ｭ縺・判髱｢縺ｧ縺ｯ繧ｿ繧､繝医Ν繧・陦檎岼縺ｫ謚倥ｊ霑斐☆ */
+/* 狭い画面ではタイトルを2行目に折り返す */
 @media (max-width: 480px) {
     .news-card { flex-wrap: wrap; }
     .news-card__title { flex-basis: 100%; white-space: normal; }
 }
 
-/* 繧ｹ繧ｯ繝ｭ繝ｼ繝ｫ隱伜ｰ・*/
+/* スクロール誘導 */
 .hero__scroll {
     position: absolute;
     bottom: 1.8rem;
@@ -524,7 +524,7 @@ body::after {
     padding: var(--section-pad) var(--content-inset);
 }
 
-/* 蜍輔￥ WebGL 閭梧勹縺ｮ荳翫〒繧よ悽譁・さ繝ｳ繝医Λ繧ｹ繝医′謠ｺ繧後↑縺・ｈ縺・∬埋縺・囓蟷輔・繝ｬ繝ｼ繝医ｒ謨ｷ縺・*/
+/* 動く WebGL 背景の上でも本文コントラストが揺れないよう、薄い暗幕プレートを敷く */
 .section__inner {
     max-width: var(--maxw);
     margin: 0 auto;
@@ -555,18 +555,18 @@ body::after {
     font-weight: 300;
 }
 
-/* ---------- Works・域棧蜀・・讓ｪ繧ｹ繧ｯ繝ｭ繝ｼ繝ｫ・・--------- */
+/* ---------- Works（枠内の横スクロール）---------- */
 .works {
     list-style: none;
     margin: 2.6rem 0 0;
-    /* hover 縺ｮ豬ｮ縺堺ｸ翫′繧・-4px)繧・ｽｱ縺・overflow 縺ｧ蛻・ｌ縺ｪ縺・ｈ縺・ｸ贋ｸ九↓菴咏區繧堤｢ｺ菫・*/
+    /* hover の浮き上がり(-4px)や影が overflow で切れないよう上下に余白を確保 */
     padding: 0.5rem 0.2rem 1.1rem;
     display: flex;
     gap: 1.2rem;
     overflow-x: auto;
     scroll-snap-type: x proximity;
     -webkit-overflow-scrolling: touch;
-    /* Firefox 縺ｮ繧ｹ繧ｯ繝ｭ繝ｼ繝ｫ繝舌・・・ebKit 邉ｻ縺ｯ荳九・逍台ｼｼ隕∫ｴ縺ｧ蜷後§隕九◆逶ｮ縺ｫ・・*/
+    /* Firefox のスクロールバー（WebKit 系は下の疑似要素で同じ見た目に） */
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 109, 77, 0.45) rgba(255, 255, 255, 0.06);
 }
@@ -581,10 +581,10 @@ body::after {
 .works::-webkit-scrollbar-thumb { background: rgba(255, 109, 77, 0.45); border-radius: 999px; }
 
 .card {
-    /* 謚倥ｊ霑斐＆縺壻ｸ螳壼ｹ・〒讓ｪ縺ｫ荳ｦ縺ｹ縲√せ繧ｯ繝ｭ繝ｼ繝ｫ菴咲ｽｮ縺ｯ繧ｫ繝ｼ繝峨・鬆ｭ縺ｫ蜷ｸ逹 */
+    /* 折り返さず一定幅で横に並べ、スクロール位置はカードの頭に吸着 */
     flex: 0 0 min(100%, 330px);
     scroll-snap-align: start;
-    /* 隗偵ｒ遶九※縺ｦ謗帙￠霆ｸ繝ｻ譛ｨ邂ｱ縺ｮ繧医≧縺ｪ髱吶￠縺輔ｒ蜃ｺ縺・*/
+    /* 角を立てて掛け軸・木箱のような静けさを出す */
     border-radius: 6px;
     background: var(--glass);
     border: 1px solid var(--glass-border);
@@ -625,7 +625,7 @@ body::after {
     text-transform: uppercase;
     color: var(--accent);
     padding: 0.25rem 0.6rem;
-    /* 遏ｭ蜀翫・繧医≧縺ｪ遏ｩ蠖｢繧ｿ繧ｰ */
+    /* 短冊のような矩形タグ */
     border-radius: 2px;
     border: 1px solid rgba(255, 109, 77, 0.3);
     background: rgba(255, 109, 77, 0.06);
@@ -734,7 +734,7 @@ body::after {
     border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-/* 縲御ｻ雁､懊・繝峨Λ繧､繝悶搾ｼ壽律譖ｿ繧上ｊ縺ｮ螟ｩ豌励・譛磯ｽ｢・・pp.js 縺梧ｳｨ蜈･縲８ebGL 荳榊庄譎ゅ・蜃ｺ縺ｪ縺・ｼ・*/
+/* 「今夜のドライブ」：日替わりの天気・月齢（app.js が注入。WebGL 不可時は出ない） */
 .footer__night {
     opacity: 0.75;
     text-align: right;
@@ -746,8 +746,8 @@ body::after {
         display: flex;
     }
 
-    /* 繝｡繝九Η繝ｼ縺ｯ繝医げ繝ｫ逶ｴ荳九・繝峨Ο繝・・繝繧ｦ繝ｳ縲る幕髢峨・ opacity/transform縲・
-       轤ｹ貊・・蜷・Μ繝ｳ繧ｯ縺ｮ brightness 縺ｪ縺ｮ縺ｧ蟷ｲ貂峨＠縺ｪ縺・・*/
+    /* メニューはトグル直下のドロップダウン。開閉は opacity/transform、
+       点滅は各リンクの brightness なので干渉しない。 */
     .nav__links {
         position: absolute;
         top: calc(100% + 0.7rem);
@@ -788,7 +788,7 @@ body::after {
 
 @media (max-width: 480px) {
     :root {
-        --nav-link-size: 0.98rem;   /* 繧ｿ繝・・縺励ｄ縺吶￥蟆代＠螟ｧ縺阪ａ */
+        --nav-link-size: 0.98rem;   /* タップしやすく少し大きめ */
     }
 }
 
@@ -806,9 +806,9 @@ body::after {
     }
 }
 
-/* ---------- 繝壹・繧ｸ驕ｷ遘ｻ ---------- */
-/* View Transitions API・亥ｯｾ蠢懊ヶ繝ｩ繧ｦ繧ｶ縺ｮ縺ｿ譛牙柑繝ｻ髱槫ｯｾ蠢懊・騾壼ｸｸ驕ｷ遘ｻ縺ｮ縺ｾ縺ｾ・峨・
-   繝壹・繧ｸ髢薙・遘ｻ蜍輔ｒ縺ｵ繧上▲縺ｨ縺励◆繧ｯ繝ｭ繧ｹ繝輔ぉ繝ｼ繝峨↓縺吶ｋ */
+/* ---------- ページ遷移 ---------- */
+/* View Transitions API（対応ブラウザのみ有効・非対応は通常遷移のまま）。
+   ページ間の移動をふわっとしたクロスフェードにする */
 @view-transition {
     navigation: auto;
 }
@@ -843,13 +843,13 @@ body::after {
 }
 
 /* ---------- Blog ---------- */
-/* 蝗ｺ螳壹リ繝薙→驥阪↑繧峨↑縺・ｈ縺・ｸ翫↓菴咏區繧定ｶｳ縺・*/
+/* 固定ナビと重ならないよう上に余白を足す */
 .section--blog {
     padding-top: clamp(6rem, 14vh, 8.5rem);
     min-height: 70svh;
 }
 
-/* 險倅ｺ倶ｸ隕ｧ */
+/* 記事一覧 */
 .post-list {
     list-style: none;
     margin-top: 2.2rem;
@@ -897,7 +897,7 @@ body::after {
     color: var(--muted);
 }
 
-/* 繧ｿ繧ｰ繝√ャ繝暦ｼ井ｸ隕ｧ繝ｻ險倅ｺ九・繝ｼ繧ｸ蜈ｱ騾夲ｼ・*/
+/* タグチップ（一覧・記事ページ共通） */
 .tag-chip {
     display: inline-block;
     font-size: 0.72rem;
@@ -918,7 +918,7 @@ body::after {
     margin-left: 0.6rem;
 }
 
-/* 繧ｿ繧ｰ邨槭ｊ霎ｼ縺ｿ繝舌・ */
+/* タグ絞り込みバー */
 .tag-filter {
     display: flex;
     flex-wrap: wrap;
@@ -960,7 +960,7 @@ body::after {
     color: var(--muted);
 }
 
-/* 險倅ｺ区悽譁・*/
+/* 記事本文 */
 .post__title {
     font-family: var(--display);
     font-weight: 400;
@@ -1038,7 +1038,7 @@ body::after {
     color: var(--muted);
 }
 
-/* 險倅ｺ句・逕ｻ蜒上・鬘崎｣・ｼ医・繝・ヨ邏・鬘咲ｸ・｢ｨ縲ょ腰菴薙・繧ｮ繝｣繝ｩ繝ｪ繝ｼ蜈ｱ騾夲ｼ・*/
+/* 記事内画像の額装（マット紙+額縁風。単体・ギャラリー共通） */
 .post__body .img-s,
 .post__body .img-m,
 .post__body .img-l,
@@ -1061,8 +1061,8 @@ body::after {
 .post__body .img-m { width: 66%; }
 .post__body .img-l { width: 100%; }
 
-/* 騾｣邯夂判蜒上・閾ｪ蜍墓紛蛻励ぐ繝｣繝ｩ繝ｪ繝ｼ・医ン繝ｫ繝画凾縺ｫ post-gallery 縺ｸ縺ｾ縺ｨ繧√ｉ繧後ｋ・峨・
-   譫壽焚縺ｨ逕ｻ髱｢蟷・↓蠢懊§縺ｦ閾ｪ蜍墓釜霑斐＠縲√ち繧､繝ｫ縺ｯ蜷後§邵ｦ讓ｪ豈斐↓謠・∴繧・*/
+/* 連続画像の自動整列ギャラリー（ビルド時に post-gallery へまとめられる）。
+   枚数と画面幅に応じて自動折返し、タイルは同じ縦横比に揃える */
 .post-gallery {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr));
@@ -1090,7 +1090,7 @@ body::after {
     border-top: 1px solid var(--glass-border);
 }
 
-/* giscus・医Μ繧｢繧ｯ繧ｷ繝ｧ繝ｳ/繧ｳ繝｡繝ｳ繝茨ｼ峨・蝓九ａ霎ｼ縺ｿ譫 */
+/* giscus（リアクション/コメント）の埋め込み枠 */
 .post__reactions {
     margin-top: 3rem;
     padding-top: 1.5rem;
@@ -1111,331 +1111,6 @@ body::after {
     text-decoration: underline;
     text-underline-offset: 3px;
 }
-
-/* =========================================================
-   Comments design refresh
-   ========================================================= */
-
-.comments {
-    position: relative;
-    margin-top: 4rem;
-    padding-top: 2rem;
-}
-
-.comments::before {
-    content: "";
-    display: block;
-    width: 100%;
-    height: 1px;
-    margin-bottom: 1.6rem;
-    background: linear-gradient(
-        90deg,
-        rgba(0, 0, 0, 0),
-        rgba(140, 225, 255, 0.5),
-        rgba(0, 0, 0, 0)
-    );
-    box-shadow: 0 0 18px rgba(110, 210, 255, 0.18);
-}
-
-.comments__title {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    margin: 0 0 1.4rem;
-    font-size: clamp(1.1rem, 2vw, 1.35rem);
-    letter-spacing: 0.06em;
-}
-
-.comments__title::before {
-    content: "?";
-    display: inline-block;
-    color: #8fe7ff;
-    text-shadow: 0 0 12px rgba(143, 231, 255, 0.5);
-    transform: translateY(-1px);
-}
-
-.comments__list {
-    display: grid;
-    gap: 1rem;
-    margin-bottom: 1.4rem;
-}
-
-.comment,
-.comments__form,
-.comments__empty,
-.comments__error {
-    position: relative;
-    overflow: hidden;
-    border-radius: 18px;
-    border: 1px solid rgba(150, 220, 255, 0.14);
-    background:
-        linear-gradient(
-            180deg,
-            rgba(14, 20, 34, 0.76),
-            rgba(7, 10, 18, 0.9)
-        );
-    box-shadow:
-        0 10px 30px rgba(0, 0, 0, 0.24),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-}
-
-.comment::before,
-.comments__form::before {
-    content: "";
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: 1px;
-    background: linear-gradient(
-        90deg,
-        rgba(255, 255, 255, 0),
-        rgba(150, 220, 255, 0.35),
-        rgba(255, 255, 255, 0)
-    );
-}
-
-.comment {
-    padding: 1rem 1.1rem 1rem;
-    transition:
-        transform 160ms ease,
-        border-color 160ms ease,
-        box-shadow 160ms ease;
-}
-
-.comment:hover {
-    transform: translateY(-2px);
-    border-color: rgba(150, 220, 255, 0.24);
-    box-shadow:
-        0 16px 34px rgba(0, 0, 0, 0.28),
-        0 0 0 1px rgba(150, 220, 255, 0.05),
-        0 0 24px rgba(80, 170, 255, 0.08);
-}
-
-.comment__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-    margin-bottom: 0.7rem;
-}
-
-.comment__author {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    max-width: 100%;
-    padding: 0.28rem 0.72rem;
-    border-radius: 999px;
-    border: 1px solid rgba(143, 231, 255, 0.14);
-    background: rgba(143, 231, 255, 0.07);
-    color: #dff8ff;
-    font-size: 0.92rem;
-    font-weight: 500;
-    letter-spacing: 0.03em;
-}
-
-.comment__author::before {
-    content: "";
-    width: 0.42rem;
-    height: 0.42rem;
-    border-radius: 50%;
-    background: #8fe7ff;
-    box-shadow: 0 0 12px rgba(143, 231, 255, 0.45);
-    flex: 0 0 auto;
-}
-
-.comment__time {
-    opacity: 0.72;
-    font-size: 0.76rem;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-}
-
-.comment__body {
-    margin: 0;
-    color: rgba(245, 250, 255, 0.94);
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-    line-height: 1.9;
-    font-size: 0.96rem;
-}
-
-.comments__form {
-    display: grid;
-    gap: 1rem;
-    padding: 1.2rem;
-}
-
-.comments__form label {
-    display: grid;
-    gap: 0.42rem;
-}
-
-.comments__form label > span {
-    font-size: 0.8rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    opacity: 0.72;
-}
-
-.comments__form input,
-.comments__form textarea {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 0.88rem 0.95rem;
-    border-radius: 12px;
-    border: 1px solid rgba(150, 220, 255, 0.13);
-    background:
-        linear-gradient(
-            180deg,
-            rgba(8, 11, 18, 0.82),
-            rgba(12, 16, 27, 0.95)
-        );
-    color: inherit;
-    font: inherit;
-    outline: none;
-    transition:
-        border-color 160ms ease,
-        box-shadow 160ms ease,
-        background 160ms ease;
-}
-
-.comments__form input::placeholder,
-.comments__form textarea::placeholder {
-    color: rgba(255, 255, 255, 0.34);
-}
-
-.comments__form input:focus,
-.comments__form textarea:focus {
-    border-color: rgba(143, 231, 255, 0.46);
-    box-shadow:
-        0 0 0 3px rgba(143, 231, 255, 0.09),
-        0 0 18px rgba(70, 170, 255, 0.08);
-    background:
-        linear-gradient(
-            180deg,
-            rgba(10, 14, 24, 0.95),
-            rgba(13, 18, 29, 0.98)
-        );
-}
-
-.comments__form textarea {
-    min-height: 9rem;
-    resize: vertical;
-    line-height: 1.8;
-}
-
-.comments__form button {
-    justify-self: start;
-    position: relative;
-    overflow: hidden;
-    min-width: 11rem;
-    padding: 0.82rem 1.28rem;
-    border: 1px solid rgba(143, 231, 255, 0.2);
-    border-radius: 999px;
-    background:
-        linear-gradient(
-            135deg,
-            rgba(98, 196, 255, 0.22),
-            rgba(126, 106, 255, 0.22)
-        );
-    color: #f4fbff;
-    font: inherit;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    transition:
-        transform 160ms ease,
-        box-shadow 160ms ease,
-        border-color 160ms ease,
-        opacity 160ms ease;
-    box-shadow:
-        0 12px 24px rgba(0, 0, 0, 0.22),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-.comments__form button:hover {
-    transform: translateY(-1px);
-    border-color: rgba(143, 231, 255, 0.36);
-    box-shadow:
-        0 14px 28px rgba(0, 0, 0, 0.28),
-        0 0 20px rgba(100, 180, 255, 0.12);
-}
-
-.comments__form button:active {
-    transform: translateY(0);
-}
-
-.comments__form button:disabled {
-    opacity: 0.55;
-    cursor: wait;
-    transform: none;
-}
-
-.comments__message {
-    min-height: 1.5em;
-    margin: 0;
-    font-size: 0.84rem;
-    opacity: 0.82;
-}
-
-.comments__message[data-error="true"],
-.comments__error {
-    color: #ffb7c5;
-}
-
-.comments__empty,
-.comments__error {
-    margin: 0;
-    padding: 1rem 1.1rem;
-    font-size: 0.92rem;
-    opacity: 0.86;
-}
-
-.comments__honeypot {
-    position: absolute !important;
-    left: -10000px !important;
-    width: 1px !important;
-    height: 1px !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-}
-
-[data-turnstile] {
-    min-height: 72px;
-    padding-top: 0.2rem;
-}
-
-@media (max-width: 640px) {
-    .comments {
-        margin-top: 3rem;
-        padding-top: 1.6rem;
-    }
-
-    .comment,
-    .comments__form {
-        border-radius: 14px;
-    }
-
-    .comments__form {
-        padding: 1rem;
-    }
-
-    .comments__form button {
-        width: 100%;
-        justify-self: stretch;
-    }
-
-    .comment__header {
-        align-items: flex-start;
-    }
-
-    .comment__time {
-        width: 100%;
-    }
-}
-
 
 /* COMMENTS V2:START
    夜の高速道路 / 朱色ネオン / 読者の余白
@@ -2200,7 +1875,3 @@ body::after {
 }
 
 /* COMMENTS V2:END */
-
-
-
-
