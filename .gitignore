@@ -2,3 +2,8 @@ node_modules/
 npm-debug.log*
 .DS_Store
 *.log
+
+# Cloudflare comments
+comments-worker/.dev.vars
+comments-worker/.wrangler/
+comments-worker/backups/

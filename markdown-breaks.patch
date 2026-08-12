@@ -1,0 +1,16 @@
+diff --git a/scripts/make-blog.js b/scripts/make-blog.js
+--- a/scripts/make-blog.js
++++ b/scripts/make-blog.js
+@@
+-            html: groupImages(marked.parse(body))
++            html: groupImages(marked.parse(body, { breaks: true }))
+         });
+     }
+
+diff --git a/js/admin-editor.js b/js/admin-editor.js
+--- a/js/admin-editor.js
++++ b/js/admin-editor.js
+@@
+-                var html = window.marked ? window.marked.parse(ta.value) : "";
++                var html = window.marked ? window.marked.parse(ta.value, { breaks: true }) : "";
+                 prev.innerHTML = NH.groupImages ? NH.groupImages(html) : html;

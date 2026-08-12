@@ -1,0 +1,15 @@
+﻿name = "sasanoha-comments"
+main = "src/index.js"
+compatibility_date = "2026-08-12"
+workers_dev = true
+
+[vars]
+ALLOWED_ORIGINS = "https://sasanoha-tk.github.io,http://localhost:8000,http://127.0.0.1:8000"
+TURNSTILE_ALLOWED_HOSTNAMES = "sasanoha-tk.github.io,localhost,127.0.0.1"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sasanoha-comments"
+database_id = "60ee386a-a205-4217-a1c5-6ebb985983ff"
+migrations_dir = "migrations"
+

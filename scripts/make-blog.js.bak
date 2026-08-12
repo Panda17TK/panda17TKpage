@@ -26,6 +26,15 @@ const OUT_DIR = path.join(ROOT, "blog");
 const SITE = "笹ノ葉製作所";
 const ORIGIN = "https://sasanoha-tk.github.io";
 
+// giscus（GitHub Discussions ベースのリアクション/コメント）。
+// 記事ページにのみ埋め込む。ID は `gh api` で取得した固定値
+// const GISCUS = {
+//     repo: "sasanoha-tk/sasanoha-tk.github.io",
+//     repoId: "R_kgDOJVR21w",
+//     category: "Announcements",
+//     categoryId: "DIC_kwDOJVR2184DBQMt"
+// };
+
 function esc(s) {
     return String(s)
         .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -144,67 +153,24 @@ function buildPost(post) {
                     <div class="post__body">
 ${post.html}
                     </div>
-                    //                     <section
-                        class="post__comments comments"
-                        data-comments
-                        data-post-id="/blog/${esc(post.slug)}.html"
-                        aria-label="コメント"
-                    >
-                        <h2 class="comments__title">コメント</h2>
-
-                        <div
-                            class="comments__list"
-                            data-comments-list
-                            aria-live="polite"
-                        ></div>
-
-                        <form
-                            class="comments__form"
-                            data-comments-form
-                        >
-                            <label>
-                                <span>名前</span>
-                                <input
-                                    type="text"
-                                    name="author"
-                                    maxlength="40"
-                                    autocomplete="nickname"
-                                    placeholder="匿名"
-                                >
-                            </label>
-
-                            <label>
-                                <span>コメント</span>
-                                <textarea
-                                    name="body"
-                                    maxlength="3000"
-                                    required
-                                    rows="5"
-                                ></textarea>
-                            </label>
-
-                            <input
-                                class="comments__honeypot"
-                                type="text"
-                                name="website"
-                                tabindex="-1"
-                                autocomplete="off"
-                                aria-hidden="true"
-                            >
-
-                            <div data-turnstile></div>
-
-                            <button type="submit">
-                                コメントする
-                            </button>
-
-                            <p
-                                class="comments__message"
-                                data-comments-message
-                                aria-live="polite"
-                            ></p>
-                        </form>
-                    </section>
+                    // <section class="post__reactions" aria-label="リアクションとコメント">
+                    //     <script src="https://giscus.app/client.js"
+                    //             data-repo="${GISCUS.repo}"
+                    //             data-repo-id="${GISCUS.repoId}"
+                    //             data-category="${GISCUS.category}"
+                    //             data-category-id="${GISCUS.categoryId}"
+                    //             data-mapping="pathname"
+                    //             data-strict="0"
+                    //             data-reactions-enabled="1"
+                    //             data-emit-metadata="0"
+                    //             data-input-position="bottom"
+                    //             data-theme="transparent_dark"
+                    //             data-lang="ja"
+                    //             data-loading="lazy"
+                    //             crossorigin="anonymous"
+                    //             async>
+                    //     </script>
+                    // </section>
                     <p class="post__back"><a href="./">← 雑記一覧へ</a></p>
                 </article>`;
     return pageShell({
@@ -213,11 +179,7 @@ ${post.html}
         canonicalPath: `/blog/${post.slug}.html`,
         bodyHtml: body,
         ogType: "article",
-        headExtra,
-        extraScripts: `    <script defer src="../js/comments-config.js"></script>
-    <script defer src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"></script>
-    <script defer src="../js/comments.js"></script>
-`
+        headExtra
     });
 }
 
