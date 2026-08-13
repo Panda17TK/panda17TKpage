@@ -165,10 +165,6 @@ ${post.html}
                                     >…</span>
                                 </h2>
                             </div>
-
-                            <p class="comments__intro">
-                                記事を読んで残ったことを、ひとことでも。
-                            </p>
                         </header>
 
                         <div class="comments__grid">
