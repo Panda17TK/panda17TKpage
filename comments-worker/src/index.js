@@ -25,7 +25,7 @@ function corsHeaders(request, env) {
 
     return {
         "Access-Control-Allow-Origin": origin,
-        "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+        "Access-Control-Allow-Methods": "GET,POST,PATCH,OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type,Authorization",
         "Access-Control-Max-Age": "86400",
         "Vary": "Origin",
@@ -256,20 +256,61 @@ async function updateAdminComment(request, env, id) {
     requireAdmin(request, env);
 
     const data = await parseJson(request);
-    const status = String(data.status || "");
+    const fields = [];
+    const bindings = [];
 
-    if (!["published", "hidden", "deleted"].includes(status)) {
-        throw new ApiError(400, "Invalid status");
+    if (Object.prototype.hasOwnProperty.call(data, "status")) {
+        const status = String(data.status || "");
+
+        if (!["published", "hidden", "deleted"].includes(status)) {
+            throw new ApiError(400, "Invalid status");
+        }
+
+        fields.push("status = ?");
+        bindings.push(status);
     }
+
+    if (Object.prototype.hasOwnProperty.call(data, "author")) {
+        let author = String(data.author || "").trim();
+
+        if (!author) {
+            author = "\u533F\u540D";
+        }
+
+        if (author.length > 40) {
+            throw new ApiError(400, "Author must be 40 characters or fewer");
+        }
+
+        fields.push("author = ?");
+        bindings.push(author);
+    }
+
+    if (Object.prototype.hasOwnProperty.call(data, "body")) {
+        const body = String(data.body || "").trim();
+
+        if (!body || body.length > 3000) {
+            throw new ApiError(400, "Comment must be 1 to 3000 characters");
+        }
+
+        fields.push("body = ?");
+        bindings.push(body);
+    }
+
+    if (!fields.length) {
+        throw new ApiError(400, "No changes supplied");
+    }
+
+    fields.push(
+        "updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')"
+    );
+    bindings.push(id);
 
     const result = await env.DB.prepare(`
         UPDATE comments
-        SET
-            status = ?,
-            updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+        SET ${fields.join(", ")}
         WHERE id = ?
     `)
-        .bind(status, id)
+        .bind(...bindings)
         .run();
 
     if (!result.meta?.changes) {
