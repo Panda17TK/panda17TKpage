@@ -2275,3 +2275,10 @@ body::after {
 }
 
 /* COMMENTS V3:END */
+
+/* COMMENTS TURNSTILE V4:START */
+.comments__turnstile {
+    min-height: 0;
+    overflow: visible;
+}
+/* COMMENTS TURNSTILE V4:END */

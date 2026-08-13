@@ -240,6 +240,7 @@
             {
                 sitekey: config.turnstileSiteKey,
                 theme: "dark",
+                appearance: "interaction-only",
                 action: "comment",
 
                 callback(token) {

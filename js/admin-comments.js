@@ -1,7 +1,7 @@
 /* =============================================================
    コメント管理（/admin.html）
    - Cloudflare Worker の管理 API を利用
-   - ADMIN_TOKEN は sessionStorage のみに保存
+   - ADMIN_TOKEN は localStorage のみに保存
    - 公開 / 非表示 / 論理削除 / 復元 / 名前・本文編集
    ============================================================= */
 window.NH = window.NH || {};
@@ -35,19 +35,19 @@ NH.adminComments = (function () {
 
     function token() {
         try {
-            return sessionStorage.getItem(TOKEN_KEY) || "";
+            return localStorage.getItem(TOKEN_KEY) || "";
         } catch (e) {
             return "";
         }
     }
 
     function setToken(value) {
-        sessionStorage.setItem(TOKEN_KEY, value);
+        localStorage.setItem(TOKEN_KEY, value);
     }
 
     function clearToken() {
         try {
-            sessionStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(TOKEN_KEY);
         } catch (e) {
             /* noop */
         }
@@ -486,7 +486,7 @@ NH.adminComments = (function () {
             '  <p class="admin-comments__lead">公開・非表示・削除・編集を管理します。</p>',
             '</div>',
             '<div id="comments-admin-auth" class="admin-comments__auth">',
-            '  <p>Cloudflare Worker の ADMIN_TOKEN を入力してください。トークンは sessionStorage のみに保存され、ブラウザを閉じると消えます。</p>',
+            '  <p>Cloudflare Worker の ADMIN_TOKEN を入力してください。トークンは localStorage のみに保存され、ブラウザを閉じると消えます。</p>',
             '  <form id="comments-admin-token-form" class="admin-form">',
             '    <input id="comments-admin-token" class="admin-input" type="password" autocomplete="off" placeholder="ADMIN_TOKEN" aria-label="コメント管理トークン">',
             '    <button class="admin-btn admin-btn--save" type="submit">コメント管理を開く</button>',
@@ -521,7 +521,7 @@ NH.adminComments = (function () {
             try {
                 setToken(value);
             } catch (error) {
-                setStatus("sessionStorage を利用できません。", true);
+                setStatus("localStorage を利用できません。", true);
                 return;
             }
 
