@@ -28,6 +28,18 @@
         }).then(function () { return path; });
     }
 
+    function uploadOgImage(file) {
+        if (!file) return Promise.resolve("");
+        status("OGP画像を圧縮中…");
+        return NH.adminEditor.processImageFile(file).then(function (base64) {
+            var name = Date.now().toString(36) + "-og.jpg";
+            status("OGP画像をアップロード中…");
+            return uploadImage(base64, name);
+        }).then(function (path) {
+            return "/" + path.replace(/^\/+/, "");
+        });
+    }
+
     function enhance(ta) { NH.adminEditor.enhance(ta, { status: status, uploadImage: uploadImage }); }
 
     // ---- 一覧の読み込み ----
@@ -79,6 +91,75 @@
             markDirty(idx, true);
         });
 
+        var ogp = document.createElement("div");
+        ogp.className = "admin-ogp";
+
+        var ogpPreview = document.createElement("div");
+        ogpPreview.className = "admin-ogp__preview";
+
+        var ogpImg = document.createElement("img");
+        ogpImg.alt = "";
+        ogpImg.loading = "lazy";
+        ogpPreview.appendChild(ogpImg);
+
+        function refreshOgpPreview() {
+            var value = String(p.meta.image || "").trim();
+            ogpImg.hidden = !value;
+            if (value) ogpImg.src = value;
+        }
+
+        var imagePath = document.createElement("input");
+        imagePath.type = "text";
+        imagePath.className = "admin-input admin-ogp__path";
+        imagePath.value = p.meta.image || "";
+        imagePath.placeholder = "OGP画像（未指定なら共通画像）";
+        imagePath.setAttribute("aria-label", "OGP画像パス");
+        imagePath.addEventListener("input", function () {
+            var value = imagePath.value.trim();
+            if (value) p.meta.image = value;
+            else delete p.meta.image;
+            refreshOgpPreview();
+            markDirty(idx, true);
+        });
+
+        var imageFile = document.createElement("input");
+        imageFile.type = "file";
+        imageFile.accept = "image/*";
+        imageFile.hidden = true;
+
+        var imageButton = document.createElement("button");
+        imageButton.type = "button";
+        imageButton.className = "admin-btn";
+        imageButton.textContent = "OGP画像を選ぶ";
+        imageButton.addEventListener("click", function () { imageFile.click(); });
+
+        imageFile.addEventListener("change", function () {
+            var file = imageFile.files && imageFile.files[0];
+            if (!file) return;
+            imageButton.disabled = true;
+            imageButton.textContent = "アップロード中…";
+
+            uploadOgImage(file).then(function (path) {
+                p.meta.image = path;
+                imagePath.value = path;
+                refreshOgpPreview();
+                markDirty(idx, true);
+                status("OGP画像をアップロードしました。記事の「保存」を押してください");
+            }).catch(function (e) {
+                status(e.message, true);
+            }).finally(function () {
+                imageFile.value = "";
+                imageButton.disabled = false;
+                imageButton.textContent = "OGP画像を選ぶ";
+            });
+        });
+
+        refreshOgpPreview();
+        ogp.appendChild(ogpPreview);
+        ogp.appendChild(imagePath);
+        ogp.appendChild(imageButton);
+        ogp.appendChild(imageFile);
+
         var toggle = document.createElement("button");
         toggle.type = "button";
         toggle.className = "admin-btn";
@@ -120,8 +201,11 @@
             editBtn.textContent = editor.hidden ? "本文を編集" : "本文を閉じる";
         });
 
-        controls.appendChild(tags); controls.appendChild(toggle);
-        controls.appendChild(editBtn); controls.appendChild(save);
+        controls.appendChild(tags);
+        controls.appendChild(ogp);
+        controls.appendChild(toggle);
+        controls.appendChild(editBtn);
+        controls.appendChild(save);
         row.appendChild(head); row.appendChild(controls); row.appendChild(editor);
         return row;
     }
@@ -187,19 +271,29 @@
         var date = localDate();
         var meta = { title: title, date: date, description: "", tags: $("new-tags").value.trim() };
         if ($("new-draft").checked) meta.draft = "true";
+        var newImageFile = $("new-image").files && $("new-image").files[0];
         var body = $("new-body").value;
         if (body && !body.endsWith("\n")) body += "\n";
         var path = gh.POSTS_DIR + "/" + date + "-" + slug + ".md";
 
         var btn = document.querySelector("#new-form .admin-btn--save");
         btn.disabled = true;
-        status("作成中…");
-        gh.api(gh.contents(path), {
-            method: "PUT",
-            body: JSON.stringify({
-                message: "blog(admin): 下書き「" + title + "」を追加",
-                content: gh.b64encode(fm.serialize(meta, body))
-            })
+        status(newImageFile ? "OGP画像を準備中…" : "作成中…");
+
+        var imageReady = newImageFile
+            ? uploadOgImage(newImageFile)
+            : Promise.resolve("");
+
+        imageReady.then(function (imagePath) {
+            if (imagePath) meta.image = imagePath;
+            status("作成中…");
+            return gh.api(gh.contents(path), {
+                method: "PUT",
+                body: JSON.stringify({
+                    message: "blog(admin): 下書き「" + title + "」を追加",
+                    content: gh.b64encode(fm.serialize(meta, body))
+                })
+            });
         }).then(function () {
             btn.disabled = false;
             $("new-form").reset();

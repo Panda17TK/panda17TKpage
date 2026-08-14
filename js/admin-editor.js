@@ -183,5 +183,5 @@ NH.adminEditor = (function () {
         ta.parentNode.insertBefore(prev, ta.nextSibling);
     }
 
-    return { enhance: enhance };
+    return { enhance: enhance, processImageFile: processImageFile };
 })();

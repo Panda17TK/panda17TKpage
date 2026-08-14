@@ -78,6 +78,11 @@
                                    placeholder="slug（URL用・半角英数とハイフン。空欄なら自動）" aria-label="slug"
                                    pattern="[a-z0-9][a-z0-9-]*" autocapitalize="off" autocorrect="off">
                             <input id="new-tags" class="admin-input" type="text" placeholder="タグ（カンマ区切り・任意）" aria-label="タグ">
+                            <label class="admin-ogp-new">
+                                <span class="admin-ogp-new__label">OGP画像（X / SNSカード）</span>
+                                <input id="new-image" class="admin-input" type="file" accept="image/*" aria-label="OGP画像">
+                                <small>未指定なら共通の og-image.png を使用します。</small>
+                            </label>
                             <textarea id="new-body" class="admin-textarea" rows="10"
                                       placeholder="本文（Markdown）" aria-label="本文"></textarea>
                             <label class="admin-check">
