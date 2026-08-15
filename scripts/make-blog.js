@@ -36,11 +36,21 @@ function tagChips(tags) {
     return tags.map((t) => `<span class="tag-chip">${esc(t)}</span>`).join("");
 }
 
+function socialImageUrl(value) {
+    const image = String(value || "").trim();
+
+    if (!image) return `${ORIGIN}/og-image.png`;
+    if (/^https?:\/\//i.test(image)) return image;
+
+    return `${ORIGIN}/${image.replace(/^\.?\//, "").replace(/^\/+/, "")}`;
+}
+
 // 全ページ共通の骨格。rel はサイトルートへの相対パス（雑記/ギャラリー配下は "../"）
 // ogType: 一覧は website / 記事は article。headExtra は記事メタ等の追加行
 // current: "blog" | "gallery" — ナビの現在地（aria-current の付与先）
-function pageShell({ title, description, canonicalPath, bodyHtml, extraScripts = "", ogType = "website", headExtra = "", current = "blog" }) {
+function pageShell({ title, description, canonicalPath, bodyHtml, extraScripts = "", ogType = "website", ogImage = "", headExtra = "", current = "blog" }) {
     const rel = "../";
+    const socialImage = socialImageUrl(ogImage);
     const navBlog = current === "blog"
         ? `<a href="./" aria-current="page">雑記</a>`
         : `<a href="${rel}blog/">雑記</a>`;
@@ -64,13 +74,13 @@ function pageShell({ title, description, canonicalPath, bodyHtml, extraScripts =
     <meta property="og:title" content="${esc(title)} | ${SITE}">
     <meta property="og:description" content="${esc(description)}">
     <meta property="og:url" content="${ORIGIN}${canonicalPath}">
-    <meta property="og:image" content="${ORIGIN}/og-image.png">
+    <meta property="og:image" content="${esc(socialImage)}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="${esc(title)} | ${SITE}">
     <meta name="twitter:description" content="${esc(description)}">
-    <meta name="twitter:image" content="${ORIGIN}/og-image.png">
+    <meta name="twitter:image" content="${esc(socialImage)}">
 ${headExtra}    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap">
@@ -293,6 +303,7 @@ ${post.html}
         canonicalPath: `/blog/${post.slug}.html`,
         bodyHtml: body,
         ogType: "article",
+        ogImage: post.image,
         headExtra,
         extraScripts: `    <script defer src="../js/comments-config.js"></script>
     <script defer src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"></script>
@@ -665,6 +676,7 @@ function main() {
             title: meta.title,
             date: meta.date,
             description: meta.description || "",
+            image: meta.image || "",
             tags: fm.parseTags(meta.tags),
             // 連続した画像を自動でギャラリー（グリッド整列）にまとめる
             html: groupImages(marked.parse(body, { breaks: true }))
